@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要本文学习几种胖树结构下的路由算法的学习笔记（未完待续……）">
+<meta property="og:type" content="article">
+<meta property="og:title" content="胖树拓扑结构下路由算法学习">
+<meta property="og:url" content="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要本文学习几种胖树结构下的路由算法的学习笔记（未完待续……）">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/rtaImage.jpg">
+<meta property="og:image" content="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/rtaImage.png">
+<meta property="og:image" content="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/rtaImage-1578058479607.png">
+<meta property="og:image" content="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/image-20200104085502238.png">
+<meta property="og:image" content="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/image-20200104104919514.png">
+<meta property="article:published_time" content="2020-01-09T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.288Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Fat-tree">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/rtaImage.jpg">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>胖树拓扑结构下路由算法学习 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Min-Hop-Algorithm"><span class="nav-number">2.</span> <span class="nav-text">Min Hop Algorithm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UPDN-Algorithm"><span class="nav-number">3.</span> <span class="nav-text">UPDN Algorithm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fat-tree-Routing-Algorithm"><span class="nav-number">4.</span> <span class="nav-text">Fat-tree Routing Algorithm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Adaptive-Routing-AR"><span class="nav-number">5.</span> <span class="nav-text">Adaptive Routing (AR)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95"><span class="nav-number">6.</span> <span class="nav-text">其他路由算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fat-tree-%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E7%9A%84%E6%94%B9%E8%BF%9B%E5%B7%A5%E4%BD%9C%E7%A0%94%E7%A9%B6"><span class="nav-number">7.</span> <span class="nav-text">Fat-tree 路由算法的改进工作研究</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#A-Weighted-Fat-Tree-Routing-Algorithm-for-Efficient-Load-Balancing-in-Infini-Band-Enterprise-Clusters"><span class="nav-number">7.1.</span> <span class="nav-text">A Weighted Fat-Tree Routing Algorithm for Efficient Load-Balancing in Infini Band Enterprise Clusters</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#On-the-Impact-of-Routing-Algorithms-in-the-Effectiveness-of-Queuing-Schemes-in-High-Performance-Interconnection-Networks"><span class="nav-number">7.2.</span> <span class="nav-text">On the Impact of Routing Algorithms in the Effectiveness of Queuing Schemes in High-Performance Interconnection Networks</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Multistage-Switches-are-not-Crossbars-Effects-of-Static-Routing-in-High-Performance-Networks"><span class="nav-number">7.3.</span> <span class="nav-text">Multistage Switches are not Crossbars: Effects of Static Routing in High-Performance Networks</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%AA%E8%AF%BB%E8%AE%BA%E6%96%87"><span class="nav-number">8.</span> <span class="nav-text">未读论文</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          胖树拓扑结构下路由算法学习
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-01-10 00:00:00" itemprop="dateCreated datePublished" datetime="2020-01-10T00:00:00+08:00">2020-01-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/" itemprop="url" rel="index"><span itemprop="name">论文研读</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>本文学习几种胖树结构下的路由算法的学习笔记（未完待续……）</p>
+<a id="more"></a> 
+
+<h2 id="Min-Hop-Algorithm"><a href="#Min-Hop-Algorithm" class="headerlink" title="Min Hop Algorithm"></a>Min Hop Algorithm</h2><p>最小跃点算法，是OpenSM默认选择的算法</p>
+<p>算法总共有两步：</p>
+<ol>
+<li>在每个交换机上计算最小跳数路由表</li>
+<li>LFT（Linear Forward Table）输出端口分配，（我猜是写入路由表的意思）</li>
+</ol>
+<h2 id="UPDN-Algorithm"><a href="#UPDN-Algorithm" class="headerlink" title="UPDN Algorithm"></a>UPDN Algorithm</h2><p>参考：<a target="_blank" rel="noopener" href="https://community.mellanox.com/s/article/understanding-up-down-infiniband-routing-algorithm">https://community.mellanox.com/s/article/understanding-up-down-infiniband-routing-algorithm</a></p>
+<p><code>UPDN</code>还可以写作<code>Up/Down</code>、<code>UpDn</code>，都是一个东西，这里干脆就译做<code>单次升降算法</code></p>
+<p>该算法使用参数<code>--root_guid_file</code>指定根交换机的GUID的文件，算法也可以自动发现根交换机GUID，但是强烈建议手动指定，当根交换机被替换时，必须及时修改文件，在每个OpenSM节点上都必须有一份一样的。</p>
+<img src="/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/rtaImage.jpg" class="">
+
+<p>记刚刚使用<code>--root_guid_file</code>指定的根交换机为<code>Distance 0</code>组，与<code>Distance 0</code>组距离一跳的，划为<code>Distance 1</code>组，距离两跳的再划为<code>Distance 2</code>组，算法会不断迭代直到每个交换机都划到一个<code>Distance x</code>组中。上图就展示了一个3层链路网路。</p>
+<p>UPDN算法首先会调用广度优先生成树算法（BSFP Breadth-First Spanning Tree）。这个过程和以太网中的生成树协议（STP Spanning Tree Protocol）有些类似，但是不同的是：在这里会尽量的寻找尽可能多的可能的路径。所以在BSFP执行完后会得到每一对节点之间的所有可能的最短路径。接着UPDN算法会去掉这些最短路径中包含这样路径的路径：从<code>Distance N</code>到<code>Distance N+1</code>又到<code>Distance N</code>的路径，即含有”下上下“路径的路径。使用这种方法，可以避免环路。最将路径写入路由表。</p>
+<img src="/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/rtaImage.png" class="">
+
+<p>如上图所示，从E到F有两条路可走，但是红色的路径含有“下上下”的路径，故会被排除。也正是因为这样的特性，所以在有些情况下一对端点可能会没有路径。当OpenSM中的<code>calculate_missing_routes</code>属性设置为<code>TRUE</code>，OpenSM会自动监控，保证所有端点之间的连通性。下图就是一个例子</p>
+<img src="/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/rtaImage-1578058479607.png" class="">
+
+<p>根据UPDN算法的计算，点G和J之间会没有路径，当OpenSM中的<code>calculate_missing_routes</code>属性设置为<code>TRUE</code>，就会自动为其产生特殊路径。但是Mellanox建议您还是最好别这么连~</p>
+<p>UPDN算法和胖树结构的<strong>无信用环</strong>属性对于可靠的网络运行至关重要。</p>
+<p>由于UPDN算法产生的路由是静态的，不考虑任何的实际负载和网络流量状态，因此在一些情况下可能不是最优的。在UPDN算法和最小跳数算法算法中可以设置一个参数<code>scatter-ports</code>可以让为流量随机分配路径，这样往往可以让提高链路的利用率。该参数需要制定一个数作为随机数种子，建议使用质数。</p>
+<h2 id="Fat-tree-Routing-Algorithm"><a href="#Fat-tree-Routing-Algorithm" class="headerlink" title="Fat-tree Routing Algorithm"></a>Fat-tree Routing Algorithm</h2><p>参考：</p>
+<p><a target="_blank" rel="noopener" href="https://docs.mellanox.com/display/MLNXOFEDv461000/OpenSM#OpenSM-fatreeroutingalgorithmFat-treeRoutingAlgorithm">https://docs.mellanox.com/display/MLNXOFEDv461000/OpenSM#OpenSM-fatreeroutingalgorithmFat-treeRoutingAlgorithm</a></p>
+<p>Optimized InﬁnibandTM fat-tree routing for shift all-to-all communication patterns</p>
+<p>A Weighted Fat-Tree Routing Algorithm for Efficient Load-Balancing in Infini Band Enterprise Clusters</p>
+<p>胖树路由算法，是一种利于进行”shift”通信的算法，应该在网络是一个对称或者几乎对称的胖树结构时使用。胖树路由算法不仅支持”K叉N树“（K- ary-N-Trees），它可以支持非常数K，因为并不是每个叶子上都有节点。和UPDN算法一样，胖树路由算法也可以避免出现信用环和死锁。</p>
+<p>该算法以索引为顺序（indexing order）遍历整个网络结构，为每个交换机端口相连的节点的分配LID，从而产生相应的路由。连接到同一个叶交换机的的节点，它们的编号由交换机的端口决定（按端口编号递增）。对于每一个端口，该算法包含一个端口计数器（port usage counter），用来在一条路由被添加时选择一个最少使用的端口。如果有多个端口连接到相同的交换机，那么这些端口将形成一个端口组（port group）。因此，在添加一条路由时，会在所有的端口组中根据端口计数器，选择一个最少使用的端口。</p>
+<p>为端口（相连的节点）分配LID由递归的完成，并且是由叶交换机开始。在每次递归一层的时候：该算法遍历每一个节点到该层树根的路，并为每个LID在子树向下传播上行的路由，然后向上传播下行的路由。</p>
+<p><strong>不符合要求的拓扑会导致路由算法回退到最小跃点算法，当出现链路故障时也有可能出现</strong></p>
+<p>请注意，尽管胖树算法支持具有非整数CBB比率的树，但路由不会像整数CBB比率那样平衡。另外，尽管该算法允许叶子交换机具有任意数量的CA，但树越接近完全填充，shift通信模式将越有效。 通常，即使提供了根列表，拓扑也越接近纯对称的胖树，路由将越优化。</p>
+<p>该算法还将计算节点的索引顺序缓存了下来，在OpenSM日志文件的旁边。</p>
+<p>配置<code>io_guid_file</code>选项允许非计算节点配置在非叶交换机上，但是该算法并不赵峥这些节点之间的路由。</p>
+<h2 id="Adaptive-Routing-AR"><a href="#Adaptive-Routing-AR" class="headerlink" title="Adaptive Routing (AR)"></a>Adaptive Routing (AR)</h2><p>参考：</p>
+<p><a target="_blank" rel="noopener" href="https://community.mellanox.com/s/article/How-To-Configure-Adaptive-Routing-and-SHIELD-New">https://community.mellanox.com/s/article/How-To-Configure-Adaptive-Routing-and-SHIELD-New</a></p>
+<p><a target="_blank" rel="noopener" href="https://docs.mellanox.com/display/MLNXOFEDv451010/OpenSM#OpenSM-AdaptiveRoutingManager">https://docs.mellanox.com/display/MLNXOFEDv451010/OpenSM#OpenSM-AdaptiveRoutingManager</a></p>
+<p><a target="_blank" rel="noopener" href="https://community.mellanox.com/s/article/adaptive-routing-and-fall-back-routing">https://community.mellanox.com/s/article/adaptive-routing-and-fall-back-routing</a></p>
+<p>从一定意义上来说，自适应路由并不是OpenSM中支持的路由算法，而是以一个插件的形式存在的，在使用时OpenSM会以动态库的形式将其加载进来。</p>
+<p>自适应的路由算法有FLFR(Fast Link Fault Recovery and Notification)功能，从而能快速从故障中自动恢复。</p>
+<p>自适应路由让交换机根据端口的实时负载自动地选择路由的端口，在选择的时候有两种模式：</p>
+<ul>
+<li>Free AR: 在选择时不做任何限制</li>
+<li>Bounded AR: 交换机在同一次爆发流量中，路由不会改变，这可以大大减少包的乱序到达。</li>
+</ul>
+<p>OpenSM会首先会扫描所有交换机，以确定哪些交换机支持自适应路由，并在这些交换机上配置该功能。</p>
+<p>自适应路由管理器支持三种算法，这三种算法会生成AR group和 AR LFT（Linear Forwarding Tables）,从而让交换机在AR group中根据AR LFT和目标LID选择转发端口。三种算法如下：</p>
+<ul>
+<li>LAG：所有连接到同一个交换机的端口在同一个AR group中。该算法适用于任何在交换机之间有多个链路的的任何拓扑，尤其是在x,y,z方向上都有多条链路的3D torus/mesh拓扑。</li>
+<li>TREE：所有到目标点具有相同跳数的端口在同一个AR group中。该算法适用于树结构，例如胖树、quasi fat tree、parallel links fat tree。该算法必须与UPDN routing engine同时使用。</li>
+<li>DF_PLUS：Dragonfly plus 拓扑结构专用算法。</li>
+</ul>
+<p>Fast Link Fault Recovery (FLFR) 让交换机能够在某个输出端口状态不正常时，在其他的多个输出端口之间动态选择。该功能能够在发生端口错误和断连时进行快速流量恢复，而不需要OpenSM的参与，同时还能转告相邻的交换机，尽量不把相关流量转发过来。</p>
+<h2 id="其他路由算法"><a href="#其他路由算法" class="headerlink" title="其他路由算法"></a>其他路由算法</h2><p>OpenSM自带的路由算法还有：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.mellanox.com/display/MLNXOFEDv461000/OpenSM#OpenSM-LASHLASHRoutingAlgorithm">LASH Routing Algorithm</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.mellanox.com/display/MLNXOFEDv461000/OpenSM#OpenSM-DORDORRoutingAlgorithm">DOR Routing Algorithm</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.mellanox.com/display/MLNXOFEDv461000/OpenSM#OpenSM-Torus-2QoSTorus-2QoSRoutingAlgorithm">Torus-2QoS Routing Algorithm</a></li>
+</ul>
+<p>在此忽略</p>
+<p>另外<a target="_blank" rel="noopener" href="https://docs.mellanox.com/display/MLNXOFEDv461000/OpenSM#OpenSM-routingchainsRoutingChains">Routing Chains</a>功能还提供了使用其他路由引擎的接口</p>
+<h2 id="Fat-tree-路由算法的改进工作研究"><a href="#Fat-tree-路由算法的改进工作研究" class="headerlink" title="Fat-tree 路由算法的改进工作研究"></a>Fat-tree 路由算法的改进工作研究</h2><h3 id="A-Weighted-Fat-Tree-Routing-Algorithm-for-Efficient-Load-Balancing-in-Infini-Band-Enterprise-Clusters"><a href="#A-Weighted-Fat-Tree-Routing-Algorithm-for-Efficient-Load-Balancing-in-Infini-Band-Enterprise-Clusters" class="headerlink" title="A Weighted Fat-Tree Routing Algorithm for Efficient Load-Balancing in Infini Band Enterprise Clusters"></a>A Weighted Fat-Tree Routing Algorithm for Efficient Load-Balancing in Infini Band Enterprise Clusters</h3><p>该论文指出fat-tree算法有两个主要的缺陷：</p>
+<ol>
+<li><p>难以发现的负载不均衡：该算法使用的负载均衡方法未考虑任何的节点流量特征。简单来说，它假设网络中的所有节点都有相同的权重。但是在现代HPC集群，有些节点扮演的特殊角色决定了他们的流量特征。例如存储节点和IO转发节点会比其他节点产生更多的流量。因此与这些特殊节点的通信经常会被阻塞，所以这时候就需要一个带有优先级的负载均衡算法。</p>
+</li>
+<li><p>不稳定的性能：因为该算法以索引为顺序（indexing order）遍历整个网络结构，然而它的索引顺序是不能被设置的，并且由叶交换机端口号决定。这就导致了以相同方式布线的胖树结构可能会出现不同且不可预测的性能。比如，在一个二层胖树结构，在不同叶交换机上的两个节点共享了同一个索引顺序，那么这两个节点将被路由到相同的根交换机，因此，所有从其他叶交换机发向这两个节点的流量，都将竞争连接到同一个根交换机的一组上行链路，即使有其他的几条通过其他根交换机的轻负载链路。</p>
+<p>在下图中有颜色的节点1、6、10、13是接收节点，将会接收大量的网络流量。每个叶交换机都连接到了4个根交换机。假设索引顺序从左向右递增，节点1-13，6-10在叶交换机有相同的index位置（1和2）。该算法会将这四个节点的流量都路由到左边两个交换机上。这将导致图中标红的4条链路出现较多流量，图中的<code>Up&#123;a,b&#125;</code>表示发送到节点a和b的流量会被计入这条链路的带宽。因此，虽然有足够的链路能让发送到节点a和b的流量互不干扰，但是该算法并不会这样选择。</p>
+<img src="/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/image-20200104085502238.png" class="">
+
+<p>一个理想的情况应该是如下图所示的，各条流量之间都互不干扰。</p>
+<img src="/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/image-20200104104919514.png" class="">
+
+</li>
+</ol>
+<h3 id="On-the-Impact-of-Routing-Algorithms-in-the-Effectiveness-of-Queuing-Schemes-in-High-Performance-Interconnection-Networks"><a href="#On-the-Impact-of-Routing-Algorithms-in-the-Effectiveness-of-Queuing-Schemes-in-High-Performance-Interconnection-Networks" class="headerlink" title="On the Impact of Routing Algorithms in the Effectiveness of Queuing Schemes in High-Performance Interconnection Networks"></a>On the Impact of Routing Algorithms in the Effectiveness of Queuing Schemes in High-Performance Interconnection Networks</h3><p><a target="_blank" rel="noopener" href="https://www.semanticscholar.org/paper/On-the-Impact-of-Routing-Algorithms-in-the-of-in-Rocher-Gonzalez-Escudero-Sahuquillo/14d341667c071ad3a4c8729e39c8d38b36e690e5">On the Impact of Routing Algorithms in the Effectiveness of Queuing Schemes in High-Performance Interconnection Networks</a></p>
+<p>貌似是研究交换机中的包的缓存策略的，似乎无关。</p>
+<h3 id="Multistage-Switches-are-not-Crossbars-Effects-of-Static-Routing-in-High-Performance-Networks"><a href="#Multistage-Switches-are-not-Crossbars-Effects-of-Static-Routing-in-High-Performance-Networks" class="headerlink" title="Multistage Switches are not Crossbars: Effects of Static Routing in High-Performance Networks"></a>Multistage Switches are not Crossbars: Effects of Static Routing in High-Performance Networks</h3><p><a target="_blank" rel="noopener" href="https://www.researchgate.net/publication/221201591_Multistage_Switches_are_not_Crossbars_Effects_of_Static_Routing_in_High-Performance_Networks">Multistage Switches are not Crossbars: Effects of Static Routing in High-Performance Networks</a></p>
+<p>貌似相关，但是非常老，2008年的了，还没看。</p>
+<h2 id="未读论文"><a href="#未读论文" class="headerlink" title="未读论文"></a>未读论文</h2><p><a target="_blank" rel="noopener" href="https://www.semanticscholar.org/paper/Efficient-Congestion-Management-for-High-Speed-Rocher-Gonzalez-Escudero-Sahuquillo/7c9d45a2063fdba7d3548aaddf2ebc44e1b79871">Efficient Congestion Management for High-Speed Interconnects using Adaptive Routing</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.researchgate.net/publication/259132161_A_new_proposal_to_deal_with_congestion_in_InfiniBand-based_fat-trees">A new proposal to deal with congestion in InfiniBand-based fat-trees</a></p>
+<p>下载不到</p>
+<p><a target="_blank" rel="noopener" href="https://www.researchgate.net/publication/335186544_Efficient_Dynamic_Isolation_of_Congestion_in_Lossless_DataCenter_Networks">Efficient Dynamic Isolation of Congestion in Lossless DataCenter Networks</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.researchgate.net/publication/262283002_Bandwidth-optimal_all-to-all_exchanges_in_fat_tree_networks">Bandwidth-optimal all-to-all exchanges in fat tree networks</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.researchgate.net/publication/277648069_Quasi_Fat_Trees_for_HPC_Clouds_and_Their_Fault-Resilient_Closed-Form_Routing">Quasi Fat Trees for HPC Clouds and Their Fault-Resilient Closed-Form Routing</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.researchgate.net/publication/232618040_Optimized_Routing_for_Large-Scale_InfiniBand_Networks">Optimized Routing for Large-Scale InfiniBand Networks</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.researchgate.net/publication/230802101_Congestion_avoidance_on_manycore_high_performance_computing_systems">Congestion avoidance on manycore high performance computing systems</a> - Panda</p>
+<p><a target="_blank" rel="noopener" href="https://www.researchgate.net/publication/261961220_Multi-homed_Fat-Tree_Routing_with_InfiniBand">Multi-homed Fat-Tree Routing with InfiniBand</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.researchgate.net/publication/221041288_Achieving_Predictable_High_Performance_in_Imbalanced_Fat_Trees">Achieving Predictable High Performance in Imbalanced Fat Trees</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.researchgate.net/publication/332532491_Combining_Source-adaptive_and_Oblivious_Routing_with_Congestion_Control_in_High-performance_Interconnects_using_Hybrid_and_Direct_Topologies">Combining Source-adaptive and Oblivious Routing with Congestion Control in High-performance Interconnects using Hybrid and Direct Topologies</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.researchgate.net/publication/318409269_Preliminary_Performance_Analysis_of_Multi-rail_Fat-Tree_Networks">Preliminary Performance Analysis of Multi-rail Fat-Tree Networks</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.researchgate.net/publication/315365328_Scheduling-Aware_Routing_for_Supercomputers">Scheduling-Aware Routing for Supercomputers</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.researchgate.net/publication/220953591_The_impact_of_network_noise_at_large-scale_communication_performance">The impact of network noise at large-scale communication performance</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Fat-tree/" rel="tag"># Fat-tree</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Linux/%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/%E5%9C%A8Linux%E4%B8%8A%E4%BD%BF%E7%94%A8Onedrive/" rel="prev" title="在Linux上使用OneDrive">
+                  <i class="fa fa-chevron-left"></i> 在Linux上使用OneDrive
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Benchmark/%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8CmpiGraph%E6%B5%8B%E8%AF%95/" rel="next" title="如何进行mpiGraph测试">
+                  如何进行mpiGraph测试 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

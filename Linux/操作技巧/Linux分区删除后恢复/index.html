@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要因为一些缘故，一个数据分区被删除了，然后系统分区被重装了（并没有覆盖到数据分区），本文介绍如何进行分区恢复">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux分区删除后恢复">
+<meta property="og:url" content="http://blog.sysu.tech/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要因为一些缘故，一个数据分区被删除了，然后系统分区被重装了（并没有覆盖到数据分区），本文介绍如何进行分区恢复">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282095440.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282110125.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282130145.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282140264.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282152610.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282181435.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282197584.png">
+<meta property="article:published_time" content="2019-10-16T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.175Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="testdisk">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282095440.png">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>Linux分区删除后恢复 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85testdisk"><span class="nav-number">2.</span> <span class="nav-text">安装testdisk</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8testdisk%E9%87%8D%E5%BB%BA%E5%88%86%E5%8C%BA%E8%A1%A8"><span class="nav-number">3.</span> <span class="nav-text">使用testdisk重建分区表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8fsck-ext4%E4%BF%AE%E5%A4%8D%E5%88%86%E5%8C%BA"><span class="nav-number">4.</span> <span class="nav-text">使用fsck.ext4修复分区</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux分区删除后恢复
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-10-17 00:00:00" itemprop="dateCreated datePublished" datetime="2019-10-17T00:00:00+08:00">2019-10-17</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/" itemprop="url" rel="index"><span itemprop="name">操作技巧</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>因为一些缘故，一个数据分区被删除了，然后系统分区被重装了（并没有覆盖到数据分区），本文介绍如何进行分区恢复</p>
+<a id="more"></a> 
+
+<h2 id="安装testdisk"><a href="#安装testdisk" class="headerlink" title="安装testdisk"></a>安装testdisk</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">yum <span class="token function">install</span> libewf-20140608-1.el7.1.x86_64.rpm ntfs-3g-2017.3.23-11.el7.x86_64.rpm testdisk-7.1-1.el7.x86_64.rpm<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h2 id="使用testdisk重建分区表"><a href="#使用testdisk重建分区表" class="headerlink" title="使用testdisk重建分区表"></a>使用testdisk重建分区表</h2><ol>
+<li>命令行重直接键入<code>testdisk</code>，出现如下页面，默认选择<code>Create</code>，直接敲<code>Enter</code>即可</li>
+</ol>
+<img src="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282095440.png" class="">
+
+<ol start="2">
+<li>选择要进行恢复的盘，我这只有一块盘，所以直接<code>Enter</code></li>
+</ol>
+<img src="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282110125.png" class="">
+
+<ol start="3">
+<li>选择分区类型，这里选择<code>Intel</code>类型的分区表类型</li>
+</ol>
+<img src="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282130145.png" class="">
+
+<ol start="4">
+<li>默认选择<code>Analyse</code>，默认选择<code>Enter</code>，然后会先显示分区表</li>
+</ol>
+<img src="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282140264.png" class="">
+
+<ol start="5">
+<li>默认选择<code>Quick Search</code>，直接<code>Enter</code>，会分析出来丢失的分区</li>
+</ol>
+<img src="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282152610.png" class="">
+
+<ol start="6">
+<li>分析出来了丢失的分区，直接<code>Enter</code>继续</li>
+</ol>
+<img src="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282181435.png" class="">
+
+<ol start="7">
+<li>选择<code>Write</code>写入分区表，然后会确认，键入<code>Y</code>即可</li>
+</ol>
+<img src="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/1571282197584.png" class="">
+
+<ol start="8">
+<li>然后一直选<code>Quit</code>退出</li>
+<li>重启系统</li>
+</ol>
+<h2 id="使用fsck-ext4修复分区"><a href="#使用fsck-ext4修复分区" class="headerlink" title="使用fsck.ext4修复分区"></a>使用fsck.ext4修复分区</h2><p>重启后（其实不重启也）能通过<code>fdisk -l</code>看到已经找回来的分区，</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token comment"># fdisk -l</span>
+
+Disk /dev/sda: <span class="token number">999.7</span> GB, <span class="token number">999653638144</span> bytes, <span class="token number">1952448512</span> sectors
+Units <span class="token operator">=</span> sectors of <span class="token number">1</span> * <span class="token number">512</span> <span class="token operator">=</span> <span class="token number">512</span> bytes
+Sector size <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: <span class="token number">512</span> bytes / <span class="token number">512</span> bytes
+I/O size <span class="token punctuation">(</span>minimum/optimal<span class="token punctuation">)</span>: <span class="token number">512</span> bytes / <span class="token number">512</span> bytes
+Disk label type: dos
+Disk identifier: 0x000e6536
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *        <span class="token number">2048</span>     <span class="token number">4196351</span>     <span class="token number">2097152</span>   <span class="token number">83</span>  Linux
+/dev/sda2         <span class="token number">4196352</span>   <span class="token number">213911551</span>   <span class="token number">104857600</span>   <span class="token number">83</span>  Linux
+/dev/sda3       <span class="token number">213911552</span>  <span class="token number">1952448511</span>   <span class="token number">869268480</span>   <span class="token number">83</span>  Linux<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>但是还是无法挂载，需要用<code>fsck.ext4</code>来先检查一下</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token comment"># fsck.ext4 -n -v /dev/sda3</span>
+e2fsck <span class="token number">1.42</span>.9 <span class="token punctuation">(</span><span class="token number">28</span>-Dec-2013<span class="token punctuation">)</span>
+ext2fs_open2: Bad magic number <span class="token keyword">in</span> super-block
+fsck.ext4: Superblock invalid, trying backup blocks<span class="token punctuation">..</span>.
+/dev/sda3 was not cleanly unmounted, check forced.
+Pass <span class="token number">1</span>: Checking inodes, blocks, and sizes
+Pass <span class="token number">2</span>: Checking directory structure
+Pass <span class="token number">3</span>: Checking directory connectivity
+Pass <span class="token number">4</span>: Checking reference counts
+Pass <span class="token number">5</span>: Checking group summary information
+Free blocks count wrong <span class="token keyword">for</span> group <span class="token comment">#86 (32768, counted=0).</span>
+Fix? no
+
+Free blocks count wrong <span class="token keyword">for</span> group <span class="token comment">#87 (32768, counted=0).</span>
+Fix? no
+
+Free blocks count wrong <span class="token keyword">for</span> group <span class="token comment">#88 (32768, counted=0).</span>
+Fix? no
+
+<span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span>
+
+Free inodes count wrong <span class="token keyword">for</span> group <span class="token comment">#6144 (8192, counted=8191).</span>
+Fix? no
+
+Directories count wrong <span class="token keyword">for</span> group <span class="token comment">#6144 (0, counted=1).</span>
+Fix? no
+
+Free inodes count wrong <span class="token punctuation">(</span><span class="token number">54329333</span>, <span class="token assign-left variable">counted</span><span class="token operator">=</span><span class="token number">54329326</span><span class="token punctuation">)</span>.
+Fix? no
+
+
+/dev/sda3: ********** WARNING: Filesystem still has errors **********
+
+
+          <span class="token number">11</span> inodes used <span class="token punctuation">(</span><span class="token number">0.00</span>%, out of <span class="token number">54329344</span><span class="token punctuation">)</span>
+           <span class="token number">0</span> non-contiguous files <span class="token punctuation">(</span><span class="token number">0.0</span>%<span class="token punctuation">)</span>
+           <span class="token number">0</span> non-contiguous directories <span class="token punctuation">(</span><span class="token number">0.0</span>%<span class="token punctuation">)</span>
+             <span class="token comment"># of inodes with ind/dind/tind blocks: 0/0/0</span>
+             Extent depth histogram: <span class="token number">8</span>/2
+     <span class="token number">3463073</span> blocks used <span class="token punctuation">(</span><span class="token number">1.59</span>%, out of <span class="token number">217317120</span><span class="token punctuation">)</span>
+           <span class="token number">0</span> bad blocks
+           <span class="token number">2</span> large files
+
+           <span class="token number">5</span> regular files
+           <span class="token number">4</span> directories
+           <span class="token number">0</span> character device files
+           <span class="token number">0</span> block device files
+           <span class="token number">0</span> fifos
+           <span class="token number">0</span> links
+           <span class="token number">0</span> symbolic links <span class="token punctuation">(</span><span class="token number">0</span> fast symbolic links<span class="token punctuation">)</span>
+           <span class="token number">0</span> sockets
+------------
+           <span class="token number">9</span> files<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>然后会提示该分区中有很多的错误</p>
+<p>然后使用<code>fsck.ext4 -y -v /dev/sda3</code>进行修复</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token comment"># fsck.ext4 -y -v /dev/sda3</span>
+e2fsck <span class="token number">1.42</span>.9 <span class="token punctuation">(</span><span class="token number">28</span>-Dec-2013<span class="token punctuation">)</span>
+ext2fs_open2: Bad magic number <span class="token keyword">in</span> super-block
+fsck.ext4: Superblock invalid, trying backup blocks<span class="token punctuation">..</span>.
+/dev/sda3 was not cleanly unmounted, check forced.
+Pass <span class="token number">1</span>: Checking inodes, blocks, and sizes
+Pass <span class="token number">2</span>: Checking directory structure
+Pass <span class="token number">3</span>: Checking directory connectivity
+Pass <span class="token number">4</span>: Checking reference counts
+Pass <span class="token number">5</span>: Checking group summary information
+Free blocks count wrong <span class="token keyword">for</span> group <span class="token comment">#86 (32768, counted=0).</span>
+Fix? <span class="token function">yes</span>
+
+Free blocks count wrong <span class="token keyword">for</span> group <span class="token comment">#87 (32768, counted=0).</span>
+Fix? <span class="token function">yes</span>
+
+<span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span>
+
+Directories count wrong <span class="token keyword">for</span> group <span class="token comment">#6144 (0, counted=1).</span>
+Fix? <span class="token function">yes</span>
+
+Free inodes count wrong <span class="token punctuation">(</span><span class="token number">54329333</span>, <span class="token assign-left variable">counted</span><span class="token operator">=</span><span class="token number">54329326</span><span class="token punctuation">)</span>.
+Fix? <span class="token function">yes</span>
+
+
+/dev/sda3: ***** FILE SYSTEM WAS MODIFIED *****
+
+          <span class="token number">18</span> inodes used <span class="token punctuation">(</span><span class="token number">0.00</span>%, out of <span class="token number">54329344</span><span class="token punctuation">)</span>
+           <span class="token number">0</span> non-contiguous files <span class="token punctuation">(</span><span class="token number">0.0</span>%<span class="token punctuation">)</span>
+           <span class="token number">0</span> non-contiguous directories <span class="token punctuation">(</span><span class="token number">0.0</span>%<span class="token punctuation">)</span>
+             <span class="token comment"># of inodes with ind/dind/tind blocks: 0/0/0</span>
+             Extent depth histogram: <span class="token number">8</span>/2
+     <span class="token number">6556189</span> blocks used <span class="token punctuation">(</span><span class="token number">3.02</span>%, out of <span class="token number">217317120</span><span class="token punctuation">)</span>
+           <span class="token number">0</span> bad blocks
+           <span class="token number">2</span> large files
+
+           <span class="token number">5</span> regular files
+           <span class="token number">4</span> directories
+           <span class="token number">0</span> character device files
+           <span class="token number">0</span> block device files
+           <span class="token number">0</span> fifos
+           <span class="token number">0</span> links
+           <span class="token number">0</span> symbolic links <span class="token punctuation">(</span><span class="token number">0</span> fast symbolic links<span class="token punctuation">)</span>
+           <span class="token number">0</span> sockets
+------------
+           <span class="token number">9</span> files<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>最后就能成功挂载了，没有报错，能读到之前的文件</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">mount</span> /dev/sda3 local-disk/<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/testdisk/" rel="tag"># testdisk</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%99%9A%E6%8B%9F%E5%8C%96%E7%9A%84%E7%A0%94%E7%A9%B6%E7%8E%B0%E7%8A%B6%E4%B8%8E%E5%B1%95%E6%9C%9B/" rel="prev" title="操作系统虚拟化的研究现状与展望">
+                  <i class="fa fa-chevron-left"></i> 操作系统虚拟化的研究现状与展望
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Hexo/%E4%BD%BF%E7%94%A8DOCKER%E9%83%A8%E7%BD%B2HEXO/" rel="next" title="使用Docker部署Hexo">
+                  使用Docker部署Hexo <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

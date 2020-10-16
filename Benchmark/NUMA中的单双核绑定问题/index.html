@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要最近在使用戴尔R740服务器时发现这个机器NUMA默认是单双核绑定的，且没有办法更改，在使用时带来了较多的不便，这里主要记录一些关于进程绑定与ID的情报。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NUMA中的单双核绑定问题">
+<meta property="og:url" content="http://blog.sysu.tech/Benchmark/NUMA%E4%B8%AD%E7%9A%84%E5%8D%95%E5%8F%8C%E6%A0%B8%E7%BB%91%E5%AE%9A%E9%97%AE%E9%A2%98/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要最近在使用戴尔R740服务器时发现这个机器NUMA默认是单双核绑定的，且没有办法更改，在使用时带来了较多的不便，这里主要记录一些关于进程绑定与ID的情报。">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/Benchmark/NUMA%E4%B8%AD%E7%9A%84%E5%8D%95%E5%8F%8C%E6%A0%B8%E7%BB%91%E5%AE%9A%E9%97%AE%E9%A2%98/numa-1570197793696.png">
+<meta property="article:published_time" content="2019-10-03T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.064Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Benchmark">
+<meta property="article:tag" content="NUMA">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/Benchmark/NUMA%E4%B8%AD%E7%9A%84%E5%8D%95%E5%8F%8C%E6%A0%B8%E7%BB%91%E5%AE%9A%E9%97%AE%E9%A2%98/numa-1570197793696.png">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Benchmark/NUMA%E4%B8%AD%E7%9A%84%E5%8D%95%E5%8F%8C%E6%A0%B8%E7%BB%91%E5%AE%9A%E9%97%AE%E9%A2%98/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>NUMA中的单双核绑定问题 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NUMA%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">2.</span> <span class="nav-text">NUMA是什么</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E6%9C%89NUMA"><span class="nav-number">2.0.1.</span> <span class="nav-text">为什么要有NUMA</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#NUMA%E6%98%AF%E4%BB%80%E4%B9%88-1"><span class="nav-number">2.0.2.</span> <span class="nav-text">NUMA是什么</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%88%91%E4%BB%AC%E9%9C%80%E8%A6%81%E4%B8%BANUMA%E5%81%9A%E4%BB%80%E4%B9%88"><span class="nav-number">2.0.3.</span> <span class="nav-text">我们需要为NUMA做什么</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83"><span class="nav-number">3.</span> <span class="nav-text">环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%A0%E4%B8%AA%E9%87%8D%E8%A6%81%E7%9A%84%E5%91%BD%E4%BB%A4%E4%B8%ADCPU%E7%BC%96%E5%8F%B7%E4%B8%8E%E7%89%A9%E7%90%86%E6%A0%B8%E7%9A%84%E5%AF%B9%E5%BA%94%E5%85%B3%E7%B3%BB"><span class="nav-number">4.</span> <span class="nav-text">几个重要的命令中CPU编号与物理核的对应关系</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AC%E6%96%87%E4%B8%AD%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="nav-number">4.1.</span> <span class="nav-text">本文中的定义</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E7%BC%96%E5%8F%B7"><span class="nav-number">4.1.1.</span> <span class="nav-text">物理编号</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%BB%E8%BE%91%E7%BC%96%E5%8F%B7"><span class="nav-number">4.1.2.</span> <span class="nav-text">逻辑编号</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#lscpu"><span class="nav-number">4.2.</span> <span class="nav-text">lscpu</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#hwloc-ls-v"><span class="nav-number">4.3.</span> <span class="nav-text">hwloc-ls -v</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E4%BD%BF%E7%94%A8%E6%97%B6%E8%A7%82%E5%AF%9F%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">5.</span> <span class="nav-text">在使用时观察到的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%BA%E5%88%86%E7%89%A9%E7%90%86%E7%BC%96%E5%8F%B7%E5%92%8C%E9%80%BB%E8%BE%91%E7%BC%96%E5%8F%B7"><span class="nav-number">5.1.</span> <span class="nav-text">区分物理编号和逻辑编号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E7%BB%91%E6%A0%B8%E9%97%AE%E9%A2%98"><span class="nav-number">5.2.</span> <span class="nav-text">应用绑核问题</span></a></li></ol></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Benchmark/NUMA%E4%B8%AD%E7%9A%84%E5%8D%95%E5%8F%8C%E6%A0%B8%E7%BB%91%E5%AE%9A%E9%97%AE%E9%A2%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          NUMA中的单双核绑定问题
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-10-04 00:00:00" itemprop="dateCreated datePublished" datetime="2019-10-04T00:00:00+08:00">2019-10-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Benchmark/" itemprop="url" rel="index"><span itemprop="name">Benchmark</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>最近在使用戴尔R740服务器时发现这个机器NUMA默认是单双核绑定的，且没有办法更改，在使用时带来了较多的不便，这里主要记录一些关于进程绑定与ID的情报。</p>
+<a id="more"></a> 
+
+<h2 id="NUMA是什么"><a href="#NUMA是什么" class="headerlink" title="NUMA是什么"></a>NUMA是什么</h2><p>摘自<a target="_blank" rel="noopener" href="http://cenalulu.github.io/linux/numa/">http://cenalulu.github.io/linux/numa/</a></p>
+<blockquote>
+<h4 id="为什么要有NUMA"><a href="#为什么要有NUMA" class="headerlink" title="为什么要有NUMA"></a>为什么要有NUMA</h4><p>在NUMA架构出现前，CPU欢快的朝着频率越来越高的方向发展。受到物理极限的挑战，又转为核数越来越多的方向发展。如果每个core的工作性质都是share-nothing（类似于map-reduce的node节点的作业属性），那么也许就不会有NUMA。由于所有CPU Core都是通过共享一个北桥来读取内存，随着核数如何的发展，北桥在响应时间上的性能瓶颈越来越明显。于是，聪明的硬件设计师们，先到了把内存控制器（原本北桥中读取内存的部分）也做个拆分，平分到了每个die上。于是NUMA就出现了！</p>
+<h4 id="NUMA是什么-1"><a href="#NUMA是什么-1" class="headerlink" title="NUMA是什么"></a>NUMA是什么</h4><p>NUMA中，虽然内存直接attach在CPU上，但是由于内存被平均分配在了各个die上。只有当CPU访问自身直接attach内存对应的物理地址时，才会有较短的响应时间（后称<code>Local Access</code>）。而如果需要访问其他CPU attach的内存的数据时，就需要通过inter-connect通道访问，响应时间就相比之前变慢了（后称<code>Remote Access</code>）。所以NUMA（Non-Uniform Memory Access）就此得名。</p>
+<img src="/Benchmark/NUMA%E4%B8%AD%E7%9A%84%E5%8D%95%E5%8F%8C%E6%A0%B8%E7%BB%91%E5%AE%9A%E9%97%AE%E9%A2%98/numa-1570197793696.png" class="">
+
+<h4 id="我们需要为NUMA做什么"><a href="#我们需要为NUMA做什么" class="headerlink" title="我们需要为NUMA做什么"></a>我们需要为NUMA做什么</h4><p>假设你是Linux教父Linus，对于NUMA架构你会做哪些优化？下面这点是显而易见的：</p>
+<blockquote>
+<p>既然CPU只有在Local-Access时响应时间才能有保障，那么我们就尽量把该CPU所要的数据集中在他local的内存中就OK啦~</p>
+</blockquote>
+<p>没错，事实上Linux识别到NUMA架构后，默认的内存分配方案就是：优先尝试在请求线程当前所处的CPU的Local内存上分配空间。如果local内存不足，优先淘汰local内存中无用的Page（Inactive，Unmapped）。</p>
+</blockquote>
+<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><p>服务器：戴尔 R740双路服务器</p>
+<p>CPU： Intel Xeon Gold 6150 CPU @ 2.70GHz （18核）</p>
+<p>内存：12通道，24各内存插槽各插有一根8G内存</p>
+<h2 id="几个重要的命令中CPU编号与物理核的对应关系"><a href="#几个重要的命令中CPU编号与物理核的对应关系" class="headerlink" title="几个重要的命令中CPU编号与物理核的对应关系"></a>几个重要的命令中CPU编号与物理核的对应关系</h2><h3 id="本文中的定义"><a href="#本文中的定义" class="headerlink" title="本文中的定义"></a>本文中的定义</h3><h4 id="物理编号"><a href="#物理编号" class="headerlink" title="物理编号"></a>物理编号</h4><p>指同一台物理机上两个CPU的核按顺序编号，即第一个CPU的18个核心标号从0-17，第二个CPU的18个核心编号18-35。</p>
+<h4 id="逻辑编号"><a href="#逻辑编号" class="headerlink" title="逻辑编号"></a>逻辑编号</h4><p>指在操作系统中看到的CPU的裸机编号，即在<code>/proc/cpuinfo</code>中的<code>processor</code>编号，和<code>top</code>或者<code>htop</code>中看到的编号</p>
+<h3 id="lscpu"><a href="#lscpu" class="headerlink" title="lscpu"></a><code>lscpu</code></h3><pre class="line-numbers language-none"><code class="language-none">Architecture:          x86_64
+CPU op-mode(s):        32-bit, 64-bit
+Byte Order:            Little Endian
+CPU(s):                36
+On-line CPU(s) list:   0-35
+Thread(s) per core:    1
+Core(s) per socket:    18
+Socket(s):             2
+NUMA node(s):          2
+Vendor ID:             GenuineIntel
+CPU family:            6
+Model:                 85
+Model name:            Intel(R) Xeon(R) Gold 6150 CPU @ 2.70GHz
+Stepping:              4
+CPU MHz:               2700.000
+BogoMIPS:              5400.00
+Virtualization:        VT-x
+L1d cache:             32K
+L1i cache:             32K
+L2 cache:              1024K
+L3 cache:              25344K
+NUMA node0 CPU(s):     0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34
+NUMA node1 CPU(s):     1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35
+Flags:                 fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch epb cat_l3 cdp_l3 intel_ppin intel_pt ssbd mba ibrs ibpb stibp tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm cqm mpx rdt_a avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xgetbv1 cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local dtherm ida arat pln pts pku ospke spec_ctrl intel_stibp flush_l1d<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>可以从<code>NUMA node*</code>中看出，这台机器时单双核绑定的，注意这里编号，是两个CPU计算核心的编号，即第一个CPU中的18个核从0到17编号，第二个CPU的18个核从18-35编号。</p>
+<h3 id="hwloc-ls-v"><a href="#hwloc-ls-v" class="headerlink" title="hwloc-ls -v"></a><code>hwloc-ls -v</code></h3><pre class="line-numbers language-none"><code class="language-none">NUMANode L#0 (P#0 local&#x3D;99292588KB total&#x3D;99292588KB)
+  Package L#0 (P#0 CPUVendor&#x3D;GenuineIntel CPUFamilyNumber&#x3D;6 CPUModelNumber&#x3D;85 CPUModel&#x3D;&quot;Intel(R) Xeon(R) Gold 6150 CPU @ 2.70GHz&quot; CPUStepping&#x3D;4)
+    L3Cache L#0 (size&#x3D;25344KB linesize&#x3D;64 ways&#x3D;11 Inclusive&#x3D;0)
+      L2Cache L#0 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#0 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#0 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#0 (P#0)
+              PU L#0 (P#0)
+      L2Cache L#1 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#1 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#1 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#1 (P#4)
+              PU L#1 (P#2)
+      L2Cache L#2 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#2 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#2 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#2 (P#1)
+              PU L#2 (P#4)
+      L2Cache L#3 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#3 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#3 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#3 (P#3)
+              PU L#3 (P#6)
+      L2Cache L#4 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#4 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#4 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#4 (P#2)
+              PU L#4 (P#8)
+      L2Cache L#5 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#5 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#5 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#5 (P#11)
+              PU L#5 (P#10)
+      L2Cache L#6 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#6 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#6 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#6 (P#8)
+              PU L#6 (P#12)
+      L2Cache L#7 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#7 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#7 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#7 (P#10)
+              PU L#7 (P#14)
+      L2Cache L#8 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#8 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#8 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#8 (P#9)
+              PU L#8 (P#16)
+      L2Cache L#9 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#9 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#9 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#9 (P#20)
+              PU L#9 (P#18)
+      L2Cache L#10 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#10 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#10 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#10 (P#16)
+              PU L#10 (P#20)
+      L2Cache L#11 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#11 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#11 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#11 (P#19)
+              PU L#11 (P#22)
+      L2Cache L#12 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#12 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#12 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#12 (P#17)
+              PU L#12 (P#24)
+      L2Cache L#13 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#13 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#13 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#13 (P#18)
+              PU L#13 (P#26)
+      L2Cache L#14 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#14 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#14 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#14 (P#24)
+              PU L#14 (P#28)
+      L2Cache L#15 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#15 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#15 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#15 (P#27)
+              PU L#15 (P#30)
+      L2Cache L#16 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#16 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#16 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#16 (P#25)
+              PU L#16 (P#32)
+      L2Cache L#17 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#17 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#17 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#17 (P#26)
+              PU L#17 (P#34)
+NUMANode L#1 (P#1 local&#x3D;100663296KB total&#x3D;100663296KB)
+  Package L#1 (P#1 CPUVendor&#x3D;GenuineIntel CPUFamilyNumber&#x3D;6 CPUModelNumber&#x3D;85 CPUModel&#x3D;&quot;Intel(R) Xeon(R) Gold 6150 CPU @ 2.70GHz&quot; CPUStepping&#x3D;4)
+    L3Cache L#1 (size&#x3D;25344KB linesize&#x3D;64 ways&#x3D;11 Inclusive&#x3D;0)
+      L2Cache L#18 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#18 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#18 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#18 (P#0)
+              PU L#18 (P#1)
+      L2Cache L#19 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#19 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#19 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#19 (P#4)
+              PU L#19 (P#3)
+      L2Cache L#20 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#20 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#20 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#20 (P#1)
+              PU L#20 (P#5)
+      L2Cache L#21 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#21 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#21 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#21 (P#3)
+              PU L#21 (P#7)
+      L2Cache L#22 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#22 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#22 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#22 (P#2)
+              PU L#22 (P#9)
+      L2Cache L#23 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#23 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#23 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#23 (P#11)
+              PU L#23 (P#11)
+      L2Cache L#24 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#24 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#24 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#24 (P#8)
+              PU L#24 (P#13)
+      L2Cache L#25 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#25 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#25 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#25 (P#10)
+              PU L#25 (P#15)
+      L2Cache L#26 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#26 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#26 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#26 (P#9)
+              PU L#26 (P#17)
+      L2Cache L#27 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#27 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#27 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#27 (P#20)
+              PU L#27 (P#19)
+      L2Cache L#28 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#28 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#28 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#28 (P#16)
+              PU L#28 (P#21)
+      L2Cache L#29 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#29 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#29 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#29 (P#19)
+              PU L#29 (P#23)
+      L2Cache L#30 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#30 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#30 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#30 (P#17)
+              PU L#30 (P#25)
+      L2Cache L#31 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#31 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#31 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#31 (P#18)
+              PU L#31 (P#27)
+      L2Cache L#32 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#32 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#32 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#32 (P#24)
+              PU L#32 (P#29)
+      L2Cache L#33 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#33 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#33 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#33 (P#27)
+              PU L#33 (P#31)
+      L2Cache L#34 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#34 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#34 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#34 (P#25)
+              PU L#34 (P#33)
+      L2Cache L#35 (size&#x3D;1024KB linesize&#x3D;64 ways&#x3D;16 Inclusive&#x3D;0)
+        L1dCache L#35 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+          L1iCache L#35 (size&#x3D;32KB linesize&#x3D;64 ways&#x3D;8 Inclusive&#x3D;0)
+            Core L#35 (P#26)
+              PU L#35 (P#35)<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="在使用时观察到的问题"><a href="#在使用时观察到的问题" class="headerlink" title="在使用时观察到的问题"></a>在使用时观察到的问题</h2><h3 id="区分物理编号和逻辑编号"><a href="#区分物理编号和逻辑编号" class="headerlink" title="区分物理编号和逻辑编号"></a>区分物理编号和逻辑编号</h3><p>由于在单双核绑定时，物理编号和逻辑编号就不是一致的了，要注意在使用场景下使用的是物理编号还是逻辑编号，如：在使用OpenMPI进行绑核时，使用的是物理编号，而不是逻辑编号。</p>
+<h3 id="应用绑核问题"><a href="#应用绑核问题" class="headerlink" title="应用绑核问题"></a>应用绑核问题</h3><p>据说由于这样的单双核绑定问题，会影响有些高性能应用的性能，但我没有实践过，姑且放个在这里。（虽然我高度怀疑是因为没有区分对物理编号和逻辑编号导致的绑核错误导致的性能下降）</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Benchmark/" rel="tag"># Benchmark</a>
+              <a href="/tags/NUMA/" rel="tag"># NUMA</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Docker/%E4%BF%AE%E6%94%B9Docker%E9%95%9C%E5%83%8F%E5%AD%98%E6%94%BE%E4%BD%8D%E7%BD%AE/" rel="prev" title="修改Docker镜像存放位置">
+                  <i class="fa fa-chevron-left"></i> 修改Docker镜像存放位置
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E6%97%B6%E9%97%B4%E5%90%8C%E6%AD%A5/" rel="next" title="Linux时间同步">
+                  Linux时间同步 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

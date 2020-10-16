@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要在初步的了解 docker 后，笔者期望通过理解 docker 背后的技术原理来深入的学习和使用 docker，接下来的几篇文章简单的介绍下 linux namespace 的概念以及基本用法。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【转】Linux Namespace 简介">
+<meta property="og:url" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20%E7%AE%80%E4%BB%8B/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要在初步的了解 docker 后，笔者期望通过理解 docker 背后的技术原理来深入的学习和使用 docker，接下来的几篇文章简单的介绍下 linux namespace 的概念以及基本用法。">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20%E7%AE%80%E4%BB%8B/952033-20180725130447798-998138444.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20%E7%AE%80%E4%BB%8B/952033-20180725130623803-1035865957.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20%E7%AE%80%E4%BB%8B/952033-20180725130707560-330510216.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20%E7%AE%80%E4%BB%8B/952033-20180725130954675-147955412.png">
+<meta property="article:published_time" content="2019-08-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.150Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Namespace">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20%E7%AE%80%E4%BB%8B/952033-20180725130447798-998138444.png">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20%E7%AE%80%E4%BB%8B/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>【转】Linux Namespace 简介 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#namespace-%E7%9A%84%E6%A6%82%E5%BF%B5"><span class="nav-number">2.</span> <span class="nav-text">namespace 的概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#namespace-%E7%9A%84%E7%94%A8%E9%80%94"><span class="nav-number">3.</span> <span class="nav-text">namespace 的用途</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#namespace-%E7%9A%84%E5%8F%91%E5%B1%95%E5%8E%86%E5%8F%B2"><span class="nav-number">4.</span> <span class="nav-text">namespace  的发展历史</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E8%BF%9B%E7%A8%8B%E6%89%80%E5%B1%9E%E7%9A%84-namespace"><span class="nav-number">5.</span> <span class="nav-text">查看进程所属的 namespace</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#clone-%E5%87%BD%E6%95%B0"><span class="nav-number">6.</span> <span class="nav-text">clone() 函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#setns-%E5%87%BD%E6%95%B0"><span class="nav-number">7.</span> <span class="nav-text">setns() 函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#unshare-%E5%87%BD%E6%95%B0-%E5%92%8C-unshare-%E5%91%BD%E4%BB%A4"><span class="nav-number">8.</span> <span class="nav-text">unshare() 函数 和 unshare 命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">9.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20%E7%AE%80%E4%BB%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【转】Linux Namespace 简介
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-08-19 00:00:00" itemprop="dateCreated datePublished" datetime="2019-08-19T00:00:00+08:00">2019-08-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/Namespace/" itemprop="url" rel="index"><span itemprop="name">Namespace</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>在初步的了解 docker 后，笔者期望通过理解 docker 背后的技术原理来深入的学习和使用 docker，接下来的几篇文章简单的介绍下 linux namespace 的概念以及基本用法。</p>
+<a id="more"></a> 
+
+<h2 id="namespace-的概念"><a href="#namespace-的概念" class="headerlink" title="namespace 的概念"></a>namespace 的概念</h2><p><strong>namespace 是 Linux 内核用来隔离内核资源的方式。</strong>通过 namespace 可以让一些进程只能看到与自己相关的一部分资源，而另外一些进程也只能看到与它们自己相关的资源，这两拨进程根本就感觉不到对方的存在。具体的实现方式是把一个或多个进程的相关资源指定在同一个 namespace 中。</p>
+<p>Linux namespaces 是对全局系统资源的一种封装隔离，使得处于不同 namespace 的进程拥有独立的全局系统资源，改变一个 namespace 中的系统资源只会影响当前 namespace 里的进程，对其他 namespace 中的进程没有影响。</p>
+<h2 id="namespace-的用途"><a href="#namespace-的用途" class="headerlink" title="namespace 的用途"></a>namespace 的用途</h2><p>可能绝大多数的使用者和我一样，是在使用 docker 后才开始了解 linux 的 namespace 技术的。实际上，Linux 内核实现 namespace 的一个主要目的就是实现轻量级虚拟化(容器)服务。在同一个 namespace 下的进程可以感知彼此的变化，而对外界的进程一无所知。这样就可以让容器中的进程产生错觉，认为自己置身于一个独立的系统中，从而达到隔离的目的。也就是说 linux 内核提供的 namespace 技术为 docker 等容器技术的出现和发展提供了基础条件。<br>我们可以从 docker 实现者的角度考虑该如何实现一个资源隔离的容器。比如是不是可以通过 chroot 命令切换根目录的挂载点，从而隔离文件系统。为了在分布式的环境下进行通信和定位，容器必须要有独立的 IP、端口和路由等，这就需要对网络进行隔离。同时容器还需要一个独立的主机名以便在网络中标识自己。接下来还需要进程间的通信、用户权限等的隔离。最后，运行在容器中的应用需要有进程号(PID)，自然也需要与宿主机中的 PID 进行隔离。也就是说这六种隔离能力是实现一个容器的基础，让我们看看 linux 内核的 namespace 特性为我们提供了什么样的隔离能力：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20%E7%AE%80%E4%BB%8B/952033-20180725130447798-998138444.png" class="">
+
+<p>上表中的前六种 namespace 正是实现容器必须的隔离技术，至于新近提供的 Cgroup namespace 目前还没有被 docker 采用。相信在不久的将来各种容器也会添加对 Cgroup namespace 的支持。</p>
+<h2 id="namespace-的发展历史"><a href="#namespace-的发展历史" class="headerlink" title="namespace  的发展历史"></a>namespace  的发展历史</h2><p>Linux 在很早的版本中就实现了部分的 namespace，比如内核 2.4 就实现了 mount namespace。大多数的 namespace 支持是在内核 2.6 中完成的，比如 IPC、Network、PID、和 UTS。还有个别的 namespace 比较特殊，比如 User，从内核 2.6 就开始实现了，但在内核 3.8 中才宣布完成。同时，随着 Linux 自身的发展以及容器技术持续发展带来的需求，也会有新的 namespace 被支持，比如在内核 4.6 中就添加了 Cgroup namespace。</p>
+<p>Linux 提供了多个 API 用来操作 namespace，它们是 clone()、setns() 和 unshare() 函数，为了确定隔离的到底是哪项 namespace，在使用这些 API 时，通常需要指定一些调用参数：CLONE_NEWIPC、CLONE_NEWNET、CLONE_NEWNS、CLONE_NEWPID、CLONE_NEWUSER、CLONE_NEWUTS 和 CLONE_NEWCGROUP。如果要同时隔离多个 namespace，可以使用 | (按位或)组合这些参数。同时我们还可以通过 /proc 下面的一些文件来操作 namespace。下面就让让我们看看这些接口的简要用法。</p>
+<h2 id="查看进程所属的-namespace"><a href="#查看进程所属的-namespace" class="headerlink" title="查看进程所属的 namespace"></a>查看进程所属的 namespace</h2><p>从版本号为 3.8 的内核开始，/proc/[pid]/ns 目录下会包含进程所属的 namespace 信息，使用下面的命令可以查看当前进程所属的 namespace 信息：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ ll /proc/<span class="token variable">$$</span>/ns<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<img src="/Linux/Namespace/Linux%20Namespace%20%E7%AE%80%E4%BB%8B/952033-20180725130623803-1035865957.png" class="">
+
+<p>首先，这些 namespace 文件都是链接文件。链接文件的内容的格式为 xxx:[inode number]。其中的 xxx 为 namespace 的类型，inode number 则用来标识一个 namespace，我们也可以把它理解为 namespace 的 ID。如果两个进程的某个 namespace 文件指向同一个链接文件，说明其相关资源在同一个 namespace 中。<br>其次，在 /proc/[pid]/ns 里放置这些链接文件的另外一个作用是，一旦这些链接文件被打开，只要打开的文件描述符(fd)存在，那么就算该 namespace 下的所有进程都已结束，这个 namespace 也会一直存在，后续的进程还可以再加入进来。<br>除了打开文件的方式，我们还可以通过文件挂载的方式阻止 namespace 被删除。比如我们可以把当前进程中的 uts 挂载到 ~/uts 文件：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">touch</span> ~/uts
+$ <span class="token function">sudo</span> <span class="token function">mount</span> --bind /proc/<span class="token variable">$$</span>/ns/uts ~/uts<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>使用 stat 命令检查下结果：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20%E7%AE%80%E4%BB%8B/952033-20180725130707560-330510216.png" class="">
+
+<p>很神奇吧，~/uts 的 inode 和链接文件中的 inode number 是一样的，它们是同一个文件。</p>
+<h2 id="clone-函数"><a href="#clone-函数" class="headerlink" title="clone() 函数"></a>clone() 函数</h2><p>我们可以通过 clone() 在创建新进程的同时创建 namespace。clone() 在 C 语言库中的声明如下：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token comment">/* Prototype for the glibc wrapper function */</span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token expression">_GNU_SOURCE</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sched.h></span></span>
+<span class="token keyword">int</span> <span class="token function">clone</span><span class="token punctuation">(</span><span class="token keyword">int</span> <span class="token punctuation">(</span><span class="token operator">*</span>fn<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token keyword">void</span> <span class="token operator">*</span>child_stack<span class="token punctuation">,</span> <span class="token keyword">int</span> flags<span class="token punctuation">,</span> <span class="token keyword">void</span> <span class="token operator">*</span>arg<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>实际上，clone() 是在 C 语言库中定义的一个封装(wrapper)函数，它负责建立新进程的堆栈并且调用对编程者隐藏的 clone() 系统调用。Clone() 其实是 linux 系统调用 fork() 的一种更通用的实现方式，它可以通过 flags 来控制使用多少功能。一共有 20 多种 CLONE_ 开头的 falg(标志位) 参数用来控制 clone 进程的方方面面(比如是否与父进程共享虚拟内存等)，下面我们只介绍与 namespace 相关的 4 个参数：</p>
+<ul>
+<li>fn：指定一个由新进程执行的函数。当这个函数返回时，子进程终止。该函数返回一个整数，表示子进程的退出代码。</li>
+<li>child_stack：传入子进程使用的栈空间，也就是把用户态堆栈指针赋给子进程的 esp 寄存器。调用进程(指调用 clone() 的进程)应该总是为子进程分配新的堆栈。</li>
+<li>flags：表示使用哪些 CLONE_ 开头的标志位，与 namespace 相关的有CLONE_NEWIPC、CLONE_NEWNET、CLONE_NEWNS、CLONE_NEWPID、CLONE_NEWUSER、CLONE_NEWUTS 和 CLONE_NEWCGROUP。</li>
+<li>arg：指向传递给 fn() 函数的参数。</li>
+</ul>
+<p>在后续的文章中，我们主要通过 clone() 函数来创建并演示各种类型的 namespace。</p>
+<h2 id="setns-函数"><a href="#setns-函数" class="headerlink" title="setns() 函数"></a>setns() 函数</h2><p>通过 setns() 函数可以将当前进程加入到已有的 namespace 中。setns() 在 C 语言库中的声明如下：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token expression">_GNU_SOURCE</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sched.h></span></span>
+<span class="token keyword">int</span> <span class="token function">setns</span><span class="token punctuation">(</span><span class="token keyword">int</span> fd<span class="token punctuation">,</span> <span class="token keyword">int</span> nstype<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>和 clone() 函数一样，C 语言库中的 setns() 函数也是对 setns() 系统调用的封装：</p>
+<ul>
+<li>fd：表示要加入 namespace 的文件描述符。它是一个指向 /proc/[pid]/ns 目录中文件的文件描述符，可以通过直接打开该目录下的链接文件或者打开一个挂载了该目录下链接文件的文件得到。</li>
+<li>nstype：参数 nstype 让调用者可以检查 fd 指向的 namespace 类型是否符合实际要求。若把该参数设置为 0 表示不检查。</li>
+</ul>
+<p>前面我们提到：可以通过挂载的方式把 namespace 保留下来。保留 namespace 的目的是为以后把进程加入这个 namespace 做准备。在 docker 中，使用 docker exec 命令在已经运行着的容器中执行新的命令就需要用到 setns() 函数。为了把新加入的 namespace 利用起来，还需要引入 execve() 系列的函数(笔者在 《<a target="_blank" rel="noopener" href="http://www.cnblogs.com/sparkdev/p/8214455.html">Linux 创建子进程执行任务</a>》一文中介绍过 execve() 系列的函数，有兴趣的同学可以前往了解)，该函数可以执行用户的命令，比较常见的用法是调用 /bin/bash 并接受参数运行起一个 shell。</p>
+<h2 id="unshare-函数-和-unshare-命令"><a href="#unshare-函数-和-unshare-命令" class="headerlink" title="unshare() 函数 和 unshare 命令"></a>unshare() 函数 和 unshare 命令</h2><p>通过 unshare 函数可以在原进程上进行 namespace 隔离。也就是创建并加入新的 namespace 。unshare() 在 C 语言库中的声明如下：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token expression">_GNU_SOURCE</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sched.h></span></span>
+<span class="token keyword">int</span> <span class="token function">unshare</span><span class="token punctuation">(</span><span class="token keyword">int</span> flags<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>和前面两个函数一样，C 语言库中的 unshare() 函数也是对 unshare() 系统调用的封装。调用 unshare() 的主要作用就是：不启动新的进程就可以起到资源隔离的效果，相当于跳出原先的 namespace 进行操作。</p>
+<p>系统还默认提供了一个叫 unshare 的命令，其实就是在调用  unshare() 系统调用。下面的 demo 使用 unshare 命令把当前进程的 user namespace 设置成了 root：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20%E7%AE%80%E4%BB%8B/952033-20180725130954675-147955412.png" class="">
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>namespace 是 linux 内核提供的特性，为虚拟化而生。随着 docker 的诞生引爆了容器技术，也把长期在后台默默奉献的 namespace 技术推到了大家的面前。笔者试图通过对 namespace 技术的学习和理解来加深对容器技术的认识，所以接下来会通过文章记录学习 namespace 的点点滴滴，希望能和同学们一起进步。</p>
+<p><strong>参考：</strong><br><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000006908272">Namespace 概述</a><br><a target="_blank" rel="noopener" href="http://man7.org/linux/man-pages/man7/namespaces.7.html">overview of Linux namespaces</a><br><a target="_blank" rel="noopener" href="http://man7.org/linux/man-pages/man2/clone.2.html">Clone 函数</a><br><a target="_blank" rel="noopener" href="http://man7.org/linux/man-pages/man2/setns.2.html">Setns 函数</a><br><a target="_blank" rel="noopener" href="http://man7.org/linux/man-pages/man2/unshare.2.html">Unshare 函数</a></p>
+<hr>
+<p>摘自<a target="_blank" rel="noopener" href="https://www.cnblogs.com/sparkdev/p/9365405.html">https://www.cnblogs.com/sparkdev/p/9365405.html</a> ，更多的信息可以有空看看英文版的说明<a target="_blank" rel="noopener" href="https://lwn.net/Articles/531114/">https://lwn.net/Articles/531114/</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/Namespace/" rel="tag"># Namespace</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E6%93%8D%E4%BD%9C%E5%B0%8F%E6%8A%80%E5%B7%A7%E6%B1%87%E6%80%BB/" rel="prev" title="Linux操作小技巧汇总">
+                  <i class="fa fa-chevron-left"></i> Linux操作小技巧汇总
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Linux/Namespace/Linux%20Namespace%20User/" rel="next" title="【转】Linux Namespace User">
+                  【转】Linux Namespace User <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

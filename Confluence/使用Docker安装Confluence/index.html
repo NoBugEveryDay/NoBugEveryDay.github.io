@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要Confluence是一个专业的企业知识管理与协同软件，也可以用于构建企业wiki。使用简单，但它强大的编辑和站点管理特征能够帮助团队成员之间共享信息、文档协作、集体讨论，信息推送。 使用Docker来构建Confluence会使部署和迁移会变得非常简单">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用Docker安装Confluence">
+<meta property="og:url" content="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要Confluence是一个专业的企业知识管理与协同软件，也可以用于构建企业wiki。使用简单，但它强大的编辑和站点管理特征能够帮助团队成员之间共享信息、文档协作、集体讨论，信息推送。 使用Docker来构建Confluence会使部署和迁移会变得非常简单">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876049889.png">
+<meta property="og:image" content="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876000523.png">
+<meta property="og:image" content="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1267938-20180415165304716-88162986.png">
+<meta property="og:image" content="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1267938-20180415165532802-106890114.png">
+<meta property="og:image" content="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876214304.png">
+<meta property="og:image" content="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876245862.png">
+<meta property="og:image" content="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876347004.png">
+<meta property="og:image" content="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876634348.png">
+<meta property="og:image" content="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876560752.png">
+<meta property="og:image" content="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566884139384.png">
+<meta property="og:image" content="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566885857601.png">
+<meta property="og:image" content="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566886597228.png">
+<meta property="article:published_time" content="2019-08-26T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.089Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Confluence">
+<meta property="article:tag" content="Docker">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876049889.png">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>使用Docker安装Confluence | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">2.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Docker"><span class="nav-number">3.</span> <span class="nav-text">安装Docker</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Confluence"><span class="nav-number">4.</span> <span class="nav-text">安装Confluence</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A0%B4%E8%A7%A3Confluence"><span class="nav-number">5.</span> <span class="nav-text">破解Confluence</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%93%E5%BC%80%E7%BD%91%E9%A1%B5"><span class="nav-number">5.1.</span> <span class="nav-text">打开网页</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E6%89%BE%E8%A2%AB%E7%A0%B4%E8%A7%A3%E6%96%87%E4%BB%B6"><span class="nav-number">5.2.</span> <span class="nav-text">查找被破解文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A0%B4%E8%A7%A3%E6%96%87%E4%BB%B6"><span class="nav-number">5.3.</span> <span class="nav-text">破解文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%BE%E5%9B%9E%E7%A0%B4%E8%A7%A3%E6%96%87%E4%BB%B6"><span class="nav-number">5.4.</span> <span class="nav-text">放回破解文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%8D%E5%90%AF-confluence-%E5%AE%B9%E5%99%A8"><span class="nav-number">5.5.</span> <span class="nav-text">重启 confluence 容器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BE%93%E5%85%A5key"><span class="nav-number">5.6.</span> <span class="nav-text">输入key</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">6.</span> <span class="nav-text">准备数据库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%89%E6%8B%A9%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">6.1.</span> <span class="nav-text">选择数据库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85PostgreSQL%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">6.2.</span> <span class="nav-text">安装PostgreSQL数据库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">6.3.</span> <span class="nav-text">初始化数据库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A9Confluence%E8%BF%9E%E6%8E%A5%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">6.4.</span> <span class="nav-text">让Confluence连接数据库</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%93%E5%8C%85%E7%A0%B4%E8%A7%A3%E9%95%9C%E5%83%8F"><span class="nav-number">7.</span> <span class="nav-text">打包破解镜像</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%9D%E5%AD%98%E9%95%9C%E5%83%8F"><span class="nav-number">7.1.</span> <span class="nav-text">保存镜像</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%BC%E5%87%BA%E9%95%9C%E5%83%8F"><span class="nav-number">7.2.</span> <span class="nav-text">导出镜像</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%BA%9B%E5%AE%9E%E9%AA%8C"><span class="nav-number">8.</span> <span class="nav-text">一些实验</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          使用Docker安装Confluence
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-08-27 00:00:00" itemprop="dateCreated datePublished" datetime="2019-08-27T00:00:00+08:00">2019-08-27</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Confluence/" itemprop="url" rel="index"><span itemprop="name">Confluence</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>Confluence是一个专业的企业知识管理与协同软件，也可以用于构建企业wiki。使用简单，但它强大的编辑和站点管理特征能够帮助团队成员之间共享信息、文档协作、集体讨论，信息推送。</p>
+<p>使用Docker来构建Confluence会使部署和迁移会变得非常简单</p>
+<a id="more"></a> 
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/rslai/p/8845777.html">https://www.cnblogs.com/rslai/p/8845777.html</a></p>
+<h2 id="安装Docker"><a href="#安装Docker" class="headerlink" title="安装Docker"></a>安装Docker</h2><p>此步骤略，见<a href="http://blog.sysu.tech/Linux/%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/Docker%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/">Docker安装教程</a></p>
+<h2 id="安装Confluence"><a href="#安装Confluence" class="headerlink" title="安装Confluence"></a>安装Confluence</h2><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">docker run -v /root/confluence-home:/var/atlassian/application-data/confluence --name<span class="token operator">=</span><span class="token string">"confluence"</span> -d -p <span class="token number">8090</span>:8090 -p <span class="token number">8091</span>:8091 atlassian/confluence-server<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h2 id="破解Confluence"><a href="#破解Confluence" class="headerlink" title="破解Confluence"></a>破解Confluence</h2><h3 id="打开网页"><a href="#打开网页" class="headerlink" title="打开网页"></a>打开网页</h3><p>访问 http://网址:8090 记录 Server ID </p>
+<img src="/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876049889.png" class="">
+
+<h3 id="查找被破解文件"><a href="#查找被破解文件" class="headerlink" title="查找被破解文件"></a>查找被破解文件</h3><p>进入docker confluence 容器，查找decoder.jar文件</p>
+<pre class="line-numbers language-none"><code class="language-none">docker exec -it confluence &#x2F;bin&#x2F;bash
+find -name &quot;*decoder*&quot;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<img src="/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876000523.png" class="">
+
+<h3 id="破解文件"><a href="#破解文件" class="headerlink" title="破解文件"></a>破解文件</h3><p>将decoder.jar文件从容器中复制出来，其中 “confluence:” 是Wiki confluence容器名称，atlassian-extras-decoder-v2-3.3.0.jar 是安装版本wiki的decode文件</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">docker <span class="token function">cp</span> confluence:/opt/atlassian/confluence/confluence/WEB-INF/lib/atlassian-extras-decoder-v2-3.4.1.jar ./<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<ol>
+<li><p>下载<code>atlassian-extras-decoder-v2-3.4.1.jar</code> 文件到windows上</p>
+</li>
+<li><p>将文件名改为 <code>atlassian-extras-2.4.jar</code>破解工具只识别这个文件名</p>
+</li>
+<li><p>下载破解文件 <a target="_blank" rel="noopener" href="http://wiki.wuyijun.cn/download/attachments/2327034/51CTO%E4%B8%8B%E8%BD%BD-Confluence.zip">http://wiki.wuyijun.cn/download/attachments/2327034/51CTO%E4%B8%8B%E8%BD%BD-Confluence.zip</a></p>
+</li>
+<li><p>解压缩此文件夹，dos命令行进入此文件夹iNViSiBLE，目录需根据你的实际情况修改 </p>
+</li>
+<li><p>执行 java -jar confluence_keygen.jar 运行破解文件</p>
+</li>
+<li><p>填入 name ，server id 处输入步骤1中得到的id，点击 “gen” 生成key<img src="/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1267938-20180415165304716-88162986.png" class=""></p>
+</li>
+<li><p>点击 patch，选择刚才改名为  “atlassian-extras-2.4.jar” 的jar包，显示 “jar success fully patched” 则破解成功。注意：patch前先删除atlassian-extras-2.4.bak文件否则patch失败<img src="/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1267938-20180415165532802-106890114.png" class=""></p>
+</li>
+<li><p>将 “atlassian-extras-2.4.jar” 文件名改回原来的<code>atlassian-extras-decoder-v2-3.4.1.jar</code> </p>
+</li>
+<li><p>复制key中的内容备用</p>
+</li>
+<li><p>将 <code>atlassian-extras-decoder-v2-3.4.1.jar</code> 文件上传回服务器</p>
+</li>
+</ol>
+<h3 id="放回破解文件"><a href="#放回破解文件" class="headerlink" title="放回破解文件"></a>放回破解文件</h3><pre class="line-numbers language-none"><code class="language-none">docker cp atlassian-extras-decoder-v2-3.4.1.jar confluence:&#x2F;opt&#x2F;atlassian&#x2F;confluence&#x2F;confluence&#x2F;WEB-INF&#x2F;lib&#x2F;atlassian-extras-decoder-v2-3.4.1.jar<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h3 id="重启-confluence-容器"><a href="#重启-confluence-容器" class="headerlink" title="重启 confluence 容器"></a>重启 confluence 容器</h3><pre class="line-numbers language-none"><code class="language-none">docker restart confluence<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h3 id="输入key"><a href="#输入key" class="headerlink" title="输入key"></a>输入key</h3><img src="/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876214304.png" class="">
+
+<h2 id="准备数据库"><a href="#准备数据库" class="headerlink" title="准备数据库"></a>准备数据库</h2><h3 id="选择数据库"><a href="#选择数据库" class="headerlink" title="选择数据库"></a>选择数据库</h3><img src="/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876245862.png" class="">
+
+<p>这里选择第三方数据库</p>
+<img src="/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876347004.png" class="">
+
+<p>这里我们选择<code>PostgreSQL</code>数据库，因为不用装别的jar包就能用</p>
+<h3 id="安装PostgreSQL数据库"><a href="#安装PostgreSQL数据库" class="headerlink" title="安装PostgreSQL数据库"></a>安装PostgreSQL数据库</h3><p>同样我们使用Docker</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">docker run --name postgresdb -p <span class="token number">5432</span>:5432 -v /home/asc19/fgn/postgresdb-data:/var/lib/postgresql/data -e <span class="token assign-left variable">POSTGRES_PASSWORD</span><span class="token operator">=</span>password -d postgres<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p><strong>注意：每次都要带上密码参数</strong></p>
+<h3 id="初始化数据库"><a href="#初始化数据库" class="headerlink" title="初始化数据库"></a>初始化数据库</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">docker <span class="token builtin class-name">exec</span> -it postgresdb <span class="token function">bash</span>
+psql -U postgres 
+CREATE DATABASE confluence WITH OWNER postgres<span class="token punctuation">;</span> <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="让Confluence连接数据库"><a href="#让Confluence连接数据库" class="headerlink" title="让Confluence连接数据库"></a>让Confluence连接数据库</h3><p>查看一下<code>PostgreSQL</code>的容器IP地址</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">docker inspect postgresdb <span class="token operator">|</span> <span class="token function">grep</span> IPAddress<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+
+
+<img src="/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876634348.png" class="">
+
+<p>然后填入<code>Database URL</code></p>
+<img src="/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566876560752.png" class="">
+
+<p>但是如果就像上面这样填写的话当给confluence做迁移时，会造成PostgreSQL Docker的ip变化，会比较麻烦，所以我们在confluence的docker中</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token builtin class-name">echo</span> <span class="token string">"172.17.0.3 postgresdb"</span> <span class="token operator">>></span> /etc/hosts<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p><strong>注意：当restart容器后，很可能需要手动重新添加，且必须在网页加载出来之前添加</strong></p>
+<p>然后按如下填写即可</p>
+<img src="/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566884139384.png" class="">
+
+<h2 id="打包破解镜像"><a href="#打包破解镜像" class="headerlink" title="打包破解镜像"></a>打包破解镜像</h2><h3 id="保存镜像"><a href="#保存镜像" class="headerlink" title="保存镜像"></a>保存镜像</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">docker commit -m <span class="token string">"Confluence po jie"</span> -a <span class="token string">"Orange"</span> 0c78ebb3b9ed confluence-p<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>下次启动命令为</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">docker run -v /root/confluence-home:/var/atlassian/application-data/confluence --name<span class="token operator">=</span><span class="token string">"confluence-p"</span> -d -p <span class="token number">8090</span>:8090 -p <span class="token number">8091</span>:8091 confluence-p<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h3 id="导出镜像"><a href="#导出镜像" class="headerlink" title="导出镜像"></a>导出镜像</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">docker images
+docker save <span class="token punctuation">[</span>IMAGE ID<span class="token punctuation">]</span> <span class="token operator">></span> confluence-p.tar<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<img src="/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566885857601.png" class="">
+
+<p>导入镜像</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">docker load <span class="token operator">&lt;</span> confluence-p.tar<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<img src="/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/1566886597228.png" class="">
+
+<p>但是发现REPOSITORY和TAG都丢失了，重新命名下就好了</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">docker tag a9fc1d4a7541 confluence-p:latest<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>然后就是将Confluence和PostgreSQL的两个文件夹迁移即可~</p>
+<h2 id="一些实验"><a href="#一些实验" class="headerlink" title="一些实验"></a>一些实验</h2><ul>
+<li>如果删除了confluence挂载目录下的所有文件，confluence就必须重置，所以不能动这个目录</li>
+<li>如果数据库连接不上，网页会什么都不显示</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Confluence/" rel="tag"># Confluence</a>
+              <a href="/tags/Docker/" rel="tag"># Docker</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Linux/%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/CentOS%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85GCC/" rel="prev" title="CentOS编译安装GCC">
+                  <i class="fa fa-chevron-left"></i> CentOS编译安装GCC
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/MPI/Mvapich/Mvapich%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/" rel="next" title="Mvapich安装教程">
+                  Mvapich安装教程 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

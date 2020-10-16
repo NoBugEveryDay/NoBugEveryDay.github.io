@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要UTS namespace 用来隔离系统的 hostname 以及 NIS domain name。UTS 据称是 UNIX Time-sharing System 的缩写。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【转】Linux Namespace UTS">
+<meta property="og:url" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20UTS/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要UTS namespace 用来隔离系统的 hostname 以及 NIS domain name。UTS 据称是 UNIX Time-sharing System 的缩写。">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131232424-765512858.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131508675-1569325841.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131605376-1110721962.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131712337-41865017.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131747003-1682208002.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131845867-470060604.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131944058-184101793.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727132017569-910299771.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727132056766-373163013.png">
+<meta property="article:published_time" content="2019-08-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.144Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Namespace">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131232424-765512858.png">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20UTS/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>【转】Linux Namespace UTS | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hostname-%E4%B8%8E-NIS-domain-name"><span class="nav-number">2.</span> <span class="nav-text">hostname 与 NIS domain name</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E8%BF%87-clone-%E5%87%BD%E6%95%B0%E5%88%9B%E5%BB%BA-UTS-%E9%9A%94%E7%A6%BB%E7%9A%84%E5%AD%90%E8%BF%9B%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text">通过 clone 函数创建 UTS 隔离的子进程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%8A%E5%BD%93%E5%89%8D%E8%BF%9B%E7%A8%8B%E5%8A%A0%E5%85%A5%E5%88%B0%E5%B7%B2%E5%AD%98%E5%9C%A8%E7%9A%84-UTS-namespace"><span class="nav-number">4.</span> <span class="nav-text">把当前进程加入到已存在的 UTS namespace</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%8A%E5%BD%93%E5%89%8D%E8%BF%9B%E7%A8%8B%E5%8A%A0%E5%85%A5%E5%88%B0%E4%B8%80%E4%B8%AA%E6%96%B0%E5%BB%BA%E7%9A%84-UTS-namespace"><span class="nav-number">5.</span> <span class="nav-text">把当前进程加入到一个新建的 UTS namespace</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UTS-namespace-%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F"><span class="nav-number">6.</span> <span class="nav-text">UTS namespace 的实现方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20UTS/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【转】Linux Namespace UTS
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-08-19 00:00:00" itemprop="dateCreated datePublished" datetime="2019-08-19T00:00:00+08:00">2019-08-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/Namespace/" itemprop="url" rel="index"><span itemprop="name">Namespace</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>UTS namespace 用来隔离系统的 hostname 以及 NIS domain name。UTS 据称是 UNIX Time-sharing System 的缩写。</p>
+<a id="more"></a> 
+
+<h2 id="hostname-与-NIS-domain-name"><a href="#hostname-与-NIS-domain-name" class="headerlink" title="hostname 与 NIS domain name"></a>hostname 与 NIS domain name</h2><p><strong>hostname</strong> 是用来标识一台主机的，比如登录时的提示，在 Shell 的提示符上，都可以显示出来，这样的话，使用者可以知道自己用的是哪台机器。比如下图中的 nick@tigger：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131232424-765512858.png" class="">
+
+<p>nick 是用户名，而 tigger 就是主机的 hostname。我们可以通过 hostname 命令来查看当前主机的名称，比如上图中的输出：tigger。本质上，hostname 命令是通过执行系统调用 gethostname 来获得 hostname 的，我们在本文的结尾处会分析 gethostname 的相关实现。</p>
+<p><strong>NIS domain name</strong><br>在一些大型的网络中，会有很多的 Linux 主机，如果能够有一部账号主控服务器来管理网络中所有主机的账号， 当其他的主机有用户登入的需求时，才到这部主控服务器上面请求相关的账号、密码等用户信息， 如此一来，如果想要增加、修改、删除用户数据，只要到这部主控服务器上面处理即可(听起来是不是有点类似 windows 平台上的域控制器的概念)。<br>在 Linux 平台上，一般通过 Network Information Services(NIS Server) 创建的域(domain)来实现相关的功能。而主机的 NIS domain name 就是加入 NIS domain 的主机显示的 NIS domain 的名称(类似 windows 平台上使用域控制器创建的域名)。</p>
+<p>简单起见，本文以 hostname 为例进行 Linux UTS namespace 的介绍。文中的 demo 均在 ubuntu 16.04 中完成。</p>
+<h2 id="通过-clone-函数创建-UTS-隔离的子进程"><a href="#通过-clone-函数创建-UTS-隔离的子进程" class="headerlink" title="通过 clone 函数创建 UTS 隔离的子进程"></a>通过 clone 函数创建 UTS 隔离的子进程</h2><p>我们在《<a target="_blank" rel="noopener" href="https://www.cnblogs.com/sparkdev/p/9365405.html">Linux Namespace 简介</a>》一文中介绍了 clone 函数用于在创建新进程的同时创建 namespace，下面的 demo 就是通过 clone 函数为新进程创建新的 UTS namespace(该 demo 的主要代码来自 clone 函数的 man page，为了进行演示，笔者进行了适当的调整和扩展)：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token expression">_GNU_SOURCE</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sys/wait.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sys/utsname.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sched.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;string.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;unistd.h></span></span>
+
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token expression"><span class="token function">errExit</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span>    <span class="token keyword">do</span> <span class="token punctuation">&#123;</span> <span class="token function">perror</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token function">exit</span><span class="token punctuation">(</span>EXIT_FAILURE<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token punctuation">&#125;</span> <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span></span></span>
+
+<span class="token comment">// 调用 clone 时执行的函数</span>
+<span class="token keyword">static</span> <span class="token keyword">int</span> <span class="token function">childFunc</span><span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span>arg<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">struct</span> <span class="token class-name">utsname</span> uts<span class="token punctuation">;</span>
+    <span class="token keyword">char</span> <span class="token operator">*</span>shellname<span class="token punctuation">;</span>
+    <span class="token comment">// 在子进程的 UTS namespace 中设置 hostname</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">sethostname</span><span class="token punctuation">(</span>arg<span class="token punctuation">,</span> <span class="token function">strlen</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span>
+        <span class="token function">errExit</span><span class="token punctuation">(</span><span class="token string">"sethostname"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">// 显示子进程的 hostname</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">uname</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>uts<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span>
+        <span class="token function">errExit</span><span class="token punctuation">(</span><span class="token string">"uname"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"uts.nodename in child:  %s\n"</span><span class="token punctuation">,</span> uts<span class="token punctuation">.</span>nodename<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"My PID is: %d\n"</span><span class="token punctuation">,</span> <span class="token function">getpid</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"My parent PID is: %d\n"</span><span class="token punctuation">,</span> <span class="token function">getppid</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// 获取系统的默认 shell</span>
+    shellname <span class="token operator">=</span> <span class="token function">getenv</span><span class="token punctuation">(</span><span class="token string">"SHELL"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token operator">!</span>shellname<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        shellname <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">char</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token string">"/bin/sh"</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token comment">// 在子进程中执行 shell</span>
+    <span class="token function">execlp</span><span class="token punctuation">(</span>shellname<span class="token punctuation">,</span> shellname<span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token keyword">char</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token constant">NULL</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+<span class="token comment">// 设置子进程的堆栈大小为 1M</span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token expression"><span class="token function">STACK_SIZE</span> <span class="token punctuation">(</span><span class="token number">1024</span> <span class="token operator">*</span> <span class="token number">1024</span><span class="token punctuation">)</span></span></span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">char</span> <span class="token operator">*</span>stack<span class="token punctuation">;</span>
+    <span class="token keyword">char</span> <span class="token operator">*</span>stackTop<span class="token punctuation">;</span>        
+    pid_t pid<span class="token punctuation">;</span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>argc <span class="token operator">&lt;</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">fprintf</span><span class="token punctuation">(</span><span class="token constant">stderr</span><span class="token punctuation">,</span> <span class="token string">"Usage: %s &lt;child-hostname>\n"</span><span class="token punctuation">,</span> argv<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">exit</span><span class="token punctuation">(</span>EXIT_SUCCESS<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">// 为子进程分配堆栈空间,大小为 1M</span>
+    stack <span class="token operator">=</span> <span class="token function">malloc</span><span class="token punctuation">(</span>STACK_SIZE<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>stack <span class="token operator">==</span> <span class="token constant">NULL</span><span class="token punctuation">)</span>
+        <span class="token function">errExit</span><span class="token punctuation">(</span><span class="token string">"malloc"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    stackTop <span class="token operator">=</span> stack <span class="token operator">+</span> STACK_SIZE<span class="token punctuation">;</span>  <span class="token comment">/* Assume stack grows downward */</span>
+
+    <span class="token comment">// 通过 clone 函数创建子进程</span>
+    <span class="token comment">// CLONE_NEWUTS 标识指明为新进程创建新的 UTS namespace</span>
+    pid <span class="token operator">=</span> <span class="token function">clone</span><span class="token punctuation">(</span>childFunc<span class="token punctuation">,</span> stackTop<span class="token punctuation">,</span> CLONE_NEWUTS <span class="token operator">|</span> SIGCHLD<span class="token punctuation">,</span> argv<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>pid <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span>
+        <span class="token function">errExit</span><span class="token punctuation">(</span><span class="token string">"clone"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">// 等待子进程退出</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">waitpid</span><span class="token punctuation">(</span>pid<span class="token punctuation">,</span> <span class="token constant">NULL</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span>
+        <span class="token function">errExit</span><span class="token punctuation">(</span><span class="token string">"waitpid"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"child has terminated\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token function">exit</span><span class="token punctuation">(</span>EXIT_SUCCESS<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>[</p>
+<p>这段代码中的 main 函数负责调用 clone 函数创建一个子进程。在调用 clone 函数时通过设置 CLONE_NEWUTS 标识让子进程拥有自己的 UTS namespace。 子进程执行 childFunc 函数，它先设置新的 hostname，然后分别输出 hostname，当前进程的 PID 和 父进程的 PID，并在最后执行系统的默认 shell。父进程等待子进程的退出，并最终退出程序。把上面的代码保存在文件 uts_clone.c 文件中，并执行下面的命令进行编译：</p>
+<pre class="line-numbers language-none"><code class="language-none">$ gcc -Wall uts_clone.c -o uts_clone_demo<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>然后以 myhost 为参数运行 demo 程序：</p>
+<pre class="line-numbers language-none"><code class="language-none">$ sudo .&#x2F;uts_clone_demo<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<img src="/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131508675-1569325841.png" class="">
+
+<p>注意图中第二个红框，hostname 已经成了 myhost。我们在当前的 shell 中执行 hostname 命令，得到的结果也是 myhost。<br>下面让我们确认新创建的子进程和父进程分别属于不同的 UTS namespace。具体的做法是查看 /proc 目录中相关进程目录下的 ns/uts 链接文件。让我们新打开一个命令行终端，以管理员权限运行下面 3 个命令(注意，在执行下面命令的同时请不要退出 demo 程序)：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131605376-1110721962.png" class="">
+
+<p>第一条命令查看当前 shell 进程的 uts namespace。<br>第二条命令查看 demo 程序中父进程的 uts namespace(父进程 PID 来自 demo 程序的输出)。<br>第三条命令查看 demo 程序中子进程的 uts namespace(子进程 PID 来自 demo 程序的输出)。<br>前两条命令的输出是相同的，它们都使用了系统默认的 uts namespace。而第三条命令的输出则说明 demo 中的子进程使用了和父进程不同的 uts namespace。</p>
+<h2 id="把当前进程加入到已存在的-UTS-namespace"><a href="#把当前进程加入到已存在的-UTS-namespace" class="headerlink" title="把当前进程加入到已存在的 UTS namespace"></a>把当前进程加入到已存在的 UTS namespace</h2><p>和 clone 函数一样，我们在前文中也介绍了通过 setns 函数可以将当前进程加入到已有的 namespace 中，下面的 demo 把当前进程加入到已有 UTS namespace(该 demo 的主要代码来自 setns 函数的 man page)：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token expression">_GNU_SOURCE</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;fcntl.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sched.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;unistd.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token expression"><span class="token function">errExit</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span>    <span class="token keyword">do</span> <span class="token punctuation">&#123;</span> <span class="token function">perror</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token function">exit</span><span class="token punctuation">(</span>EXIT_FAILURE<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token punctuation">&#125;</span> <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span></span></span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">int</span> fd<span class="token punctuation">;</span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>argc <span class="token operator">&lt;</span> <span class="token number">3</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">fprintf</span><span class="token punctuation">(</span><span class="token constant">stderr</span><span class="token punctuation">,</span> <span class="token string">"%s /proc/PID/ns/FILE cmd args...\n"</span><span class="token punctuation">,</span> argv<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">exit</span><span class="token punctuation">(</span>EXIT_FAILURE<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">// 打开一个现存的 UTS namespace 文件</span>
+    fd <span class="token operator">=</span> <span class="token function">open</span><span class="token punctuation">(</span>argv<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> O_RDONLY<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>fd <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span>
+        <span class="token function">errExit</span><span class="token punctuation">(</span><span class="token string">"open"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">// 把当前进程的 UTS namespace 设置为命令行参数传入的 namespace</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">setns</span><span class="token punctuation">(</span>fd<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span>        
+        <span class="token function">errExit</span><span class="token punctuation">(</span><span class="token string">"setns"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">// 在新的 UTS namespace 中运行用户指定的程序</span>
+    <span class="token function">execvp</span><span class="token punctuation">(</span>argv<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token operator">&amp;</span>argv<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">errExit</span><span class="token punctuation">(</span><span class="token string">"execvp"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>代码的逻辑很简单，通过 open 函数打开用户传入的 UTS namespace 文件，然后把得到的文件描述符传递给 setns 函数。最后执行用户指定的程序。<br>所以执行上面的程序需要我们传入两个参数，第一个参数是一个已经存在的 UTS namespace 文件，第二个参数是指定要运行的程序。下面我们将结合前面的 uts_clone_demo 进行演示。把上面的代码保存到文件 uts_setns.c 文件中，并执行下面的命令进行编译：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ gcc -Wall uts_setns.c -o uts_setns_demo<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>接下来的思路是：运行 uts_clone_demo 程序创建一个新的 UTS namespace，然后把运行 uts_setns_demo 程序的进程加入到这个新的 UTS namespace 中，并运行 shell 命令。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">sudo</span> ./uts_clone_demo myhost<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<img src="/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131712337-41865017.png" class="">
+
+<p>需要记住进程的 PID，这里是 96074，需要为 uts_setns_demo 指定 UTS namespace 文件的路径：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">sudo</span> ./uts_setns_demo /proc/96074/ns/uts <span class="token variable">$&#123;<span class="token environment constant">SHELL</span>&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>执行上的命令会把运行 uts_setns_demo 程序的 UTS namespace 设置为 uts:[4026532540]，并运行 shell 程序：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131747003-1682208002.png" class="">
+
+<p>上图中的 hostname 已经变成了 myhost，并且执行 readlink /proc/$$/ns/uts 命令的结果也和我们预期的相同。</p>
+<h2 id="把当前进程加入到一个新建的-UTS-namespace"><a href="#把当前进程加入到一个新建的-UTS-namespace" class="headerlink" title="把当前进程加入到一个新建的 UTS namespace"></a>把当前进程加入到一个新建的 UTS namespace</h2><p>我们要介绍的最后一个函数是 unshare 。它可以创建新的 namespace，并把当前进程加入到这个 namespace 中。下面我们依然通过 demo 程序演示 unshare 对 UTS namespace 的操作(该 demo 的主要代码来自 unshare 函数的 man page)：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token expression">_GNU_SOURCE</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sched.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;unistd.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token expression"><span class="token function">errExit</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span>    <span class="token keyword">do</span> <span class="token punctuation">&#123;</span> <span class="token function">perror</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token function">exit</span><span class="token punctuation">(</span>EXIT_FAILURE<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token punctuation">&#125;</span> <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span></span></span>
+
+<span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">usage</span><span class="token punctuation">(</span><span class="token keyword">char</span> <span class="token operator">*</span>pname<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token function">fprintf</span><span class="token punctuation">(</span><span class="token constant">stderr</span><span class="token punctuation">,</span> <span class="token string">"Usage: %s [options] program [arg...]\n"</span><span class="token punctuation">,</span> pname<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">fprintf</span><span class="token punctuation">(</span><span class="token constant">stderr</span><span class="token punctuation">,</span> <span class="token string">"Options can be:\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">fprintf</span><span class="token punctuation">(</span><span class="token constant">stderr</span><span class="token punctuation">,</span> <span class="token string">"    -i   unshare IPC namespace\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">fprintf</span><span class="token punctuation">(</span><span class="token constant">stderr</span><span class="token punctuation">,</span> <span class="token string">"    -m   unshare mount namespace\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">fprintf</span><span class="token punctuation">(</span><span class="token constant">stderr</span><span class="token punctuation">,</span> <span class="token string">"    -n   unshare network namespace\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">fprintf</span><span class="token punctuation">(</span><span class="token constant">stderr</span><span class="token punctuation">,</span> <span class="token string">"    -p   unshare PID namespace\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">fprintf</span><span class="token punctuation">(</span><span class="token constant">stderr</span><span class="token punctuation">,</span> <span class="token string">"    -u   unshare UTS namespace\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">fprintf</span><span class="token punctuation">(</span><span class="token constant">stderr</span><span class="token punctuation">,</span> <span class="token string">"    -U   unshare user namespace\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">exit</span><span class="token punctuation">(</span>EXIT_FAILURE<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">int</span> flags<span class="token punctuation">,</span> opt<span class="token punctuation">;</span>
+    flags <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token punctuation">(</span>opt <span class="token operator">=</span> <span class="token function">getopt</span><span class="token punctuation">(</span>argc<span class="token punctuation">,</span> argv<span class="token punctuation">,</span> <span class="token string">"imnpuU"</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">switch</span> <span class="token punctuation">(</span>opt<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">case</span> <span class="token string">'i'</span><span class="token operator">:</span> flags <span class="token operator">|=</span> CLONE_NEWIPC<span class="token punctuation">;</span>        <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token keyword">case</span> <span class="token string">'m'</span><span class="token operator">:</span> flags <span class="token operator">|=</span> CLONE_NEWNS<span class="token punctuation">;</span>         <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token keyword">case</span> <span class="token string">'n'</span><span class="token operator">:</span> flags <span class="token operator">|=</span> CLONE_NEWNET<span class="token punctuation">;</span>        <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token keyword">case</span> <span class="token string">'p'</span><span class="token operator">:</span> flags <span class="token operator">|=</span> CLONE_NEWPID<span class="token punctuation">;</span>        <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token keyword">case</span> <span class="token string">'u'</span><span class="token operator">:</span> flags <span class="token operator">|=</span> CLONE_NEWUTS<span class="token punctuation">;</span>        <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token keyword">case</span> <span class="token string">'U'</span><span class="token operator">:</span> flags <span class="token operator">|=</span> CLONE_NEWUSER<span class="token punctuation">;</span>       <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token keyword">default</span><span class="token operator">:</span>  <span class="token function">usage</span><span class="token punctuation">(</span>argv<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>optind <span class="token operator">>=</span> argc<span class="token punctuation">)</span>
+        <span class="token function">usage</span><span class="token punctuation">(</span>argv<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">unshare</span><span class="token punctuation">(</span>flags<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span>
+        <span class="token function">errExit</span><span class="token punctuation">(</span><span class="token string">"unshare"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token function">execvp</span><span class="token punctuation">(</span>argv<span class="token punctuation">[</span>optind<span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token operator">&amp;</span>argv<span class="token punctuation">[</span>optind<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">errExit</span><span class="token punctuation">(</span><span class="token string">"execvp"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>其实上面的代码可以根据参数实现几乎所有 namespace 的隔离，这里我们仅用它来演示对 UTS namespace 的隔离。把代码保存到文件 uts_unshare.c 文件中，并执行下面的命令进行编译：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ gcc -Wall uts_unshare.c -o uts_unshare_demo<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>接下来运行新创建的程序 uts_unshare_demo：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131845867-470060604.png" class="">
+
+<p>我们为 uts_unshare_demo 指定了参数 -u，它会把当前的进程加入到一个新的 UTS namespace 中，并让它运行一个 shell 程序。如上图中的红框所示，通过对比 readlink /proc/$$/ns/uts 命令的输出，我们可以确定运行 uts_unshare_demo 的进程加入了新的 UTS namespace。</p>
+<h2 id="UTS-namespace-的实现方式"><a href="#UTS-namespace-的实现方式" class="headerlink" title="UTS namespace 的实现方式"></a>UTS namespace 的实现方式</h2><p>在新版(区别2.6)的 linux 内核中(比如笔者查看的 v4.13)，定义进程的结构体 task_struct 包含一个名为 nsproxy 的字段。该字段用来保存于 namespace 相关的信息(/include/linux/sched.h)：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727131944058-184101793.png" class="">
+
+<p>而 nsproxy 结构体的定义如下(/include/linux/nsproxy.h)：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727132017569-910299771.png" class="">
+
+<p>至于其中的 uts_namespace 结构体这里就不展开了，有兴趣的朋友可以自己去代码中查看。下面我们看看 gethostname 系统调用的大概实现(/kernel/sys.c)：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token function">SYSCALL_DEFINE2</span><span class="token punctuation">(</span>gethostname<span class="token punctuation">,</span> <span class="token keyword">char</span> __user <span class="token operator">*</span><span class="token punctuation">,</span> name<span class="token punctuation">,</span> <span class="token keyword">int</span><span class="token punctuation">,</span> len<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">struct</span> <span class="token class-name">new_utsname</span> <span class="token operator">*</span>u<span class="token punctuation">;</span>
+    …
+    u <span class="token operator">=</span> <span class="token function">utsname</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    …
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">copy_to_user</span><span class="token punctuation">(</span>name<span class="token punctuation">,</span> u<span class="token operator">-></span>nodename<span class="token punctuation">,</span> i<span class="token punctuation">)</span><span class="token punctuation">)</span>
+        errno <span class="token operator">=</span> <span class="token operator">-</span>EFAULT<span class="token punctuation">;</span>
+    …
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>而 utsname 方法的实现如下(/include/linux/utsname.h)：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20UTS/952033-20180727132056766-373163013.png" class="">
+
+<p>其实，不管是 gethostname 系统调用还是 uname 系统调用，只要是返回了 hostname 的函数，最后总要落到 utsname 函数的调用上。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>对于 linux namespace 的学习总算是迈出了第一步，虽然参考了很多的资料和文章，但一路下来还是感觉很不轻松。学习 linux namespace 的目的主要是想更好的理解和掌握容器技术，并希望能够通过进一步的学习和分享加深对 Linux 系统的了解。文中如有不当之处，还请朋友们多多指教！</p>
+<p><strong>参考：</strong><br><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000006908598">Linux Namespace系列（02）：UTS namespace (CLONE_NEWUTS)</a><br><a target="_blank" rel="noopener" href="http://man7.org/linux/man-pages/man2/clone.2.html">man 2 clone</a><br><a target="_blank" rel="noopener" href="http://man7.org/linux/man-pages/man2/setns.2.html">man 2 setns</a><br><a target="_blank" rel="noopener" href="http://man7.org/linux/man-pages/man2/unshare.2.html">man 2 unshare</a></p>
+<hr>
+<p>转自[<a target="_blank" rel="noopener" href="https://www.cnblogs.com/sparkdev/tag/linux%20namespace/]">https://www.cnblogs.com/sparkdev/tag/linux%20namespace/]</a>(<a target="_blank" rel="noopener" href="https://www.cnblogs.com/sparkdev/tag/linux">https://www.cnblogs.com/sparkdev/tag/linux</a> namespace/)</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/Namespace/" rel="tag"># Namespace</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Linux/Namespace/Linux%20Namespace%20User/" rel="prev" title="【转】Linux Namespace User">
+                  <i class="fa fa-chevron-left"></i> 【转】Linux Namespace User
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Linux/Namespace/Linux%20Namespace%20PID/" rel="next" title="【转】Linux Namespace PID">
+                  【转】Linux Namespace PID <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

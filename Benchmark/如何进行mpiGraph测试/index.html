@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要本文介绍我运行mpiGraph的过程，因为这玩意在LLNL的源码中本来就是有bug的，所以果断优化了，所以直接可以从我的Github上拉下来我的改进版直接跑。同时里面还有一些自动化脚本，可以遍历size和window，并自动调整iters数量使运行时间大于1分钟.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何进行mpiGraph测试">
+<meta property="og:url" content="http://blog.sysu.tech/Benchmark/%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8CmpiGraph%E6%B5%8B%E8%AF%95/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要本文介绍我运行mpiGraph的过程，因为这玩意在LLNL的源码中本来就是有bug的，所以果断优化了，所以直接可以从我的Github上拉下来我的改进版直接跑。同时里面还有一些自动化脚本，可以遍历size和window，并自动调整iters数量使运行时间大于1分钟.">
+<meta property="og:locale">
+<meta property="article:published_time" content="2020-01-09T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.082Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Benchmark">
+<meta property="article:tag" content="mpiGraph">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Benchmark/%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8CmpiGraph%E6%B5%8B%E8%AF%95/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>如何进行mpiGraph测试 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BD"><span class="nav-number">2.</span> <span class="nav-text">下载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E8%AF%91"><span class="nav-number">3.</span> <span class="nav-text">编译</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85%E4%B8%BB%E7%A8%8B%E5%BA%8F"><span class="nav-number">3.0.1.</span> <span class="nav-text">编译安装主程序</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85netpbm"><span class="nav-number">3.0.2.</span> <span class="nav-text">安装netpbm</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C"><span class="nav-number">4.</span> <span class="nav-text">运行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8E%E5%A4%84%E7%90%86"><span class="nav-number">5.</span> <span class="nav-text">后处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#debug"><span class="nav-number">6.</span> <span class="nav-text">debug</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#bug1"><span class="nav-number">6.1.</span> <span class="nav-text">bug1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bug2"><span class="nav-number">6.2.</span> <span class="nav-text">bug2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bug3"><span class="nav-number">6.3.</span> <span class="nav-text">bug3</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%98%E5%8C%96"><span class="nav-number">7.</span> <span class="nav-text">优化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E6%88%90%E7%9A%84%E7%BB%93%E6%9E%9C%E8%AF%B4%E6%98%8E"><span class="nav-number">8.</span> <span class="nav-text">生成的结果说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B6%85%E5%BC%BA%E4%BC%98%E5%8C%96"><span class="nav-number">9.</span> <span class="nav-text">超强优化</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Benchmark/%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8CmpiGraph%E6%B5%8B%E8%AF%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          如何进行mpiGraph测试
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-01-10 00:00:00" itemprop="dateCreated datePublished" datetime="2020-01-10T00:00:00+08:00">2020-01-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Benchmark/" itemprop="url" rel="index"><span itemprop="name">Benchmark</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>本文介绍我运行mpiGraph的过程，因为这玩意在LLNL的源码中本来就是有bug的，所以果断优化了，所以直接可以从我的<a target="_blank" rel="noopener" href="https://github.com/408534734/mpiGraph">Github</a>上拉下来我的改进版直接跑。同时里面还有一些自动化脚本，可以遍历size和window，并自动调整iters数量使运行时间大于1分钟.</p>
+<a id="more"></a> 
+
+<h2 id="下载"><a href="#下载" class="headerlink" title="下载"></a>下载</h2><p>到GitHub上下载源码即可 <a target="_blank" rel="noopener" href="https://github.com/LLNL/mpiGraph">https://github.com/LLNL/mpiGraph</a> </p>
+<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><h4 id="编译安装主程序"><a href="#编译安装主程序" class="headerlink" title="编译安装主程序"></a>编译安装主程序</h4><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">unzip</span> mpiGraph-master.zip
+<span class="token builtin class-name">cd</span> mpiGraph-master/
+module load IMPI/2018.1.163-icc-18.0.1<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>编辑<code>makefile</code></p>
+<pre class="line-numbers language-makefile" data-language="makefile"><code class="language-makefile"><span class="token symbol">all</span><span class="token punctuation">:</span> clean
+        mpiicc -O3 -xhost -ipo -o mpiGraph mpiGraph.c
+
+<span class="token symbol">debug</span><span class="token punctuation">:</span>
+        mpiicc -g -O0 -o mpiGraph mpiGraph.c
+
+<span class="token symbol">clean</span><span class="token punctuation">:</span>
+        rm -rf mpiGraph.o mpiGraph<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>然后直接<code>make</code></p>
+<h4 id="安装netpbm"><a href="#安装netpbm" class="headerlink" title="安装netpbm"></a>安装netpbm</h4><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">wget</span> http://hfs.sysu.tech/software/linux/mpiGraph/netpbm/netpbm-10.79.00-7.el7.x86_64.rpm
+<span class="token function">wget</span> http://hfs.sysu.tech/software/linux/mpiGraph/netpbm/netpbm-progs-10.79.00-7.el7.x86_64.rpm
+rpm2cpio netpbm-10.79.00-7.el7.x86_64.rpm <span class="token operator">|</span> cpio -idvm
+rpm2cpio netpbm-progs-10.79.00-7.el7.x86_64.rpm <span class="token operator">|</span> cpio -idvm<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="运行"><a href="#运行" class="headerlink" title="运行"></a>运行</h2><p>参数</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">mpiGraph <span class="token operator">&lt;</span>size<span class="token operator">></span> <span class="token operator">&lt;</span>iters<span class="token operator">></span> <span class="token operator">&lt;</span>window<span class="token operator">></span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>第一个参数<code>size</code> 为消息大小，单位为byte</p>
+<p>第二个参数<code>iters </code>为迭代次数</p>
+<p>第三个参数<code>window</code>为每次迭代同时发送的消息的数量</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">srun -N <span class="token number">32</span> -p test_docker ./mpiGraph <span class="token number">1048576</span> <span class="token number">1000</span> <span class="token number">30</span> <span class="token operator">></span> mpiGraph.out<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>或者</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">mpirun -n <span class="token number">32</span> -ppn <span class="token number">1</span> -hosts cpn1,cpn2,cpn3,cpn4,cpn5,cpn6,cpn7,cpn8,cpn9,cpn10,cpn11,cpn12,cpn13,cpn14,cpn15,cpn16,cpn106,cpn107,cpn108,cpn109,cpn110,cpn111,cpn112,cpn113,cpn114,cpn115,cpn116,cpn117,cpn118,cpn119,cpn120,cpn121 ./mpiGraph <span class="token number">1048576</span> <span class="token number">1000</span> <span class="token number">30</span> <span class="token operator">></span> mpiGraph.out<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h2 id="后处理"><a href="#后处理" class="headerlink" title="后处理"></a>后处理</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token builtin class-name">export</span> <span class="token assign-left variable"><span class="token environment constant">PATH</span></span><span class="token operator">=</span><span class="token environment constant">$PATH</span>:/GPUFS/nsccgz_yfdu_16/fgn/sriov-test/mpigraph/usr/bin
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">LD_LIBRARY_PATH</span><span class="token operator">=</span><span class="token variable">$LD_LIBRARY_PATH</span>:/GPUFS/nsccgz_yfdu_16/fgn/sriov-test/mpigraph/usr/lib64
+./crunch_mpiGraph mpiGraph.out<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>生成带图的html网页</p>
+<h2 id="debug"><a href="#debug" class="headerlink" title="debug"></a>debug</h2><h3 id="bug1"><a href="#bug1" class="headerlink" title="bug1"></a>bug1</h3><p><code>crunch_mpiGraph</code>第120行</p>
+<pre class="line-numbers language-perl" data-language="perl"><code class="language-perl">push <span class="token variable">@ret</span><span class="token punctuation">,</span> sprintf<span class="token punctuation">(</span><span class="token string">"%3.1f%"</span><span class="token punctuation">,</span> <span class="token variable">$val</span> <span class="token operator">/</span> <span class="token variable">$base</span> <span class="token operator">*</span> <span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+改为
+push <span class="token variable">@ret</span><span class="token punctuation">,</span> sprintf<span class="token punctuation">(</span><span class="token string">"%3.1f%%"</span><span class="token punctuation">,</span> <span class="token variable">$val</span> <span class="token operator">/</span> <span class="token variable">$base</span> <span class="token operator">*</span> <span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>不改会出现如下bug</p>
+<pre class="line-numbers language-none"><code class="language-none">Missing argument in sprintf at .&#x2F;crunch_mpiGraph line 120.
+Invalid conversion in sprintf: end of string at .&#x2F;crunch_mpiGraph line 120.<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>生成的HTML在有些地方会有undefined，不知道这个算不算bug</p>
+<h3 id="bug2"><a href="#bug2" class="headerlink" title="bug2"></a>bug2</h3><p><code>crunch_mpiGraph</code>注释掉305行的</p>
+<pre class="line-numbers language-perl" data-language="perl"><code class="language-perl"><span class="token keyword">print</span> HTML <span class="token string">"&lt;tr>&lt;td>Run by:&lt;/td>&lt;td>"</span> <span class="token operator">.</span> <span class="token variable">$parts</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span> <span class="token operator">.</span> <span class="token string">" ("</span> <span class="token operator">.</span> <span class="token variable">$parts</span><span class="token punctuation">[</span><span class="token number">4</span><span class="token punctuation">]</span><span class="token operator">.</span> <span class="token string">")&lt;/td>&lt;/tr>\n"</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>因为有的HPC集群上无法正确获取用户名</p>
+<h3 id="bug3"><a href="#bug3" class="headerlink" title="bug3"></a>bug3</h3><p><code>mpiGraph</code>超级坑的bug，要不是openmpi给我报错了，还真发现不了它的下标写错了……</p>
+<p>第171行两个数组下标计算错误，都多了一个<code>-1</code></p>
+<p>将</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token function">MPI_Testall</span><span class="token punctuation">(</span><span class="token punctuation">(</span>k<span class="token operator">+</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token operator">/</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token operator">&amp;</span>request_array<span class="token punctuation">[</span><span class="token punctuation">(</span>k<span class="token operator">+</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token operator">/</span><span class="token number">2</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token operator">&amp;</span>flag_sends<span class="token punctuation">,</span> <span class="token operator">&amp;</span>status_array<span class="token punctuation">[</span><span class="token punctuation">(</span>k<span class="token operator">+</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token operator">/</span><span class="token number">2</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>改为</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token function">MPI_Testall</span><span class="token punctuation">(</span><span class="token punctuation">(</span>k<span class="token operator">+</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token operator">/</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token operator">&amp;</span>request_array<span class="token punctuation">[</span><span class="token punctuation">(</span>k<span class="token operator">+</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token operator">/</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token operator">&amp;</span>flag_sends<span class="token punctuation">,</span> <span class="token operator">&amp;</span>status_array<span class="token punctuation">[</span><span class="token punctuation">(</span>k<span class="token operator">+</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token operator">/</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h2 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h2><p>因为对小消息计时非常不准，所以使用CPU周期计时器对代码进行优化</p>
+<p>将81行至116行的代码替换为如下</p>
+<pre class="line-numbers language-c++" data-language="c++"><code class="language-c++">long long int CPU_FREQUENCY&#x3D;2700000000;
+
+inline long long int getCurrentCycle() &#123;
+	unsigned low, high;
+	__asm__ __volatile__(&quot;rdtsc&quot; : &quot;&#x3D;a&quot; (low), &quot;&#x3D;d&quot; (high));
+	return ((unsigned long long)low) | (((unsigned long long)high)&lt;&lt;32);
+&#125;
+
+#define __TIME_START__    (g_timeval__start    &#x3D; getCurrentCycle())
+#define __TIME_END_SEND__ (g_timeval__end_send &#x3D; getCurrentCycle())
+#define __TIME_END_RECV__ (g_timeval__end_recv &#x3D; getCurrentCycle())
+#define __TIME_USECS_SEND__ ((g_timeval__end_send - g_timeval__start) &#x2F; 2700)
+#define __TIME_USECS_RECV__ ((g_timeval__end_recv - g_timeval__start) &#x2F; 2700)
+long long int g_timeval__start, g_timeval__end_send, g_timeval__end_recv;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="生成的结果说明"><a href="#生成的结果说明" class="headerlink" title="生成的结果说明"></a>生成的结果说明</h2><p>每一行对角线上的元素为全局带宽最大值！</p>
+<h2 id="超强优化"><a href="#超强优化" class="headerlink" title="超强优化"></a>超强优化</h2><p>每个节点跑两个进程，一个收，一个发，以实现更精确的计时，且互不干扰</p>
+<p>详细见代码</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Benchmark/" rel="tag"># Benchmark</a>
+              <a href="/tags/mpiGraph/" rel="tag"># mpiGraph</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E8%83%96%E6%A0%91%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84%E4%B8%8B%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/" rel="prev" title="胖树拓扑结构下路由算法学习">
+                  <i class="fa fa-chevron-left"></i> 胖树拓扑结构下路由算法学习
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/%E7%BD%91%E7%BB%9C/Shadowsocks/ShadowsocksR%E9%83%A8%E7%BD%B2/" rel="next" title="ShadowsocksR部署">
+                  ShadowsocksR部署 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

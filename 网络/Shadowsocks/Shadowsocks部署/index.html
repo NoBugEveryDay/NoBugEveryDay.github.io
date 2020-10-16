@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要本文将介绍通过一键安装脚本在Linux上部署Shadowsocks服务端来搭建VPN的方法。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Shadowsocks部署">
+<meta property="og:url" content="http://blog.sysu.tech/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要本文将介绍通过一键安装脚本在Linux上部署Shadowsocks服务端来搭建VPN的方法。">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/15ac751affd9e4e37642fbc50b3da004.png">
+<meta property="og:image" content="http://blog.sysu.tech/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/004c35414fcf8423f76214f0f5099638.png">
+<meta property="og:image" content="http://blog.sysu.tech/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/dca3643bc3bc1c728b57d10c45b211fd.png">
+<meta property="og:image" content="http://blog.sysu.tech/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/300979c76ae8c40d2c16a7513baa34b0.png">
+<meta property="og:image" content="http://blog.sysu.tech/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/33430f0fb6bb4973147093fde16bdcdd.png">
+<meta property="article:published_time" content="2019-02-16T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.262Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="VPN">
+<meta property="article:tag" content="Shadowsocks">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/15ac751affd9e4e37642fbc50b3da004.png">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>Shadowsocks部署 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%82%E7%94%A8%E7%8E%AF%E5%A2%83"><span class="nav-number">2.</span> <span class="nav-text">适用环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%AE%89%E8%A3%85%E6%96%B9%E6%B3%95"><span class="nav-number">3.</span> <span class="nav-text">服务端安装方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%85%8D%E7%BD%AE"><span class="nav-number">4.</span> <span class="nav-text">客户端配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#WIN10"><span class="nav-number">4.1.</span> <span class="nav-text">WIN10</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Android"><span class="nav-number">4.2.</span> <span class="nav-text">Android</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux"><span class="nav-number">4.3.</span> <span class="nav-text">Linux</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%94%AF%E6%8C%81%E5%A4%9A%E7%94%A8%E6%88%B7"><span class="nav-number">5.</span> <span class="nav-text">支持多用户</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E7%AB%AF%E5%8F%A3%E5%AF%86%E7%A0%81"><span class="nav-number">5.1.</span> <span class="nav-text">配置端口密码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%8D%E5%90%AF%E6%9C%8D%E5%8A%A1"><span class="nav-number">5.2.</span> <span class="nav-text">重启服务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%81%E9%87%8F%E7%9B%91%E6%8E%A7"><span class="nav-number">5.3.</span> <span class="nav-text">流量监控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%89%B9%E6%AE%8A%E6%83%85%E5%86%B5"><span class="nav-number">5.4.</span> <span class="nav-text">特殊情况</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%81%E9%87%8F%E6%B7%B7%E6%B7%86"><span class="nav-number">6.</span> <span class="nav-text">流量混淆</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%AB%AF"><span class="nav-number">6.1.</span> <span class="nav-text">服务端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="nav-number">6.2.</span> <span class="nav-text">客户端</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#WIN10-1"><span class="nav-number">6.2.1.</span> <span class="nav-text">WIN10</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Android-1"><span class="nav-number">6.2.2.</span> <span class="nav-text">Android</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%84%B6%E8%80%8C"><span class="nav-number">6.3.</span> <span class="nav-text">然而</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VPN%E8%B7%B3%E6%9D%BF"><span class="nav-number">7.</span> <span class="nav-text">VPN跳板</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Shadowsocks部署
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-02-17 00:00:00" itemprop="dateCreated datePublished" datetime="2019-02-17T00:00:00+08:00">2019-02-17</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">网络</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BD%91%E7%BB%9C/Shadowsocks/" itemprop="url" rel="index"><span itemprop="name">Shadowsocks</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>本文将介绍通过一键安装脚本在Linux上部署Shadowsocks服务端来搭建VPN的方法。</p>
+<a id="more"></a> 
+
+<p>参考：<a target="_blank" rel="noopener" href="https://teddysun.com/486.html" title="https://teddysun.com/486.html">https://teddysun.com/486.html</a> Shadowsocks 一键安装脚本（四合一）</p>
+<h2 id="适用环境"><a href="#适用环境" class="headerlink" title="适用环境"></a>适用环境</h2><p>CentOS 6+，Debian 7+，Ubuntu 12+（Ubuntu18.10亲测会翻车，我用的是Ubuntu18.04）</p>
+<h2 id="服务端安装方法"><a href="#服务端安装方法" class="headerlink" title="服务端安装方法"></a>服务端安装方法</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">wget</span> --no-check-certificate -O shadowsocks-all.sh https://raw.githubusercontent.com/408534734/shadowsocks_install/master/shadowsocks-all.sh
+<span class="token comment">#这里我fork了一份到我自己的github</span>
+<span class="token function">chmod</span> +x shadowsocks-all.sh
+./shadowsocks-all.sh <span class="token operator"><span class="token file-descriptor important">2</span>></span><span class="token file-descriptor important">&amp;1</span> <span class="token operator">|</span> <span class="token function">tee</span> shadowsocks-all.log<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>在执行脚本安装过程中第一步需要选择安装版本，因为这是一个四合一安装脚本，这里选择第一个<code>Shadowsocks-Python</code>，因为如果要设置多个端口给多个用户，会比较方便</p>
+<img src="/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/15ac751affd9e4e37642fbc50b3da004.png" class="">
+<p>后面的按照自己的需求设置端口号和密码即可，加密方法应该可以随便选一个即可，我选的是<code>aes-256-cfb</code></p>
+<h2 id="客户端配置"><a href="#客户端配置" class="headerlink" title="客户端配置"></a>客户端配置</h2><h3 id="WIN10"><a href="#WIN10" class="headerlink" title="WIN10"></a>WIN10</h3><ol>
+<li>下载，地址：<a target="_blank" rel="noopener" href="https://github.com/shadowsocks/shadowsocks-windows/releases" title="https://github.com/shadowsocks/shadowsocks-windows/releases">https://github.com/shadowsocks/shadowsocks-windows/releases</a><br>点击最新版的下载即可<img src="/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/004c35414fcf8423f76214f0f5099638.png" class=""></li>
+<li>解压</li>
+<li>打开Shadowsocks.exe</li>
+<li>服务器地址填写你的ip</li>
+<li>端口号和密码填写自己的</li>
+<li>加密方式选择安装时设置的</li>
+<li>点击确定</li>
+<li>右键点击右下角纸飞机小图标，启用系统代理（启用了之后该选项之前会有个小勾）</li>
+<li>右键点击右下角纸飞机小图标，移动鼠标到系统袋里模式，由两种模式可选<ul>
+<li>PAC模式：将会对需要翻墙的网站如google等进行自动翻墙</li>
+<li>全局模式：对所有访问翻墙</li>
+</ul>
+</li>
+<li>访问google.com或者youtube.com进行测试</li>
+</ol>
+<p><strong>电脑中如有其它VPN软件或者浏览器中有其它VPN插件，请先卸载，以免发生冲突</strong></p>
+<h3 id="Android"><a href="#Android" class="headerlink" title="Android"></a>Android</h3><ol>
+<li>下载，地址：<a target="_blank" rel="noopener" href="https://github.com/shadowsocks/shadowsocks-android/releases" title="https://github.com/shadowsocks/shadowsocks-android/releases">https://github.com/shadowsocks/shadowsocks-android/releases</a><br>点击最新<strong>稳定通用版</strong>下载即可<img src="/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/dca3643bc3bc1c728b57d10c45b211fd.png" class=""></li>
+<li>手机中安装Shadowsocks.apk，如果使用微信发送该安装包的时候回在后面自动再添加一个<code>.1</code>后缀，手动在手机里找到该文件重命名去掉就好</li>
+<li>点击右上角加号添加连接</li>
+<li>服务器地址填写你的ip</li>
+<li>端口号和密码填写自己的</li>
+<li>加密方式选择安装时设置的</li>
+<li>分应用绕过VPN可以开也可以关<ul>
+<li>开：部分应用使用VPN，将里面要使用VPN的应用打开</li>
+<li>关：所有应用使用VPN</li>
+<li>建议添加两个连接，一个用于分应用使用VPN，另一个用于所有应用使用VPN</li>
+</ul>
+</li>
+<li>完成保存配置后点击应用右下角纸飞机即可</li>
+</ol>
+<h3 id="Linux"><a href="#Linux" class="headerlink" title="Linux"></a>Linux</h3><ul>
+<li>参考：<a target="_blank" rel="noopener" href="https://github.com/shadowsocks/shadowsocks-libev#installation" title="https://github.com/shadowsocks/shadowsocks-libev#installation">https://github.com/shadowsocks/shadowsocks-libev#installation</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/Shadowsocks-Wiki/shadowsocks/blob/master/6-linux-setup-guide-cn.md" title="https://github.com/Shadowsocks-Wiki/shadowsocks/blob/master/6-linux-setup-guide-cn.md">https://github.com/Shadowsocks-Wiki/shadowsocks/blob/master/6-linux-setup-guide-cn.md</a></li>
+</ul>
+<h2 id="支持多用户"><a href="#支持多用户" class="headerlink" title="支持多用户"></a>支持多用户</h2><p><strong>如果你的VPN是多人是使用，并且你还想做一个管理，那么请阅读接下来的内容</strong></p>
+<h3 id="配置端口密码"><a href="#配置端口密码" class="headerlink" title="配置端口密码"></a>配置端口密码</h3><p>如果你也是安装的<code>Shadowsocks-Python</code>版的，那么就修改<code>/etc/shadowsocks-python/config.json</code>，因为每个版本的配置文件所在地不一样，分别如下：</p>
+<ul>
+<li>ShadowsocksR 版：<br>/etc/shadowsocks-r/config.json</li>
+<li>Shadowsocks-Go 版：<br>/etc/shadowsocks-go/config.json</li>
+<li>Shadowsocks-libev 版：<br>/etc/shadowsocks-libev/config.json</li>
+</ul>
+<p>配置文件里面原来大概长这样：</p>
+<img src="/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/300979c76ae8c40d2c16a7513baa34b0.png" class="">
+<p>现在编辑配置文件来为每个用户配置端口和密码：删掉里面的条目<code>server_port</code>和<code>password</code>，并增加格式如下的一个<code>port_password</code>条目如下</p>
+<pre class="line-numbers language-json" data-language="json"><code class="language-json"><span class="token punctuation">&#123;</span>
+    <span class="token property">"server"</span><span class="token operator">:</span><span class="token string">"::"</span><span class="token punctuation">,</span>
+    <span class="token property">"local_address"</span><span class="token operator">:</span><span class="token string">"127.0.0.1"</span><span class="token punctuation">,</span>
+    <span class="token property">"local_port"</span><span class="token operator">:</span><span class="token number">1080</span><span class="token punctuation">,</span>
+    <span class="token property">"port_password"</span><span class="token operator">:</span><span class="token punctuation">&#123;</span>
+            <span class="token property">"10001"</span><span class="token operator">:</span><span class="token string">"password of user1"</span><span class="token punctuation">,</span>
+            <span class="token property">"10002"</span><span class="token operator">:</span><span class="token string">"password of user2"</span><span class="token punctuation">,</span>
+            <span class="token property">"10003"</span><span class="token operator">:</span><span class="token string">"password of user3"</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">,</span>
+    <span class="token property">"timeout"</span><span class="token operator">:</span><span class="token number">300</span><span class="token punctuation">,</span>
+    <span class="token property">"method"</span><span class="token operator">:</span><span class="token string">"aes-256-cfb"</span><span class="token punctuation">,</span>
+    <span class="token property">"fast_open"</span><span class="token operator">:</span><span class="token boolean">false</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>注意最后一个端口号密码条目没有逗号，端口号的范围为1025-65535</strong></p>
+<h3 id="重启服务"><a href="#重启服务" class="headerlink" title="重启服务"></a>重启服务</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">/etc/init.d/shadowsocks-python restart
+<span class="token comment">#或者</span>
+/etc/init.d/shadowsocks-r restart
+/etc/init.d/shadowsocks-go restart
+/etc/init.d/shadowsocks-libev restart<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>上面的<code>restart</code>换成<code>start | stop | status</code>相应的可以开始、停止、查看状态</p>
+<h3 id="流量监控"><a href="#流量监控" class="headerlink" title="流量监控"></a>流量监控</h3><p>如果想检测每个用户用了多上流量，最方便的方法就是添加端口检测了，这里直接把一键添加端口流量检测的脚本贴上来</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+<span class="token builtin class-name">set</span> -x
+iptables -F
+<span class="token keyword">for</span> <span class="token for-or-select variable">i</span> <span class="token keyword">in</span> <span class="token punctuation">&#123;</span><span class="token number">10001</span><span class="token punctuation">..</span><span class="token number">10003</span><span class="token punctuation">&#125;</span>
+<span class="token comment"># 10001和10003分别用你的起始和结束端口号代替即可</span>
+<span class="token keyword">do</span>
+    iptables -A INPUT -p tcp --dport <span class="token variable">$i</span>
+    iptables -A INPUT -p udp --dport <span class="token variable">$i</span>
+    iptables -A OUTPUT -p tcp --sport <span class="token variable">$i</span>
+    iptables -A OUTPUT -p udp --sport <span class="token variable">$i</span>
+<span class="token keyword">done</span>
+iptables -Z INPUT
+iptables -Z OUTPUT
+iptables -L -v -x<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>要查看每个端口用了多少流量时直接<code>iptables -L -v -x</code>即可<br>如果想要清空计数，再执行一次脚本即可</p>
+<h3 id="特殊情况"><a href="#特殊情况" class="headerlink" title="特殊情况"></a>特殊情况</h3><p>特别注意<code>Shadowsocks-libev</code>版的设置多端口多用户的方法有所不同，参考<a target="_blank" rel="noopener" href="https://teddysun.com/532.html">https://teddysun.com/532.html</a></p>
+<ol>
+<li>新建存放配置文件的目录<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">mkdir</span> /etc/shadowsocks-manager<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></li>
+<li>创建多端口配置文件，/etc/shadowsocks-manager/config.json 示例：<pre class="line-numbers language-json" data-language="json"><code class="language-json"><span class="token punctuation">&#123;</span>
+    <span class="token property">"server"</span><span class="token operator">:</span><span class="token string">"0.0.0.0"</span><span class="token punctuation">,</span>
+    <span class="token property">"port_password"</span><span class="token operator">:</span><span class="token punctuation">&#123;</span>
+         <span class="token property">"9000"</span><span class="token operator">:</span><span class="token string">"password0"</span><span class="token punctuation">,</span>
+         <span class="token property">"9001"</span><span class="token operator">:</span><span class="token string">"password1"</span><span class="token punctuation">,</span>
+         <span class="token property">"9002"</span><span class="token operator">:</span><span class="token string">"password2"</span><span class="token punctuation">,</span>
+         <span class="token property">"9003"</span><span class="token operator">:</span><span class="token string">"password3"</span><span class="token punctuation">,</span>
+         <span class="token property">"9004"</span><span class="token operator">:</span><span class="token string">"password4"</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">,</span>
+    <span class="token property">"timeout"</span><span class="token operator">:</span><span class="token number">300</span><span class="token punctuation">,</span>
+    <span class="token property">"user"</span><span class="token operator">:</span><span class="token string">"nobody"</span><span class="token punctuation">,</span>
+    <span class="token property">"method"</span><span class="token operator">:</span><span class="token string">"your_encryption_method"</span><span class="token punctuation">,</span>
+    <span class="token property">"nameserver"</span><span class="token operator">:</span><span class="token string">"8.8.8.8"</span><span class="token punctuation">,</span>
+    <span class="token property">"mode"</span><span class="token operator">:</span><span class="token string">"tcp_and_udp"</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></li>
+<li>使用启动脚本<br>启动：<code>/etc/init.d/shadowsocks-manager start</code><br>停止：<code>/etc/init.d/shadowsocks-manager stop</code><br>重启：<code>/etc/init.d/shadowsocks-manager restart</code><br>查看状态：<code>/etc/init.d/shadowsocks-manager status</code></li>
+</ol>
+<p>既然<code>Shadowsocks-libev</code>版还要更麻烦为什么还要用这个版本呢？因为这个版本能使用端口流量呀！</p>
+<h2 id="流量混淆"><a href="#流量混淆" class="headerlink" title="流量混淆"></a>流量混淆</h2><p>参考：<a target="_blank" rel="noopener" href="https://teddysun.com/511.html" title="https://teddysun.com/511.html">https://teddysun.com/511.html</a></p>
+<h3 id="服务端"><a href="#服务端" class="headerlink" title="服务端"></a>服务端</h3><p><code>Shadowsocks-libev</code>版的在安装的时候即可选择安装<code>obfs</code>流量混淆，那一步按y安装即可，混淆模式有http和tls两种，我选择了http，然后服务端的流量混淆就配置好了</p>
+<h3 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h3><h4 id="WIN10-1"><a href="#WIN10-1" class="headerlink" title="WIN10"></a>WIN10</h4><p>下载网址：<a target="_blank" rel="noopener" href="https://github.com/shadowsocks/simple-obfs/releases" title="https://github.com/shadowsocks/simple-obfs/releases">https://github.com/shadowsocks/simple-obfs/releases</a> 同上选择最新稳定版下载<br>下载后，解压出来的文件一定要和 Windows 客户端的 exe 文件放在同一文件夹下<br>配置插件如下：</p>
+<img src="/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/33430f0fb6bb4973147093fde16bdcdd.png" class="">
+<h4 id="Android-1"><a href="#Android-1" class="headerlink" title="Android"></a>Android</h4><p>下载网址：<a target="_blank" rel="noopener" href="https://github.com/shadowsocks/simple-obfs-android/releases" title="https://github.com/shadowsocks/simple-obfs-android/releases">https://github.com/shadowsocks/simple-obfs-android/releases</a> 同上选择最新稳定版下载安装</p>
+<h3 id="然而"><a href="#然而" class="headerlink" title="然而"></a>然而</h3><p>当初我想做流量混淆完全是因为我的VPN被中国移动和中国电信墙了，中国联通能用，所以想做一个流量混淆看能不能绕过去，然而并没有什么卵用，最后还是用跳板解决的。</p>
+<h2 id="VPN跳板"><a href="#VPN跳板" class="headerlink" title="VPN跳板"></a>VPN跳板</h2><p>当直接连接到国外VPN不成功时就需要一个跳板了，直接买一个国内的VPS，推荐带宽越大越好，然后在国内VPS上执行以下脚本即可</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+<span class="token builtin class-name">set</span> -x
+iptables -F
+iptables -F -t nat
+<span class="token keyword">for</span> <span class="token for-or-select variable">i</span> <span class="token keyword">in</span> <span class="token punctuation">&#123;</span><span class="token number">10001</span><span class="token punctuation">..</span><span class="token number">10003</span><span class="token punctuation">&#125;</span>
+<span class="token comment"># 10001和10003分别用你的起始和结束端口号代替即可</span>
+<span class="token keyword">do</span>
+    iptables -t nat -A POSTROUTING -p tcp --dport <span class="token variable">$i</span> -j SNAT --to-source <span class="token punctuation">[</span>国内VPS的ip<span class="token punctuation">]</span>
+    iptables -t nat -A POSTROUTING -p udp --dport <span class="token variable">$i</span> -j SNAT --to-source <span class="token punctuation">[</span>国内VPS的ip<span class="token punctuation">]</span>
+    iptables -t nat -A PREROUTING -p tcp --dport <span class="token variable">$i</span> -j DNAT --to-destination <span class="token punctuation">[</span>国外VPS的ip<span class="token punctuation">]</span>:<span class="token variable">$i</span>
+    iptables -t nat -A PREROUTING -p udp --dport <span class="token variable">$i</span> -j DNAT --to-destination <span class="token punctuation">[</span>国外VPS的ip<span class="token punctuation">]</span>:<span class="token variable">$i</span>
+<span class="token keyword">done</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这里要注意比较坑的是你“国内VPS的ip”可能并不是你ssh上去的ip，而是你<code>ifconfig</code>看到的ip<br>然后VPN连接的时候填写你国内VPS的ip即可</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/VPN/" rel="tag"># VPN</a>
+              <a href="/tags/Shadowsocks/" rel="tag"># Shadowsocks</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/%E7%BD%91%E7%BB%9C/%E5%85%B6%E4%BB%96/%E6%90%AD%E5%BB%BA%E5%9F%BA%E4%BA%8EL2TP%20IPSec%E7%9A%84VPN/" rel="prev" title="搭建基于L2TP IPSec的VPN">
+                  <i class="fa fa-chevron-left"></i> 搭建基于L2TP IPSec的VPN
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/WordPress/WordPress%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/" rel="next" title="WordPress安装教程">
+                  WordPress安装教程 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

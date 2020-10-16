@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要本文介绍如何开启SR-IOV">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SR-IOV配置方法">
+<meta property="og:url" content="http://blog.sysu.tech/Linux/%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/SR-IOV%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要本文介绍如何开启SR-IOV">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/SR-IOV%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/1569147638585.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/SR-IOV%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/1569147654467.png">
+<meta property="article:published_time" content="2019-10-13T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.190Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="SR-IOV">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/Linux/%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/SR-IOV%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/1569147638585.png">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Linux/%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/SR-IOV%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>SR-IOV配置方法 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">2.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E7%8E%AF%E5%A2%83"><span class="nav-number">3.</span> <span class="nav-text">实验环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%BC%80%E5%90%AFBIOS%E7%9A%84SR-IOV%E5%92%8CVT-d%E9%80%89%E9%A1%B9"><span class="nav-number">4.</span> <span class="nav-text">1. 开启BIOS的SR-IOV和VT-d选项</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%9B%BA%E4%BB%B6%E8%AE%BE%E7%BD%AE"><span class="nav-number">5.</span> <span class="nav-text">2. 固件设置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E6%9F%A5%E7%9C%8B%E7%BD%91%E5%8D%A1%E8%AE%BE%E5%A4%87%E8%B7%AF%E5%BE%84"><span class="nav-number">5.1.</span> <span class="nav-text">2.1 查看网卡设备路径</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E6%9F%A5%E7%9C%8B%E7%BD%91%E5%8D%A1%E7%8E%B0%E6%9C%89%E9%85%8D%E7%BD%AE"><span class="nav-number">5.2.</span> <span class="nav-text">2.2 查看网卡现有配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-%E6%9B%B4%E6%94%B9%E9%85%8D%E7%BD%AE"><span class="nav-number">5.3.</span> <span class="nav-text">2.3 更改配置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E4%BF%AE%E6%94%B9%E5%86%85%E6%A0%B8%E5%90%AF%E5%8A%A8%E5%8F%82%E6%95%B0"><span class="nav-number">6.</span> <span class="nav-text">3. 修改内核启动参数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E9%87%8D%E5%90%AF"><span class="nav-number">7.</span> <span class="nav-text">4. 重启</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E8%AE%BE%E7%BD%AE%E5%BC%80%E5%90%AF%E7%9A%84%E8%99%9A%E6%8B%9F%E7%BD%91%E5%8D%A1%E6%95%B0%E9%87%8F%EF%BC%88%E5%8F%AF%E9%80%89%EF%BC%89"><span class="nav-number">8.</span> <span class="nav-text">5. 设置开启的虚拟网卡数量（可选）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%B7%E6%9A%82%E6%97%B6%E4%B8%8D%E8%A6%81%E6%89%A7%E8%A1%8C%E7%AC%AC5%E6%AD%A5"><span class="nav-number">9.</span> <span class="nav-text">请暂时不要执行第5步</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Linux/%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/SR-IOV%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SR-IOV配置方法
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-10-14 00:00:00" itemprop="dateCreated datePublished" datetime="2019-10-14T00:00:00+08:00">2019-10-14</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">配置方法</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>本文介绍如何开启SR-IOV</p>
+<a id="more"></a> 
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://hub.docker.com/r/rdma/container_tools_installer">https://hub.docker.com/r/rdma/container_tools_installer</a></p>
+<h2 id="实验环境"><a href="#实验环境" class="headerlink" title="实验环境"></a>实验环境</h2><p>DELL R740</p>
+<h2 id="1-开启BIOS的SR-IOV和VT-d选项"><a href="#1-开启BIOS的SR-IOV和VT-d选项" class="headerlink" title="1. 开启BIOS的SR-IOV和VT-d选项"></a>1. 开启BIOS的SR-IOV和VT-d选项</h2><p>参考：<a target="_blank" rel="noopener" href="https://community.mellanox.com/s/article/docker-rdma-sriov-networking-with-connectx4-connectx5">https://community.mellanox.com/s/article/docker-rdma-sriov-networking-with-connectx4-connectx5</a></p>
+<p>将<code>SR-IOV</code>和<code>VT(Virtualization Technology)</code>的开关打开，不同型号的机器设置的地方可能不一样</p>
+<img src="/Linux/%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/SR-IOV%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/1569147638585.png" class="">
+
+<img src="/Linux/%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/SR-IOV%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95/1569147654467.png" class="">
+
+<h2 id="2-固件设置"><a href="#2-固件设置" class="headerlink" title="2. 固件设置"></a>2. 固件设置</h2><h3 id="2-1-查看网卡设备路径"><a href="#2-1-查看网卡设备路径" class="headerlink" title="2.1 查看网卡设备路径"></a>2.1 查看网卡设备路径</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token punctuation">[</span>root@cpn124%tianhe2-K ~<span class="token punctuation">]</span><span class="token comment"># mst start</span>
+Starting MST <span class="token punctuation">(</span>Mellanox Software Tools<span class="token punctuation">)</span> driver <span class="token builtin class-name">set</span>
+Loading MST PCI module - Success
+Loading MST PCI configuration module - Success
+Create devices
+Unloading MST PCI module <span class="token punctuation">(</span>unused<span class="token punctuation">)</span> - Success
+<span class="token punctuation">[</span>root@cpn124%tianhe2-K ~<span class="token punctuation">]</span><span class="token comment"># mst status</span>
+MST modules:
+------------
+    MST PCI module is not loaded
+    MST PCI configuration module loaded
+
+MST devices:
+------------
+/dev/mst/mt4115_pciconf0         - PCI configuration cycles access.
+                                   domain:bus:dev.fn<span class="token operator">=</span>0000:af:00.0 addr.reg<span class="token operator">=</span><span class="token number">88</span> data.reg<span class="token operator">=</span><span class="token number">92</span>
+                                   Chip revision is: 00
+/dev/mst/mt4117_pciconf0         - PCI configuration cycles access.
+                                   domain:bus:dev.fn<span class="token operator">=</span>0000:5e:00.0 addr.reg<span class="token operator">=</span><span class="token number">88</span> data.reg<span class="token operator">=</span><span class="token number">92</span>
+                                   Chip revision is: 00xxxxxxxxxx mst
+<span class="token punctuation">[</span>root@cpn124%tianhe2-K ~<span class="token punctuation">]</span><span class="token comment"># lspci | grep Mellanox</span>
+5e:00.0 Ethernet controller: Mellanox Technologies MT27710 Family <span class="token punctuation">[</span>ConnectX-4 Lx<span class="token punctuation">]</span>
+5e:00.1 Ethernet controller: Mellanox Technologies MT27710 Family <span class="token punctuation">[</span>ConnectX-4 Lx<span class="token punctuation">]</span>
+af:00.0 Infiniband controller: Mellanox Technologies MT27700 Family <span class="token punctuation">[</span>ConnectX-4<span class="token punctuation">]</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>这里因为有两块网卡，不要搞错了，是<code>/dev/mst/mt4115_pciconf0</code>这一块IB网卡，而不是以太网卡</p>
+<h3 id="2-2-查看网卡现有配置"><a href="#2-2-查看网卡现有配置" class="headerlink" title="2.2 查看网卡现有配置"></a>2.2 查看网卡现有配置</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token punctuation">[</span>root@cpn124%tianhe2-K ~<span class="token punctuation">]</span><span class="token comment"># mlxconfig -d /dev/mst/mt4115_pciconf0 q</span>
+
+Device <span class="token comment">#1:</span>
+----------
+
+Device type:    ConnectX4       
+Name:           N/A             
+Description:    N/A             
+Device:         /dev/mst/mt4115_pciconf0
+
+Configurations:                              Next Boot
+         MEMIC_BAR_SIZE                      <span class="token number">0</span>               
+         MEMIC_SIZE_LIMIT                    _256KB<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>       
+         FLEX_PARSER_PROFILE_ENABLE          <span class="token number">0</span>               
+         FLEX_IPV4_OVER_VXLAN_PORT           <span class="token number">0</span>               
+         ROCE_NEXT_PROTOCOL                  <span class="token number">254</span>             
+         NON_PREFETCHABLE_PF_BAR             False<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>        
+         NUM_OF_VFS                          <span class="token number">0</span>               
+         FPP_EN                              True<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>         
+         SRIOV_EN                            False<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>可以看到现在的<code>NUM_OF_VFS=0</code>，<code>SRIOV_EN=False</code></p>
+<h3 id="2-3-更改配置"><a href="#2-3-更改配置" class="headerlink" title="2.3 更改配置"></a>2.3 更改配置</h3><p>下面的例子是配置256个虚拟网卡的指令，其中<code>NUM_OF_VFS=256</code>。但我们实验中其实只设置了8个虚拟网卡，如果配到256个，并不清楚会不会因为数量多了一点引起什么问题。</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token punctuation">[</span>root@cpn124%tianhe2-K ~<span class="token punctuation">]</span><span class="token comment"># mlxconfig -d /dev/mst/mt4115_pciconf0 set SRIOV_EN=1 NUM_OF_VFS=256</span>
+
+Device <span class="token comment">#1:</span>
+----------
+
+Device type:    ConnectX4       
+Name:           N/A             
+Description:    N/A             
+Device:         /dev/mst/mt4115_pciconf0
+
+Configurations:                              Next Boot       New
+         SRIOV_EN                            False<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>        True<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>         
+         NUM_OF_VFS                          <span class="token number">0</span>               <span class="token number">256</span>               
+
+ Apply new Configuration? <span class="token punctuation">(</span>y/n<span class="token punctuation">)</span> <span class="token punctuation">[</span>n<span class="token punctuation">]</span> <span class="token builtin class-name">:</span> y
+Applying<span class="token punctuation">..</span>. Done<span class="token operator">!</span>
+-I- Please <span class="token function">reboot</span> machine to load new configurations.<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="3-修改内核启动参数"><a href="#3-修改内核启动参数" class="headerlink" title="3. 修改内核启动参数"></a>3. 修改内核启动参数</h2><p>修改<code>/etc/sysconfig/grub</code>，添加参数<code>intel_iommu=on</code></p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token assign-left variable">GRUB_CMDLINE_LINUX</span><span class="token operator">=</span><span class="token string">"intel_pstate=disable intel_idle.max_cstate=0 processor.max_cstate=1 net.ifnames=0 biosdevname=0"</span>
+<span class="token comment"># 修改为了</span>
+<span class="token assign-left variable">GRUB_CMDLINE_LINUX</span><span class="token operator">=</span><span class="token string">"intel_pstate=disable intel_idle.max_cstate=0 processor.max_cstate=1 net.ifnames=0 biosdevname=0 intel_iommu=on"</span>
+<span class="token comment"># 然后执行</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>然后将这个设置写入启动设置</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">grub2-mkconfig -o /boot/grub2/grub.cfg<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>重启后可以通过以下操作检查是否生效</p>
+<p>检查上述操作是否生效</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token punctuation">[</span>root@cpn124%tianhe2-K ~<span class="token punctuation">]</span><span class="token comment"># cat /proc/cmdline |grep intel_iommu=on</span>
+<span class="token assign-left variable">BOOT_IMAGE</span><span class="token operator">=</span>/vmlinuz-3.10.0-957.el7.x86_64 <span class="token assign-left variable">root</span><span class="token operator">=</span>UUID<span class="token operator">=</span>5cedf166-4e57-49eb-b246-f63d4c5e114f ro <span class="token assign-left variable">intel_pstate</span><span class="token operator">=</span>disable intel_idle.max_cstate<span class="token operator">=</span><span class="token number">0</span> processor.max_cstate<span class="token operator">=</span><span class="token number">1</span> net.ifnames<span class="token operator">=</span><span class="token number">0</span> <span class="token assign-left variable">biosdevname</span><span class="token operator">=</span><span class="token number">0</span> <span class="token assign-left variable">intel_iommu</span><span class="token operator">=</span>on
+<span class="token punctuation">[</span>root@cpn124%tianhe2-K ~<span class="token punctuation">]</span><span class="token comment"># dmesg |grep -e DMAR -e IOMMU</span>
+<span class="token punctuation">[</span>    <span class="token number">0.000000</span><span class="token punctuation">]</span> ACPI: DMAR 000000006f6c5000 001D0 <span class="token punctuation">(</span>v01 DELL   PE_SC3   00000001 DELL 00000001<span class="token punctuation">)</span>
+<span class="token punctuation">[</span>    <span class="token number">0.000000</span><span class="token punctuation">]</span> DMAR: IOMMU enabled<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="4-重启"><a href="#4-重启" class="headerlink" title="4. 重启"></a>4. 重启</h2><p>前面3步的设置都需要重启之后才能生效</p>
+<p>后面的第5步是立即生效的</p>
+<h2 id="5-设置开启的虚拟网卡数量（可选）"><a href="#5-设置开启的虚拟网卡数量（可选）" class="headerlink" title="5. 设置开启的虚拟网卡数量（可选）"></a>5. 设置开启的虚拟网卡数量（可选）</h2><p>执行了前4步之后，通过<code>lspci</code>还是看不到虚拟网卡，这是正常的，因为还需要一步</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token builtin class-name">echo</span> <span class="token number">8</span> <span class="token operator">>></span> /sys/class/infiniband/mlx5_2/device/sriov_numvfs<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>（注意：这里是<code>mlx5_2</code>而不是<code>mlx5_0</code>，具体的设备名通过<code>ibdev2netdev</code>查询）</p>
+<p>这里开启了8个虚拟网卡，使用<code>lspci</code>即可看到多出来了8块虚拟网卡</p>
+<p>这一步操作是立即生效的，但这一步也是会重启失效的，重启系统后需要重新设置</p>
+<p>如果需要关掉虚拟网卡，使用以下命令即可</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token builtin class-name">echo</span> <span class="token number">0</span> <span class="token operator">>></span> /sys/class/infiniband/mlx5_2/device/sriov_numvfs<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>在不需要使用时置零即可，应该不会对系统有什么影响</p>
+<h2 id="请暂时不要执行第5步"><a href="#请暂时不要执行第5步" class="headerlink" title="请暂时不要执行第5步"></a>请暂时不要执行第5步</h2><p>因为完成了最后这一步才算是真正开启了SR-IOV，各种软件才能看到虚拟网卡</p>
+<p><strong>但是</strong>根据我们的实验这会导致很多软件的的<strong>很多兼容性问题</strong>，因为很多软件对虚拟网卡的兼容性并不是很好，各种MPI可能会有各种各样的问题，各种依赖于IB的设备的软件，可能由于一下看到了很多很多网卡然后随便捡一个使用然后就崩了~</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/SR-IOV/" rel="tag"># SR-IOV</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/%E4%BF%AE%E6%94%B9ssh%E7%99%BB%E9%99%86%E7%AB%AF%E5%8F%A3/" rel="prev" title="修改ssh登陆端口">
+                  <i class="fa fa-chevron-left"></i> 修改ssh登陆端口
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%99%9A%E6%8B%9F%E5%8C%96%E7%9A%84%E7%A0%94%E7%A9%B6%E7%8E%B0%E7%8A%B6%E4%B8%8E%E5%B1%95%E6%9C%9B/" rel="next" title="操作系统虚拟化的研究现状与展望">
+                  操作系统虚拟化的研究现状与展望 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要本文是一个手动安装LAMP后安装WordPress的教程，虽然后面用着用着觉得WordPress十分辣鸡于是不用了……">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WordPress安装教程">
+<meta property="og:url" content="http://blog.sysu.tech/WordPress/WordPress%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要本文是一个手动安装LAMP后安装WordPress的教程，虽然后面用着用着觉得WordPress十分辣鸡于是不用了……">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/WordPress/WordPress%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/d317b8a766a64b82698f1cf53b89fd15.png">
+<meta property="og:image" content="http://blog.sysu.tech/WordPress/WordPress%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/664c14112d1c96e25aa787f79d104aad.png">
+<meta property="article:published_time" content="2019-02-16T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.236Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="WordPress">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/WordPress/WordPress%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/d317b8a766a64b82698f1cf53b89fd15.png">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/WordPress/WordPress%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>WordPress安装教程 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C"><span class="nav-number">2.</span> <span class="nav-text">准备工作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Apache%E5%AE%89%E8%A3%85"><span class="nav-number">3.</span> <span class="nav-text">Apache安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL%E5%AE%89%E8%A3%85"><span class="nav-number">4.</span> <span class="nav-text">MySQL安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PHP%E5%AE%89%E8%A3%85"><span class="nav-number">5.</span> <span class="nav-text">PHP安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WordPress%E5%AE%89%E8%A3%85"><span class="nav-number">6.</span> <span class="nav-text">WordPress安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6%E7%9A%84%E5%AE%89%E8%A3%85"><span class="nav-number">7.</span> <span class="nav-text">插件的安装</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/WordPress/WordPress%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          WordPress安装教程
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-02-17 00:00:00" itemprop="dateCreated datePublished" datetime="2019-02-17T00:00:00+08:00">2019-02-17</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/WordPress/" itemprop="url" rel="index"><span itemprop="name">WordPress</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>本文是一个<strong>手动安装LAMP后安装WordPress的教程</strong>，虽然后面用着用着觉得WordPress十分辣鸡于是不用了……</p>
+<a id="more"></a> 
+
+<p>前言</p>
+<p>WordPress的安装需要LAMP（Linux+Apache+MySQL+PHP）环境或者其他如LNMP，WordPress安装的难点主要在于LAMP的安装，网上许多的解决方案都是直接用LAMP镜像或者LAMP一键安装脚本，或者直接就是WordPress镜像。<br>因为我后期Apache和MySQL还要用于其他生产环境，所以我偏向于手动安装LAMP。<br>之前网上看了好几个教程综合起来弄的，不过后来就找不到关键的几个网页了，所以是查着history写出来的</p>
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><p>系统我用的是<code>Ubuntu18.04</code></p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">apt-get</span> update<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h2 id="Apache安装"><a href="#Apache安装" class="headerlink" title="Apache安装"></a>Apache安装</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">apt-get</span> <span class="token function">install</span> apache2<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>就这一句，其实很简单<br>通过IP地址访问你的网站，看有没有出来这个东西↓，有则成功了</p>
+<img src="/WordPress/WordPress%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/d317b8a766a64b82698f1cf53b89fd15.png" class="">
+<h2 id="MySQL安装"><a href="#MySQL安装" class="headerlink" title="MySQL安装"></a>MySQL安装</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">apt-get</span> <span class="token function">install</span> mysql-server<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然后在安装过程中会提示设置用户名和密码</p>
+<h2 id="PHP安装"><a href="#PHP安装" class="headerlink" title="PHP安装"></a>PHP安装</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">apt-get</span> <span class="token function">install</span> php
+<span class="token function">apt-get</span> <span class="token function">install</span> libapache2-mod-php7.0
+<span class="token function">apt-get</span> -y <span class="token function">install</span> php7.0-mysql php7.0-curl php7.0-gd php7.0-intl php-pear php-imagick php7.0-imap php7.0-mcrypt php-memcache  php7.0-pspell php7.0-recode php7.0-sqlite3 php7.0-tidy php7.0-xmlrpc php7.0-xsl php7.0-mbstring php-gettext
+systemctl restart apache2<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这时候在网站根目录<code>/var/www/html</code>下建立一个<code>info.php</code></p>
+<pre class="line-numbers language-php" data-language="php"><code class="language-php"><span class="token php language-php"><span class="token delimiter important">&lt;?php</span> <span class="token function">phpinfo</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token delimiter important">?></span></span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然后访问http://你的ip/info.php<br>应该会出现如下内容</p>
+<img src="/WordPress/WordPress%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/664c14112d1c96e25aa787f79d104aad.png" class="">
+<h2 id="WordPress安装"><a href="#WordPress安装" class="headerlink" title="WordPress安装"></a>WordPress安装</h2><ol>
+<li>从官网下载安装包放到<code>/var/www/html</code>，<strong>注意，如果想要安装中文版，这里一定要找对中文版的安装包</strong><br>这里是中文版安装包<a target="_blank" rel="noopener" href="https://cn.wordpress.org/wordpress-5.0.3-zh_CN.tar.gz" title="https://cn.wordpress.org/wordpress-5.0.3-zh_CN.tar.gz">https://cn.wordpress.org/wordpress-5.0.3-zh_CN.tar.gz</a></li>
+<li>解压后得到一个<code>wordpress</code>文件夹</li>
+<li>这时访问http://你的ip/wordpress 就可以开始跟着提示安装了</li>
+<li>这个期间会需要数据库的用户名和密码，你可以直接给root，也可以自己创建一个数据库用户和数据库给WordPress，我选择了后者<br>这里只介绍一下直接给root的方法，因为如果你要选择后者，代表你的数据库还需要做其他运用，不能给WordPress完整的权限，而这代表着你知道如何使用MySQL，故不介绍</li>
+</ol>
+<ul>
+<li>开放数据库的外部访问：编辑<code>/etc/mysql/mysql.conf.d/mysqld.cnf</code>，找到<code>bind-address = 127.0.0.1</code>一句并给它加注释（最前面加#即可）</li>
+<li>给WordPress创建数据库：<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">mysql -u root -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with <span class="token punctuation">;</span> or <span class="token punctuation">\</span>g.
+mysql<span class="token operator">></span> create database wordpress default character <span class="token builtin class-name">set</span> utf8<span class="token punctuation">;</span>
+Query OK, <span class="token number">1</span> row affected <span class="token punctuation">(</span><span class="token number">0.00</span> sec<span class="token punctuation">)</span>
+mysql<span class="token operator">></span> <span class="token builtin class-name">exit</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+</li>
+</ul>
+<h2 id="插件的安装"><a href="#插件的安装" class="headerlink" title="插件的安装"></a>插件的安装</h2><p>第一次安装插件的时候竟然还提示需要ftp服务器，然后我架ftp服务器的时候不知道为啥死活从外面登不进去，于是干脆找了不需要用ftp服务器的方法<br>在<code>/var/www/html/wordpress/wp-config.php</code>的最后加上如下内容</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">define<span class="token punctuation">(</span><span class="token string">"FS_METHOD"</span>, <span class="token string">"direct"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+define<span class="token punctuation">(</span><span class="token string">"FS_CHMOD_DIR"</span>, 0777<span class="token punctuation">)</span><span class="token punctuation">;</span>
+define<span class="token punctuation">(</span><span class="token string">"FS_CHMOD_FILE"</span>, 0777<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>然后把<code>/var/www/html/wordpress</code>整个的权限变成777即可</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">chmod</span> -R <span class="token number">777</span> /var/www/html/wordpress<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>如果还是不行就刷新一下网页，重启一下Apache即可</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">service</span> apache2 restart<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/WordPress/" rel="tag"># WordPress</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/%E7%BD%91%E7%BB%9C/Shadowsocks/Shadowsocks%E9%83%A8%E7%BD%B2/" rel="prev" title="Shadowsocks部署">
+                  <i class="fa fa-chevron-left"></i> Shadowsocks部署
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/MPI/Intel%20MPI/I_MPI_FABRICS/" rel="next" title="I_MPI_FABRICS">
+                  I_MPI_FABRICS <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

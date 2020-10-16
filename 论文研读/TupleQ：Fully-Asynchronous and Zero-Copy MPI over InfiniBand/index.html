@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要这是2009年发表在IPDPS(B会)的一篇论文在这篇论文之前，由于IB硬件和接口的限制，还没有一个MPI能实现完全的异步和零拷贝来进行通信。这时IB在InfiniBand 1.2 specification新增了eXtended Reliable Connection (XRC)和Shared Receive Queues (SRQs)两种新特性（然而我并没有在文档中找到……可能是我找错文档">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TupleQ：Fully-Asynchronous and Zero-Copy MPI over InfiniBand">
+<meta property="og:url" content="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/TupleQ%EF%BC%9AFully-Asynchronous%20and%20Zero-Copy%20MPI%20over%20InfiniBand/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要这是2009年发表在IPDPS(B会)的一篇论文在这篇论文之前，由于IB硬件和接口的限制，还没有一个MPI能实现完全的异步和零拷贝来进行通信。这时IB在InfiniBand 1.2 specification新增了eXtended Reliable Connection (XRC)和Shared Receive Queues (SRQs)两种新特性（然而我并没有在文档中找到……可能是我找错文档">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/TupleQ%EF%BC%9AFully-Asynchronous%20and%20Zero-Copy%20MPI%20over%20InfiniBand/0c0fc6f09b633b101df7675d5c02a9aa.png">
+<meta property="og:image" content="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/TupleQ%EF%BC%9AFully-Asynchronous%20and%20Zero-Copy%20MPI%20over%20InfiniBand/c81671ddca0531ee5b42c9c3082eaa93.png">
+<meta property="og:image" content="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/TupleQ%EF%BC%9AFully-Asynchronous%20and%20Zero-Copy%20MPI%20over%20InfiniBand/3227ddebf7497c5c301abdaea2280051.png">
+<meta property="og:image" content="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/TupleQ%EF%BC%9AFully-Asynchronous%20and%20Zero-Copy%20MPI%20over%20InfiniBand/c8f152e9caa1ecaea09702df25ea7fb2.png">
+<meta property="article:published_time" content="2019-03-31T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.281Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="MPI">
+<meta property="article:tag" content="InfiniBand">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/TupleQ%EF%BC%9AFully-Asynchronous%20and%20Zero-Copy%20MPI%20over%20InfiniBand/0c0fc6f09b633b101df7675d5c02a9aa.png">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/TupleQ%EF%BC%9AFully-Asynchronous%20and%20Zero-Copy%20MPI%20over%20InfiniBand/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>TupleQ：Fully-Asynchronous and Zero-Copy MPI over InfiniBand | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IB%E6%9E%B6%E6%9E%84"><span class="nav-number"></span> <span class="nav-text">IB架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%BC%8F"><span class="nav-number">0.1.</span> <span class="nav-text">通信模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#two-types-of-communication-semantics"><span class="nav-number">0.2.</span> <span class="nav-text">two types of communication semantics</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Shared-Receive-Queues-SRQs"><span class="nav-number">0.3.</span> <span class="nav-text">Shared Receive Queues (SRQs)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#eXtended-Reliable-Connection-XRC"><span class="nav-number">0.4.</span> <span class="nav-text">eXtended Reliable Connection (XRC)</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%8E%B0%E6%9C%89%E7%9A%84MPI%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F"><span class="nav-number"></span> <span class="nav-text">现有的MPI设计模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Eager-Protocol"><span class="nav-number">0.1.</span> <span class="nav-text">Eager Protocol</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Rendezvous-Protocol"><span class="nav-number">0.2.</span> <span class="nav-text">Rendezvous Protocol</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%96%B0%E7%9A%84%E8%AE%BE%E8%AE%A1"><span class="nav-number"></span> <span class="nav-text">新的设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Providing-Full-Overlap-and-Zero-Copy"><span class="nav-number">1.</span> <span class="nav-text">Providing Full Overlap and Zero-Copy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Creating-Receive-Queues"><span class="nav-number">2.</span> <span class="nav-text">Creating Receive Queues</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Sender-Side-Copy"><span class="nav-number">3.</span> <span class="nav-text">Sender-Side Copy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MPI-Wildcards"><span class="nav-number">4.</span> <span class="nav-text">MPI Wildcards</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C"><span class="nav-number"></span> <span class="nav-text">实验结果</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%8E%E8%AE%B0"><span class="nav-number"></span> <span class="nav-text">后记</span></a></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/TupleQ%EF%BC%9AFully-Asynchronous%20and%20Zero-Copy%20MPI%20over%20InfiniBand/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          TupleQ：Fully-Asynchronous and Zero-Copy MPI over InfiniBand
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-04-01 00:00:00" itemprop="dateCreated datePublished" datetime="2019-04-01T00:00:00+08:00">2019-04-01</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/" itemprop="url" rel="index"><span itemprop="name">论文研读</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>这是2009年发表在IPDPS(B会)的一篇论文<br>在这篇论文之前，由于IB硬件和接口的限制，还没有一个MPI能实现完全的异步和零拷贝来进行通信。这时IB在<code>InfiniBand 1.2 specification</code>新增了<code>eXtended Reliable Connection (XRC)</code>和<code>Shared Receive Queues (SRQs)</code>两种新特性（然而我并没有在文档中找到……可能是我找错文档了？），作者使用这两种新特性，克服了原先MPI的一些瓶颈，实现了完全异步和零拷贝的MPI</p>
+<a id="more"></a> 
+
+<h1 id="IB架构"><a href="#IB架构" class="headerlink" title="IB架构"></a>IB架构</h1><h3 id="通信模式"><a href="#通信模式" class="headerlink" title="通信模式"></a>通信模式</h3><p>通信的双方都需要建立一对Queue Pair (QP)，QP里面包含Send Queue (SQ)和Receive Queue (RQ)。每次收发消息都需要建立work requests (WR)来放入队列中。当一个WQ被完成后，就会被放入Completion Queue (CQ)。在接收消息之前，一块buffer必须被分配给QP，这块buffer会按照FIFO的顺序被消耗。</p>
+<h3 id="two-types-of-communication-semantics"><a href="#two-types-of-communication-semantics" class="headerlink" title="two types of communication semantics"></a>two types of communication semantics</h3><ul>
+<li>Channel模式：像socket一样，通信必须有通信双方都参与其中。</li>
+<li>RDMA模式：可以直接读写通信对端的内存，不过这块内存必须是已经被钉在内存中的</li>
+</ul>
+<h3 id="Shared-Receive-Queues-SRQs"><a href="#Shared-Receive-Queues-SRQs" class="headerlink" title="Shared Receive Queues (SRQs)"></a>Shared Receive Queues (SRQs)</h3><p>这是IB在<code>InfiniBand 1.2 specification</code>新增的（虽然我没找到）。<br>由于每个进程的每个通信对端都要建立一对QP，每个QP又要在内存为其分配buffer。这样当节点上进程数变多，集群规模变大，内存消耗会非常巨大。SRQ可以让多个QP共享一个SRQ，但一个QP只能与一个SRQ相关联。</p>
+<h3 id="eXtended-Reliable-Connection-XRC"><a href="#eXtended-Reliable-Connection-XRC" class="headerlink" title="eXtended Reliable Connection (XRC)"></a>eXtended Reliable Connection (XRC)</h3><p>前面提到的SRQ可以在一个节点上可以有多个，而XRC就是为了在发送时知道要发送到哪一个SRQ。</p>
+<h1 id="现有的MPI设计模式"><a href="#现有的MPI设计模式" class="headerlink" title="现有的MPI设计模式"></a>现有的MPI设计模式</h1><img src="/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/TupleQ%EF%BC%9AFully-Asynchronous%20and%20Zero-Copy%20MPI%20over%20InfiniBand/0c0fc6f09b633b101df7675d5c02a9aa.png" class="">
+<h3 id="Eager-Protocol"><a href="#Eager-Protocol" class="headerlink" title="Eager Protocol"></a>Eager Protocol</h3><p>发送方发送消息不需要告知接收方，用来发送小消息。由于不知道对方的接收内存地址和接收能力，所以不能使用RDMA。发送方和接收方都要对数据进行一次拷贝。</p>
+<h3 id="Rendezvous-Protocol"><a href="#Rendezvous-Protocol" class="headerlink" title="Rendezvous Protocol"></a>Rendezvous Protocol</h3><p>发送方发送数据之前会现发送Request to Send (RTS)，然后使用RDMA的RPUT或者RGET进行数据传输，最后发送一个finish message (FIN)来结束。使用这种方法可以实现数据的<code>zero-copy transfer</code>，但是由于数据并不是马上发送的，所以异步做的并不好。</p>
+<h1 id="新的设计"><a href="#新的设计" class="headerlink" title="新的设计"></a>新的设计</h1><h2 id="Providing-Full-Overlap-and-Zero-Copy"><a href="#Providing-Full-Overlap-and-Zero-Copy" class="headerlink" title="Providing Full Overlap and Zero-Copy"></a>Providing Full Overlap and Zero-Copy</h2><ul>
+<li>使用Channel通信，由于作者发现大家使用tag的频率并不高，并且tag并不会有跟多种，所以为每一个三元组tuple（tag, communicator ID,  rank）建立一个接收队列。如果一个队列还没有绑定一块接收缓存，但是已经接收到了一个消息，则发送方的网卡将会被阻塞直到接收方队列绑定了一块内存。这样就可以由网卡处理所有的发送和接收任务，而不需要CPU的参与。</li>
+</ul>
+<h2 id="Creating-Receive-Queues"><a href="#Creating-Receive-Queues" class="headerlink" title="Creating Receive Queues"></a>Creating Receive Queues</h2><p>原来的话，需要为每个tuple建立一个QP，而每个QP需要建立一个RC。现在只需要为每个三元组创建一个SRQ，多个SRQ可以共用一个XRC。<br>RQ是按需求建立的，只有当消息过大的时候，才会建立，然后返回给发送方一个专用SRQ，然后以后往这个SRQ里发送。（这个扩展性太差了吧……万一我的程序就是很多tag呢？）</p>
+<h2 id="Sender-Side-Copy"><a href="#Sender-Side-Copy" class="headerlink" title="Sender-Side Copy"></a>Sender-Side Copy</h2><p>因为MPI_Send完成的标准是buffer能被重用，因此，可以把要发送的数据拷贝到buffer中就返回。</p>
+<h2 id="MPI-Wildcards"><a href="#MPI-Wildcards" class="headerlink" title="MPI Wildcards"></a>MPI Wildcards</h2><p>这种新设计的一个缺陷是，<code>MPI_ANY_SOURCE</code>和<code>MPI_ANY_TAG</code>。因为，发送方无法同时往多个RQ中发送，接收方收到数据后也不知道往哪放。<br>解决方案是：遇到这种操作就把其他所有的连接都关闭了，等到这个操作开始传输了，再把别的连接传输恢复。如果这种操作被频繁调用，就完全使用传统的方法。（这个方法有点蠢……）</p>
+<img src="/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/TupleQ%EF%BC%9AFully-Asynchronous%20and%20Zero-Copy%20MPI%20over%20InfiniBand/c81671ddca0531ee5b42c9c3082eaa93.png" class="">
+
+<h1 id="实验结果"><a href="#实验结果" class="headerlink" title="实验结果"></a>实验结果</h1><img src="/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/TupleQ%EF%BC%9AFully-Asynchronous%20and%20Zero-Copy%20MPI%20over%20InfiniBand/3227ddebf7497c5c301abdaea2280051.png" class="">
+<img src="/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/TupleQ%EF%BC%9AFully-Asynchronous%20and%20Zero-Copy%20MPI%20over%20InfiniBand/c8f152e9caa1ecaea09702df25ea7fb2.png" class="">
+<p>在数据包比较大时比较有优势，CPU占用依然低~</p>
+<h1 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h1><p>这篇读起来好迷啊……不知道是我语法太菜还是作者语法太菜……<br>创新切入点感觉还不错？但是感觉做出来的东西不是很出彩……<br>看到很迷的时候才去查了下发现是个B会论文……还是尽量去找A会的读吧……</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MPI/" rel="tag"># MPI</a>
+              <a href="/tags/InfiniBand/" rel="tag"># InfiniBand</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/MPI/Mvapich/Mvapich%E5%B8%B8%E7%94%A8%E6%8A%80%E5%B7%A7/" rel="prev" title="Mvapich常用技巧">
+                  <i class="fa fa-chevron-left"></i> Mvapich常用技巧
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E6%8C%82%E8%BD%BD%E7%A1%AC%E7%9B%98/" rel="next" title="Linux挂载硬盘">
+                  Linux挂载硬盘 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

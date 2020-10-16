@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要OpenMPI常用技巧">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenMPI常用技巧">
+<meta property="og:url" content="http://blog.sysu.tech/MPI/OpenMPI/OpenMPI%E5%B8%B8%E7%94%A8%E6%8A%80%E5%B7%A7/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要OpenMPI常用技巧">
+<meta property="og:locale">
+<meta property="article:published_time" content="2019-02-19T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.219Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="MPI">
+<meta property="article:tag" content="OpenMPI">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/MPI/OpenMPI/OpenMPI%E5%B8%B8%E7%94%A8%E6%8A%80%E5%B7%A7/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>OpenMPI常用技巧 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mpirun%E5%8F%82%E6%95%B0"><span class="nav-number">2.</span> <span class="nav-text">mpirun参数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#x-NAME-value"><span class="nav-number">2.1.</span> <span class="nav-text">-x NAME[&#x3D;value]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#allow-run-as-root"><span class="nav-number">2.2.</span> <span class="nav-text">--allow-run-as-root</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#prefix-openmpi-build%E7%9B%AE%E5%BD%95"><span class="nav-number">2.3.</span> <span class="nav-text">--prefix [openmpi-build目录]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#map-by-node"><span class="nav-number">2.4.</span> <span class="nav-text">--map-by node</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mca-btl-openib-self-vader"><span class="nav-number">2.5.</span> <span class="nav-text">--mca btl openib,self,vader</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mca-btl-openib-if-include-mlx5-2"><span class="nav-number">2.6.</span> <span class="nav-text">--mca btl_openib_if_include mlx5_2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mca-btl-tcp-self-vader"><span class="nav-number">2.7.</span> <span class="nav-text">--mca btl tcp,self,vader</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mca-btl-tcp-if-include-eth4"><span class="nav-number">2.8.</span> <span class="nav-text">--mca btl_tcp_if_include eth4</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mca-pml-ob1-mca-btl-openib-self-vader-mca-btl-openib-cpc-include-rdmacm-mca-btl-openib-rroce-enable-1"><span class="nav-number">2.9.</span> <span class="nav-text">--mca pml ob1 --mca btl openib,self,vader --mca btl_openib_cpc_include rdmacm --mca btl_openib_rroce_enable 1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#hostfile-file-machinefile-file"><span class="nav-number">2.10.</span> <span class="nav-text">-hostfile [file] &#x2F; -machinefile [file]</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%BA%9B%E5%B8%AE%E5%8A%A9%E6%96%87%E6%A1%A3%E4%B8%AD%E5%B8%B8%E8%A7%81%E7%9A%84%E7%BC%A9%E5%86%99"><span class="nav-number">3.</span> <span class="nav-text">一些帮助文档中常见的缩写</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ompi-info"><span class="nav-number">4.</span> <span class="nav-text">ompi_info</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E8%BF%87%E5%85%B6%E4%BB%96%E6%96%B9%E6%B3%95%E8%AE%BE%E7%BD%AE%E5%8F%82%E6%95%B0"><span class="nav-number">5.</span> <span class="nav-text">通过其他方法设置参数</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/MPI/OpenMPI/OpenMPI%E5%B8%B8%E7%94%A8%E6%8A%80%E5%B7%A7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OpenMPI常用技巧
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-02-20 00:00:00" itemprop="dateCreated datePublished" datetime="2019-02-20T00:00:00+08:00">2019-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/MPI/" itemprop="url" rel="index"><span itemprop="name">MPI</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/MPI/OpenMPI/" itemprop="url" rel="index"><span itemprop="name">OpenMPI</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>OpenMPI常用技巧</p>
+<a id="more"></a> 
+
+<h2 id="mpirun参数"><a href="#mpirun参数" class="headerlink" title="mpirun参数"></a>mpirun参数</h2><h3 id="x-NAME-value"><a href="#x-NAME-value" class="headerlink" title="-x NAME[=value]"></a><code>-x NAME[=value]</code></h3><p>可以将环境变量NAME传递给所有进程，或者在所有进程启动前将环境变量NAME设置为value</p>
+<h3 id="allow-run-as-root"><a href="#allow-run-as-root" class="headerlink" title="--allow-run-as-root"></a><code>--allow-run-as-root</code></h3><p>允许使用root用户运行程序</p>
+<h3 id="prefix-openmpi-build目录"><a href="#prefix-openmpi-build目录" class="headerlink" title="--prefix [openmpi-build目录]"></a><code>--prefix [openmpi-build目录]</code></h3><p>在集群上mpirun时如果其他节点没有在登陆环境变量中加载openmpi，则用这个参数指定openmpi所在位置</p>
+<h3 id="map-by-node"><a href="#map-by-node" class="headerlink" title="--map-by node"></a><code>--map-by node</code></h3><p>只用这个参数openmpi才会machinefile里按顺序，一个host一个进程，如果某一个host要多一个进程，多写一次就好。</p>
+<h3 id="mca-btl-openib-self-vader"><a href="#mca-btl-openib-self-vader" class="headerlink" title="--mca btl openib,self,vader"></a><code>--mca btl openib,self,vader</code></h3><p>这个参数将显示指定openmpi使用IB网，其中vader表示同节点内进程使用共享内存通信，self表示进程和它自己通信，不加self可能导致不能和自己通信</p>
+<h3 id="mca-btl-openib-if-include-mlx5-2"><a href="#mca-btl-openib-if-include-mlx5-2" class="headerlink" title="--mca btl_openib_if_include mlx5_2"></a><code>--mca btl_openib_if_include mlx5_2</code></h3><p>和上面一个参数联用，可以指定用于ib通信的网卡，这里的网卡名称由<code>ibstat</code>得到</p>
+<h3 id="mca-btl-tcp-self-vader"><a href="#mca-btl-tcp-self-vader" class="headerlink" title="--mca btl tcp,self,vader"></a><code>--mca btl tcp,self,vader</code></h3><p>这个参数将指定openmpi使用TCP/IP协议进行通信</p>
+<h3 id="mca-btl-tcp-if-include-eth4"><a href="#mca-btl-tcp-if-include-eth4" class="headerlink" title="--mca btl_tcp_if_include eth4"></a><code>--mca btl_tcp_if_include eth4</code></h3><p>和上面一个参数联用，可以指定用于通信的设备，这里的设备名称由<code>ifconfig</code>得到</p>
+<h3 id="mca-pml-ob1-mca-btl-openib-self-vader-mca-btl-openib-cpc-include-rdmacm-mca-btl-openib-rroce-enable-1"><a href="#mca-pml-ob1-mca-btl-openib-self-vader-mca-btl-openib-cpc-include-rdmacm-mca-btl-openib-rroce-enable-1" class="headerlink" title="--mca pml ob1 --mca btl openib,self,vader --mca btl_openib_cpc_include rdmacm --mca btl_openib_rroce_enable 1"></a><code>--mca pml ob1 --mca btl openib,self,vader --mca btl_openib_cpc_include rdmacm --mca btl_openib_rroce_enable 1</code></h3><p>这个参数将指定openmpi使用RoCEv2协议进行通信</p>
+<h3 id="hostfile-file-machinefile-file"><a href="#hostfile-file-machinefile-file" class="headerlink" title="-hostfile [file] / -machinefile [file]"></a><code>-hostfile [file]</code> / <code>-machinefile [file]</code></h3><p>file中在每一个hostname后面可以加上slots=n，表示在这个host上运行n个进程</p>
+<h2 id="一些帮助文档中常见的缩写"><a href="#一些帮助文档中常见的缩写" class="headerlink" title="一些帮助文档中常见的缩写"></a>一些帮助文档中常见的缩写</h2><ul>
+<li>MCA = Modular Component Architecture 组件模块</li>
+<li>CPC = Connection Pseudo-Component</li>
+<li>btl =  Byte transfer layer (point-to-point byte movement)</li>
+<li>bml= BTL management layer (managing multiple devices)</li>
+<li>pml= MPI point-to-point management layer<h2 id="ompi-info"><a href="#ompi-info" class="headerlink" title="ompi_info"></a>ompi_info</h2>ompi_info指令可以获取mpirun中的各种参数的帮助信息<br>比如不清楚<code>mpirun -n 2 -machinefile machinefile --mca btl vader,self ./test</code> 中的参数就可以</li>
+</ul>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ ompi_info --param btl vader --level <span class="token number">9</span>
+MCA btl: vader <span class="token punctuation">(</span>MCA v2.1.0, API v3.0.0, Component v3.1.6<span class="token punctuation">)</span>
+           MCA btl vader: ---------------------------------------------------
+           MCA btl vader: parameter <span class="token string">"btl_vader_free_list_num"</span> <span class="token punctuation">(</span>current value:
+                          <span class="token string">"8"</span>, data source: default, level: <span class="token number">9</span> dev/all, type:
+                          int<span class="token punctuation">)</span>
+                          Initial number of fragments to allocate <span class="token keyword">for</span> shared
+                          memory communication.
+<span class="token comment"># 后面其他参数省略</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>如果想查看btl中的全部就用</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">ompi_info --param btl all --level <span class="token number">9</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>如果想要查看设置collective操作的算法的参数</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">ompi_info --param coll tuned --level <span class="token number">9</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h2 id="通过其他方法设置参数"><a href="#通过其他方法设置参数" class="headerlink" title="通过其他方法设置参数"></a>通过其他方法设置参数</h2><p>有时要通过slurm启动mpi程序，不能通过<code>--mca key=value</code>的方法来设置参数，此时可以通过设置环境变量或者配置文件来设置参数</p>
+<p>参考：<a target="_blank" rel="noopener" href="https://www.open-mpi.org/faq/?category=tuning#setting-mca-params">https://www.open-mpi.org/faq/?category=tuning#setting-mca-params</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MPI/" rel="tag"># MPI</a>
+              <a href="/tags/OpenMPI/" rel="tag"># OpenMPI</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Benchmark/%E5%9C%A825G%E4%BB%A5%E5%A4%AA%E7%BD%91%E7%8E%AF%E5%A2%83%E4%B8%8B%E4%BD%BF%E7%94%A8iperf3%E8%BF%9B%E8%A1%8C%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95/" rel="prev" title="在25G以太网环境下使用iperf3进行性能测试">
+                  <i class="fa fa-chevron-left"></i> 在25G以太网环境下使用iperf3进行性能测试
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/MPI/Intel%20MPI/Intel%20MPI%20%E5%B8%B8%E7%94%A8%E6%8A%80%E5%B7%A7/" rel="next" title="Intel MPI 常用技巧">
+                  Intel MPI 常用技巧 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

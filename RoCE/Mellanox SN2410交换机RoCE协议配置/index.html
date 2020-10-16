@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要本文将以Mellanox SN2410为例讲解如何在Mellanox交换机上配置RoCE协议">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mellanox SN2410交换机RoCE协议配置">
+<meta property="og:url" content="http://blog.sysu.tech/RoCE/Mellanox%20SN2410%E4%BA%A4%E6%8D%A2%E6%9C%BARoCE%E5%8D%8F%E8%AE%AE%E9%85%8D%E7%BD%AE/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要本文将以Mellanox SN2410为例讲解如何在Mellanox交换机上配置RoCE协议">
+<meta property="og:locale">
+<meta property="article:published_time" content="2019-03-07T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.228Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="RoCE">
+<meta property="article:tag" content="Mellanox">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/RoCE/Mellanox%20SN2410%E4%BA%A4%E6%8D%A2%E6%9C%BARoCE%E5%8D%8F%E8%AE%AE%E9%85%8D%E7%BD%AE/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>Mellanox SN2410交换机RoCE协议配置 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83"><span class="nav-number">2.</span> <span class="nav-text">环境</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Mellanox-SN2410"><span class="nav-number">2.1.</span> <span class="nav-text">Mellanox SN2410</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E5%8D%A1"><span class="nav-number">2.2.</span> <span class="nav-text">网卡</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%85%8D%E7%BD%AE"><span class="nav-number">3.</span> <span class="nav-text">服务器配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%85%8D%E7%BD%AE-1"><span class="nav-number">4.</span> <span class="nav-text">服务器配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E9%AA%8C%E8%AF%81%E9%85%8D%E7%BD%AE%E6%88%90%E5%8A%9F"><span class="nav-number">5.</span> <span class="nav-text">如何验证配置成功</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%86%E8%8A%82%E5%8E%9F%E7%90%86"><span class="nav-number">6.</span> <span class="nav-text">细节原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#0-ECN%E5%8E%9F%E7%90%86"><span class="nav-number">6.1.</span> <span class="nav-text">0. ECN原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-RoCE%E6%B5%81%E9%87%8F%E8%AE%BE%E7%BD%AE%E5%80%BC"><span class="nav-number">6.2.</span> <span class="nav-text">1. RoCE流量设置值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E4%BC%98%E5%85%88%E9%98%9F%E5%88%97%E5%80%BC%E8%AE%BE%E7%BD%AE"><span class="nav-number">6.3.</span> <span class="nav-text">2. 优先队列值设置</span></a></li></ol></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/RoCE/Mellanox%20SN2410%E4%BA%A4%E6%8D%A2%E6%9C%BARoCE%E5%8D%8F%E8%AE%AE%E9%85%8D%E7%BD%AE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Mellanox SN2410交换机RoCE协议配置
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-03-08 00:00:00" itemprop="dateCreated datePublished" datetime="2019-03-08T00:00:00+08:00">2019-03-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/RoCE/" itemprop="url" rel="index"><span itemprop="name">RoCE</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>本文将以<code>Mellanox SN2410</code>为例讲解如何在Mellanox交换机上配置RoCE协议</p>
+<a id="more"></a> 
+
+<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><h3 id="Mellanox-SN2410"><a href="#Mellanox-SN2410" class="headerlink" title="Mellanox SN2410"></a>Mellanox SN2410</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">Mellanox-SN2410 <span class="token punctuation">[</span>standalone: master<span class="token punctuation">]</span> <span class="token comment"># show version</span>
+Product name:      Onyx
+Product release:   <span class="token number">3.7</span>.1102<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p><em>ps. 交换机刚拿到的时候是<code>3.6.4114</code>，竟然有的功能是无法使用的，官方说了要<code>3.6.5000</code>之后的版本才支持</em></p>
+<h3 id="网卡"><a href="#网卡" class="headerlink" title="网卡"></a>网卡</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ ofed_info
+OFED-internal-4.4-2.0.7
+$ mlxfwmanager
+Querying Mellanox devices firmware <span class="token punctuation">..</span>.
+
+Device <span class="token comment">#1:</span>
+----------
+
+  Device Type:      N/A
+  Part Number:      N/A
+  Description:
+  PSID:             DEL2420110034
+  PCI Device Name:  0000:06:00.0
+  Port1 MAC:        N/A
+  Port1 GUID:       N/A
+  Port2 MAC:        N/A
+  Port2 GUID:       N/A
+  Versions:         Current        Available
+     FW             <span class="token number">14.23</span>.1020     N/A<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><em>ps. Firmware和OFED也最好升级到最新，低版本的配置方法会有所不同</em><br>在我这里以太网卡的名称是<code>eth4</code>，如果要设置为其他，更改响应的名称即可</p>
+<h2 id="服务器配置"><a href="#服务器配置" class="headerlink" title="服务器配置"></a>服务器配置</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">mlnx_qos -i eth4 --trust dscp
+<span class="token comment"># 将qos切换到dscp模式，使用dscp来作为网络服务质量管理的依据。如果这里无法设置，很有可能是OFED或者Firmware版本问题</span>
+
+<span class="token builtin class-name">echo</span> <span class="token number">106</span> <span class="token operator">></span> /sys/class/infiniband/mlx5_0/tc/1/traffic_class
+cma_roce_tos -d mlx5_0 -t <span class="token number">106</span>
+<span class="token comment"># 将RoCE流量的标记设置为26，至于为什么26要填106，见细节原理1</span>
+
+sysctl -w net.ipv4.tcp_ecn<span class="token operator">=</span><span class="token number">1</span>
+<span class="token comment"># 开启系统对TCP流量的ECN标记，对于RoCE好像没啥用，因为RoCE是封装在UDP中的，但官方教程有设置，还是写一下</span>
+
+mlnx_qos -i eth4 --pfc <span class="token number">0,0</span>,0,1,0,0,0,0
+<span class="token comment"># 3号优先级队列上开启PFC控制，这里为什么开3号，见细节原理2</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="服务器配置-1"><a href="#服务器配置-1" class="headerlink" title="服务器配置"></a>服务器配置</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">interface ethernet <span class="token number">1</span>/1-1/48 traffic-class <span class="token number">3</span> congestion-control ecn minimum-absolute <span class="token number">150</span> maximum-absolute <span class="token number">1500</span>
+<span class="token comment"># traffic class 3 对应的是3号输出队列，将所有端口3号输出队列的长度超过150时，开始以一定概率标记ECN，当长度超过1500的时候全部标记ECN。为什么是3号见细节原理2</span>
+
+traffic pool roce <span class="token builtin class-name">type</span> lossless
+<span class="token comment"># 创建名为roce的流量缓存池，并将其属性设置为无损流量</span>
+
+traffic pool roce memory percent <span class="token number">50.00</span>
+<span class="token comment"># 将名为roce的流量缓存池的最高内存占用设置为50？</span>
+
+traffic pool roce map switch-priority <span class="token number">3</span>
+<span class="token comment"># 将3号交换机有限队列的流量映射到这个流量缓存池</span>
+
+interface ethernet <span class="token number">1</span>/1-1/48 traffic-class <span class="token number">6</span> dcb ets strict
+<span class="token comment"># 将所有端口的6号输出队列设置为确保转发</span>
+
+interface ethernet <span class="token number">1</span>/1-1/48 qos trust L3
+<span class="token comment"># 将所有端口设置为使用三层通信模式（DSCP值）来管理网络服务质量</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="如何验证配置成功"><a href="#如何验证配置成功" class="headerlink" title="如何验证配置成功"></a>如何验证配置成功</h2><p>进行一次多对一通信，保证网络中产生拥塞，然后通过以下两条命令前后对比验证</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">ethtool</span> -S
+<span class="token comment"># 检查 prio3和prio6中均有流量，并且pause中记录到了收到pause包数量，确保PFC生效</span>
+<span class="token builtin class-name">cd</span> /sys/class/infiniband/mlx5_0/ports/1/hw_counters
+<span class="token function">ls</span> <span class="token operator">|</span> <span class="token function">grep</span> cnp
+<span class="token function">cat</span> *cnp*
+<span class="token comment"># 检查收到了CNP包，确保CNP包生效</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="细节原理"><a href="#细节原理" class="headerlink" title="细节原理"></a>细节原理</h2><h3 id="0-ECN原理"><a href="#0-ECN原理" class="headerlink" title="0. ECN原理"></a>0. ECN原理</h3><p>参考：<a target="_blank" rel="noopener" href="https://community.mellanox.com/s/article/understanding-rocev2-congestion-management" title="Mellanox Understanding RoCEv2 Congestion Management">Mellanox Understanding RoCEv2 Congestion Management</a><br>这是这篇的翻译：<a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1078916" title="RoCE拥塞控制机制">RoCE拥塞控制机制</a><br>在数据包的IP层(网路程)有一块TOS(Type Of Server)域，其中前8个位为DSCP值，后2位为ECN标记位，……</p>
+<h3 id="1-RoCE流量设置值"><a href="#1-RoCE流量设置值" class="headerlink" title="1. RoCE流量设置值"></a>1. RoCE流量设置值</h3><p>在数据包的IP层(网路程)有一块TOS(Type Of Server)域，其中前8个位为DSCP值，后2位为ECN标记位，我们需要把ECN标记位设置为<code>10</code>(二进制)，而DSCP值为<code>26</code>，对应二进制值为<code>11010</code>，连一起就是<code>1101010</code>，对应十进制值就是<code>106</code></p>
+<h3 id="2-优先队列值设置"><a href="#2-优先队列值设置" class="headerlink" title="2. 优先队列值设置"></a>2. 优先队列值设置</h3><p>因为DSCP值的取值范围时0-63，而PFC队列和交换机的优先队列的取值范围都是0-7，所以要建立一种映射关系。幸运的是这两种映射的默认映射方式默认都是每8个连续的DSCP映射到一个队列</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ mlnx_qos -i eth4
+DCBX mode: OS controlled
+Priority trust state: dscp
+dscp2prio mapping:
+	prio:0 dscp:07,06,05,04,03,02,01,00,
+	prio:1 dscp:15,14,13,12,11,10,09,08,
+	prio:2 dscp:23,22,21,20,19,18,17,16,
+	prio:3 dscp:31,30,29,28,27,26,25,24,
+	prio:4 dscp:39,38,37,36,35,34,33,32,
+	prio:5 dscp:47,46,45,44,43,42,41,40,
+	prio:6 dscp:55,54,53,52,51,50,49,48,
+	prio:7 dscp:63,62,61,60,59,58,57,56,<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>我们的RoCE流量标记的DSCP值为26，对应的是优先队列3，所以服务器和交换机设置的PFC队列编号都是3<br>由于ECN的反馈控制包（CNP包）的默认DSCP值是48，所以交换机上设置的确保转发的优先队列编号是6</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/RoCE/" rel="tag"># RoCE</a>
+              <a href="/tags/Mellanox/" rel="tag"># Mellanox</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Linux/Ubuntu/Perl%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F%E9%94%99%E8%AF%AF%E8%A7%A3%E5%86%B3/" rel="prev" title="Perl正则表达式错误解决">
+                  <i class="fa fa-chevron-left"></i> Perl正则表达式错误解决
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/MPI/MPI_Gather%E5%BB%B6%E8%BF%9F%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E6%96%AD%E5%B1%82%E9%97%AE%E9%A2%98%E7%8E%B0%E8%B1%A1%E7%A0%94%E7%A9%B6/" rel="next" title="MPI_Gather延迟测试中的断层问题现象研究">
+                  MPI_Gather延迟测试中的断层问题现象研究 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

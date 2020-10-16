@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要Hexo部署好还有许多基本的设置需要设置一下，让博客变得能看一些~">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo美化设置">
+<meta property="og:url" content="http://blog.sysu.tech/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要Hexo部署好还有许多基本的设置需要设置一下，让博客变得能看一些~">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/1565272539721.png">
+<meta property="og:image" content="http://blog.sysu.tech/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/1565272737773.png">
+<meta property="og:image" content="http://blog.sysu.tech/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/1565272640303.png">
+<meta property="og:image" content="http://blog.sysu.tech/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/1565272663172.png">
+<meta property="og:image" content="http://blog.sysu.tech/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/1565272834398.png">
+<meta property="og:image" content="http://blog.sysu.tech/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/1565272855089.png">
+<meta property="article:published_time" content="2019-08-05T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.108Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Hexo">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/1565272539721.png">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>Hexo美化设置 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E9%A1%B5%E9%9D%A2%E6%A0%87%E9%A2%98%E5%8F%8A%E5%85%B3%E9%94%AE%E4%BF%A1%E6%81%AF"><span class="nav-number">2.</span> <span class="nav-text">修改页面标题及关键信息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E2%80%9C%E9%98%85%E8%AF%BB%E6%9B%B4%E5%A4%9A%E2%80%9C%E8%AE%BE%E7%BD%AE"><span class="nav-number">3.</span> <span class="nav-text">“阅读更多“设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%87%E9%A2%98%E8%AE%BE%E7%BD%AE"><span class="nav-number">4.</span> <span class="nav-text">标题设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85NexT%E4%B8%BB%E9%A2%98"><span class="nav-number">5.</span> <span class="nav-text">安装NexT主题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BD%E4%B8%BB%E9%A2%98"><span class="nav-number">5.1.</span> <span class="nav-text">下载主题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%87%E6%8D%A2%E4%B8%BB%E9%A2%98"><span class="nav-number">5.2.</span> <span class="nav-text">切换主题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%93%E5%BC%80%E6%8F%92%E4%BB%B6%E8%8E%B7%E5%8F%96"><span class="nav-number">5.3.</span> <span class="nav-text">打开插件获取</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%87%E6%8D%A2%E7%89%88%E9%9D%A2"><span class="nav-number">5.4.</span> <span class="nav-text">切换版面</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Muse"><span class="nav-number">5.4.1.</span> <span class="nav-text">Muse</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Mist"><span class="nav-number">5.4.2.</span> <span class="nav-text">Mist</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Pisces"><span class="nav-number">5.4.3.</span> <span class="nav-text">Pisces</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Gemini"><span class="nav-number">5.4.4.</span> <span class="nav-text">Gemini</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAcategories%E5%92%8Ctags%E9%A1%B5%E9%9D%A2"><span class="nav-number">5.5.</span> <span class="nav-text">创建categories和tags页面</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAcategories%E9%A1%B5%E9%9D%A2"><span class="nav-number">5.5.1.</span> <span class="nav-text">创建categories页面</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAtags%E9%A1%B5%E9%9D%A2"><span class="nav-number">5.5.2.</span> <span class="nav-text">创建tags页面</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E8%8F%9C%E5%8D%95"><span class="nav-number">5.5.3.</span> <span class="nav-text">添加菜单</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E5%A4%B4%E5%83%8F"><span class="nav-number">5.6.</span> <span class="nav-text">设置头像</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E4%B8%AA%E4%BA%BA%E9%A1%B5%E9%9D%A2"><span class="nav-number">5.7.</span> <span class="nav-text">创建个人页面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E4%B8%8D%E6%98%BE%E7%A4%BA%E4%BF%AE%E6%94%B9%E6%97%A5%E6%9C%9F"><span class="nav-number">5.8.</span> <span class="nav-text">设置不显示修改日期</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E5%9D%97%E4%B8%BB%E9%A2%98"><span class="nav-number">5.9.</span> <span class="nav-text">代码块主题</span></a></li></ol></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Hexo美化设置
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-08-06 00:00:00" itemprop="dateCreated datePublished" datetime="2019-08-06T00:00:00+08:00">2019-08-06</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Hexo/" itemprop="url" rel="index"><span itemprop="name">Hexo</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>Hexo部署好还有许多基本的设置需要设置一下，让博客变得能看一些~</p>
+<a id="more"></a> 
+
+<h2 id="修改页面标题及关键信息"><a href="#修改页面标题及关键信息" class="headerlink" title="修改页面标题及关键信息"></a>修改页面标题及关键信息</h2><p>简单的页面信息都在<code>_config.yml</code>中设置</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>title</code></td>
+<td>网站标题</td>
+</tr>
+<tr>
+<td><code>subtitle</code></td>
+<td>网站副标题</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>网站描述</td>
+</tr>
+<tr>
+<td><code>keywords</code></td>
+<td>网站的关键词。使用半角逗号 <code>,</code> 分隔多个关键词。</td>
+</tr>
+<tr>
+<td><code>author</code></td>
+<td>您的名字</td>
+</tr>
+<tr>
+<td><code>language</code></td>
+<td>网站使用的语言</td>
+</tr>
+<tr>
+<td><code>timezone</code></td>
+<td>网站时区。Hexo 默认使用您电脑的时区。<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">时区列表</a>。比如说：<code>America/New_York</code>, <code>Japan</code>, 和 <code>UTC</code> 。</td>
+</tr>
+</tbody></table>
+<h2 id="“阅读更多“设置"><a href="#“阅读更多“设置" class="headerlink" title="“阅读更多“设置"></a>“阅读更多“设置</h2><p>默认状态下在博客首页会显示文章的全文，这样不便于预览，通过在文章中增加以下标志，可以截断文章的预览，这样可以让文章更加美观。</p>
+<pre class="line-numbers language-html" data-language="html"><code class="language-html"><span class="token comment">&lt;!-- more --></span> <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h2 id="标题设置"><a href="#标题设置" class="headerlink" title="标题设置"></a>标题设置</h2><p>经试验发现，如果在文章中使用一级标题，会和标题的字一样大，感觉有点不协调，而且在自动生成的大纲中会爆炸，所以在文章中只使用二级标题及以下</p>
+<h2 id="安装NexT主题"><a href="#安装NexT主题" class="headerlink" title="安装NexT主题"></a>安装NexT主题</h2><p>这里安装最流行的主题之一NexT</p>
+<h3 id="下载主题"><a href="#下载主题" class="headerlink" title="下载主题"></a>下载主题</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token builtin class-name">cd</span> hexo
+<span class="token function">git</span> clone https://github.com/theme-next/hexo-theme-next themes/next<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<h3 id="切换主题"><a href="#切换主题" class="headerlink" title="切换主题"></a>切换主题</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">vim</span> hexo/_config.yml
+theme: next<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<h3 id="打开插件获取"><a href="#打开插件获取" class="headerlink" title="打开插件获取"></a>打开插件获取</h3><p>意义不明</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">vim</span> next/_config.yml
+fancybox: <span class="token boolean">true</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<h3 id="切换版面"><a href="#切换版面" class="headerlink" title="切换版面"></a>切换版面</h3><p>NexT主题有四种版面可选，预览区分别如下</p>
+<h4 id="Muse"><a href="#Muse" class="headerlink" title="Muse"></a>Muse</h4><img src="/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/1565272539721.png" class="">
+
+<img src="/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/1565272737773.png" class="">
+
+<h4 id="Mist"><a href="#Mist" class="headerlink" title="Mist"></a>Mist</h4><img src="/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/1565272640303.png" class="">
+
+<img src="/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/1565272663172.png" class="">
+
+<h4 id="Pisces"><a href="#Pisces" class="headerlink" title="Pisces"></a>Pisces</h4><img src="/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/1565272834398.png" class="">
+
+<img src="/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/1565272855089.png" class="">
+
+<h4 id="Gemini"><a href="#Gemini" class="headerlink" title="Gemini"></a>Gemini</h4><p>和Pisces长得一样，官网的介绍是</p>
+<blockquote>
+<p>Looks like Pisces, but have distinct column blocks with shadow to appear more sensitive to view.</p>
+</blockquote>
+<p>那就用Gemini吧</p>
+<h3 id="创建categories和tags页面"><a href="#创建categories和tags页面" class="headerlink" title="创建categories和tags页面"></a>创建categories和tags页面</h3><h4 id="创建categories页面"><a href="#创建categories页面" class="headerlink" title="创建categories页面"></a>创建categories页面</h4><p>打开命令行，进入博客所在文件夹。执行命令</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ hexo new page categories<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>成功后会提示：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">INFO  Created: ~/hexo/blog/source/categories/index.md<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>根据上面的路径，找到<code>index.md</code>这个文件，打开后默认内容是这样的：</p>
+<pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token punctuation">---</span>
+<span class="token key atrule">title</span><span class="token punctuation">:</span> 文章分类
+<span class="token key atrule">date</span><span class="token punctuation">:</span> <span class="token datetime number">2019-08-08 13:47:40</span>
+<span class="token punctuation">---</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>添加<code>type: &quot;categories&quot;</code>到内容中，添加后是这样的：</p>
+<pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token punctuation">---</span>
+<span class="token key atrule">title</span><span class="token punctuation">:</span> 文章分类
+<span class="token key atrule">date</span><span class="token punctuation">:</span> <span class="token datetime number">2019-08-08</span>
+<span class="token key atrule">type</span><span class="token punctuation">:</span> <span class="token string">"categories"</span>
+<span class="token punctuation">---</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h4 id="创建tags页面"><a href="#创建tags页面" class="headerlink" title="创建tags页面"></a>创建tags页面</h4><p>打开命令行，进入博客所在文件夹。执行命令</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ hexo new page tags<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>成功后会提示：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">INFO  Created: ~/hexo/blog/source/tags/index.md<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>根据上面的路径，找到<code>index.md</code>这个文件，打开后默认内容是这样的：</p>
+<pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token punctuation">---</span>
+<span class="token key atrule">title</span><span class="token punctuation">:</span> 标签
+<span class="token key atrule">date</span><span class="token punctuation">:</span> <span class="token datetime number">2019-08-08 13:47:40</span>
+<span class="token punctuation">---</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>添加<code>type: &quot;tags&quot;</code>到内容中，添加后是这样的：</p>
+<pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token punctuation">---</span>
+<span class="token key atrule">title</span><span class="token punctuation">:</span> 文章分类
+<span class="token key atrule">date</span><span class="token punctuation">:</span> <span class="token datetime number">2019-08-08</span>
+<span class="token key atrule">type</span><span class="token punctuation">:</span> <span class="token string">"tags"</span>
+<span class="token punctuation">---</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h4 id="添加菜单"><a href="#添加菜单" class="headerlink" title="添加菜单"></a>添加菜单</h4><p>编辑主题配置文件 ，添加 tags 到 menu 中，如下:</p>
+<pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token key atrule">menu</span><span class="token punctuation">:</span>
+  <span class="token key atrule">home</span><span class="token punctuation">:</span> /
+  <span class="token key atrule">categories</span><span class="token punctuation">:</span> /categories/
+  <span class="token comment">#about: /about/</span>
+  <span class="token key atrule">archives</span><span class="token punctuation">:</span> /archives/
+  <span class="token key atrule">tags</span><span class="token punctuation">:</span> /tags/
+  <span class="token comment">#sitemap: /sitemap.xml</span>
+  <span class="token comment">#commonweal: /404.html</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="设置头像"><a href="#设置头像" class="headerlink" title="设置头像"></a>设置头像</h3><p>上传头像图片到主题文件夹<code>themes/next</code>中的<code>source/images/</code>下</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">vim</span> next/_config.yml
+avatar:
+  url: /images/<span class="token punctuation">[</span>pic<span class="token punctuation">]</span>.jpg<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>还可以通过<code>rounded</code>和<code>rotated</code>来设置圆形和旋转</p>
+<h3 id="创建个人页面"><a href="#创建个人页面" class="headerlink" title="创建个人页面"></a>创建个人页面</h3><p>编辑主题配置文件 ，将about也解除注释，如下:</p>
+<pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token key atrule">menu</span><span class="token punctuation">:</span>
+  <span class="token key atrule">home</span><span class="token punctuation">:</span> /
+  <span class="token key atrule">categories</span><span class="token punctuation">:</span> /categories/
+  <span class="token key atrule">about</span><span class="token punctuation">:</span> /about/
+  <span class="token key atrule">archives</span><span class="token punctuation">:</span> /archives/
+  <span class="token key atrule">tags</span><span class="token punctuation">:</span> /tags/
+  <span class="token comment">#sitemap: /sitemap.xml</span>
+  <span class="token comment">#commonweal: /404.html</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>在命令行执行以下命令创建页面</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">hexo new page <span class="token string">"about"</span>
+INFO  Created: ~/hexo/blog/source/about/index.md<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>再编写该文件即可</p>
+<h3 id="设置不显示修改日期"><a href="#设置不显示修改日期" class="headerlink" title="设置不显示修改日期"></a>设置不显示修改日期</h3><p>编辑主题配置文件</p>
+<pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token comment"># Post meta display settings</span>
+<span class="token key atrule">post_meta</span><span class="token punctuation">:</span>
+  <span class="token key atrule">item_text</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+  <span class="token key atrule">created_at</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+  <span class="token key atrule">updated_at</span><span class="token punctuation">:</span>
+    <span class="token key atrule">enable</span><span class="token punctuation">:</span> <span class="token boolean important">false</span>
+    <span class="token key atrule">another_day</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+  <span class="token key atrule">categories</span><span class="token punctuation">:</span> <span class="token boolean important">true</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>中<code>updated_at</code>的<code>enable</code>为<code>false</code></p>
+<h3 id="代码块主题"><a href="#代码块主题" class="headerlink" title="代码块主题"></a>代码块主题</h3><p>参考：<a target="_blank" rel="noopener" href="https://theme-next.js.org/highlight/">https://theme-next.js.org/highlight/</a> 来进行配置即可</p>
+<p>这里用了<code>prism-tomorrow</code></p>
+<p>把<code>copy_button:</code>的<code>enable:</code>设置为<code>true</code>可以产生复制按钮</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Hexo/" rel="tag"># Hexo</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%20bash%20Shell%E7%89%B9%E6%AE%8A%E5%8F%98%E9%87%8F/" rel="prev" title="Linux bash Shell特殊变量">
+                  <i class="fa fa-chevron-left"></i> Linux bash Shell特殊变量
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/%E7%BD%91%E7%BB%9C/%E8%B7%AF%E7%94%B1%E5%99%A8/OpenWrt/OpenWrt%E5%88%B6%E4%BD%9C%E6%9C%AC%E5%9C%B0%E6%BA%90/" rel="next" title="OpenWrt制作本地源">
+                  OpenWrt制作本地源 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

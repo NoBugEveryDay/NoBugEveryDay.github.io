@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要Linux系统一般挂载新硬盘时会将其格式化为ext4格式的硬盘，本文将介绍如何挂载一块全新的硬盘并将其格式化为ext4格式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux挂载硬盘">
+<meta property="og:url" content="http://blog.sysu.tech/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E6%8C%82%E8%BD%BD%E7%A1%AC%E7%9B%98/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要Linux系统一般挂载新硬盘时会将其格式化为ext4格式的硬盘，本文将介绍如何挂载一块全新的硬盘并将其格式化为ext4格式">
+<meta property="og:locale">
+<meta property="article:published_time" content="2019-04-29T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.176Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E6%8C%82%E8%BD%BD%E7%A1%AC%E7%9B%98/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>Linux挂载硬盘 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">2.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A3%80%E6%9F%A5%E5%B7%B2%E6%8C%82%E8%BD%BD%E7%9B%98"><span class="nav-number">3.</span> <span class="nav-text">检查已挂载盘</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E6%96%B0%E7%9B%98%E5%88%86%E5%8C%BA"><span class="nav-number">4.</span> <span class="nav-text">对新盘分区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E9%87%8D%E6%96%B0%E8%AF%BB%E5%8F%96%E5%88%86%E5%8C%BA%E8%A1%A8"><span class="nav-number">5.</span> <span class="nav-text">内核重新读取分区表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%88%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%88%86%E5%8C%BA%EF%BC%89"><span class="nav-number">6.</span> <span class="nav-text">创建文件系统（格式化分区）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%82%E8%BD%BD"><span class="nav-number">7.</span> <span class="nav-text">挂载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B0%B8%E4%B9%85%E6%8C%82%E8%BD%BD%EF%BC%9A"><span class="nav-number">8.</span> <span class="nav-text">永久挂载：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%90%8E%E6%80%BB%E7%BB%93%E4%B8%80%E4%B8%8B"><span class="nav-number">9.</span> <span class="nav-text">最后总结一下</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%82%E8%BD%BDNTFS%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%A3%81%E7%9B%98"><span class="nav-number">10.</span> <span class="nav-text">挂载NTFS文件系统磁盘</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%B8%E8%BD%BD%E7%A1%AC%E7%9B%98"><span class="nav-number">11.</span> <span class="nav-text">卸载硬盘</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E6%8C%82%E8%BD%BD%E7%A1%AC%E7%9B%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux挂载硬盘
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-04-30 00:00:00" itemprop="dateCreated datePublished" datetime="2019-04-30T00:00:00+08:00">2019-04-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/" itemprop="url" rel="index"><span itemprop="name">操作技巧</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>Linux系统一般挂载新硬盘时会将其格式化为<code>ext4</code>格式的硬盘，本文将介绍如何挂载一块全新的硬盘并将其格式化为<code>ext4</code>格式</p>
+<a id="more"></a> 
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://www.linuxidc.com/Linux/2018-06/152958.htm" title="Linux中添加新硬盘后对硬盘的分区以及挂载">Linux中添加新硬盘后对硬盘的分区以及挂载</a></p>
+<h2 id="检查已挂载盘"><a href="#检查已挂载盘" class="headerlink" title="检查已挂载盘"></a>检查已挂载盘</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">df</span> -h<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>注意：</p>
+<ul>
+<li>如果你是IDE 接 口 硬 盘 :/dev/dh[a-z]，这里的硬盘名字应该是dh[a-z]开头</li>
+<li>如果你是SCSI 接 口 硬 盘 : / dev/[ a -z ],这里的硬盘名字应该是sd[a-z]开头</li>
+</ul>
+<h2 id="对新盘分区"><a href="#对新盘分区" class="headerlink" title="对新盘分区"></a>对新盘分区</h2><p>1.将硬盘装在电脑上，重启电脑，后查看/dev/ 下有没多了一块硬盘<br>2.用fdisk对这块硬盘分区</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">fdisk</span> /dev/sdb<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>按下m显示菜单：<br>因为要新建分区选择n<br>这里是问你是要建立主分区还是扩展分区，这里是第一次建立选择主分区p<br>因为是MBR分区只能有4个分区，这里建立第一个分区，输入1<br>这里问你个分区的起始扇区，这里直接回车（默认），相当于输入了2048<br>这里问你的结束扇区，这里不需要计算，直接输入+1G 加号后面为这个分区的大小，或者直接回车，默认用完这块盘所有余量<br>此时第一个分区已经建立，但还是在内存中并没有写到硬盘sdb中，所以直接输入w　　<br>注意这里可以继续创建分区，完了再输入w，我这里只建立一个分区<br>经过以上步骤后分区的建立已经完成，但是此时系统还无法识别分区表</p>
+<h2 id="内核重新读取分区表"><a href="#内核重新读取分区表" class="headerlink" title="内核重新读取分区表"></a>内核重新读取分区表</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">partprobe /dev/sdb<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>注意：这里是整个磁盘sdb，不是磁盘分区sdb1</p>
+<h2 id="创建文件系统（格式化分区）"><a href="#创建文件系统（格式化分区）" class="headerlink" title="创建文件系统（格式化分区）"></a>创建文件系统（格式化分区）</h2><p>Linux 中的主流的文件系统有：ext4和xfsd等<br>这里我建立ext4文件系统</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">mkfs.ext4 /dev/sdb1<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>　　注意：这里是磁盘分区sdb1，不是整个磁盘sdb</p>
+<h2 id="挂载"><a href="#挂载" class="headerlink" title="挂载"></a>挂载</h2><p>在挂载之前你需要确定挂载的目录，我这里是/mnt/sdb1，没有目录的自己mkdir,这里目录最好建立在/mnt下，这个目录是专门挂载的，可以任意。<br>将来这个分区就会与这个/mnt/sdb1目录建立联系<br>手动挂载</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">mount</span> /dev/sdb1 /mnt/sdb1/<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>这里已经挂载成功，但是这只是一次性的，重启后就会消失</p>
+<h2 id="永久挂载："><a href="#永久挂载：" class="headerlink" title="永久挂载："></a>永久挂载：</h2><p>要对/etc/fstab文件编辑</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">vim</span> /etc/fstab<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>比如第一行中</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token comment"># 硬盘路径　　　　　　　　　　　　　　　　　　　　　　　　　文件路径（挂载点）　　　　文件系统类型　　　　设备的自定义选项　　是否转存　　fsck的顺序</span>
+ 
+/dev/mapper/CentOS-root　　　　　　　　　　　　　　　　　　 /                  　xfs  　　　　　　 　defaults        <span class="token number">0</span> 　　　　　<span class="token number">0</span>
+ 
+<span class="token assign-left variable">UUID</span><span class="token operator">=</span>e4ef36e1-0840-4a58-a4f7-c26f52ead6f1 　　　　　　　　/boot　　　　　　　　　xfs 　　　　　　　　defaults 　　　 <span class="token number">0</span>　　　　　 <span class="token number">0</span>
+ 
+<span class="token comment"># 我们要在最后一行写入自己的分区与文件路径，可以仿照上面的写</span>
+ 
+/dev/sdb1 　　　　　　　　　　　　　　　　　　　　　　　　/mnt/sdb1-zhi 　　　　　ext4 　　　　　　　　defaults 　　　　<span class="token number">0</span>　　　　　 <span class="token number">0</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这里第一列也可以写入UUID<br>UUID的查询：　</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">blkid<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>转存：0 不转存，不备份　　1转存，备份</p>
+<p>fsck：开机检查磁盘的顺序　　0表示不检查　　1234….为检查顺序</p>
+<p>以上步骤完成后，还需要判断是否正确</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">mount</span> -a<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>如果没有其他信息出现，表示你插入的正确，否则错误。<br>如果错误且没有检查，开机后将进入紧急模式，无法开机<br>最后开机重启后df一下，看看是否正常</p>
+<h2 id="最后总结一下"><a href="#最后总结一下" class="headerlink" title="最后总结一下"></a>最后总结一下</h2><p>1.fdisk /dev/sdb<br>2.partprobe /dev/sdb<br>3.mkfs.ext4 /dev/sdb1<br>4.mount /dev/sdb1　/mnt/sdb1<br>vim /etc/fstab<br>5.mount -a</p>
+<h2 id="挂载NTFS文件系统磁盘"><a href="#挂载NTFS文件系统磁盘" class="headerlink" title="挂载NTFS文件系统磁盘"></a>挂载NTFS文件系统磁盘</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">mount</span> -t ntfs-3g /dev/sdc1 /mnt/sdc1 -o force<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h2 id="卸载硬盘"><a href="#卸载硬盘" class="headerlink" title="卸载硬盘"></a>卸载硬盘</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">umount</span> /mnt/sdc1<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>如果卸载不掉并提示<code>device is busy</code></p>
+<p>用如下命令可以查看正在占用该设备的进程</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">fuser</span> -m /GPUFS<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>如下命令可以查询并杀死正在占用该设备的进程</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">fuser</span> -m -k /GPUFS<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB/TupleQ%EF%BC%9AFully-Asynchronous%20and%20Zero-Copy%20MPI%20over%20InfiniBand/" rel="prev" title="TupleQ：Fully-Asynchronous and Zero-Copy MPI over InfiniBand">
+                  <i class="fa fa-chevron-left"></i> TupleQ：Fully-Asynchronous and Zero-Copy MPI over InfiniBand
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Linux/CentOS/%E5%9C%A8CentOS7.6%E4%B8%8A%E4%B8%BA%E7%BD%91%E5%8D%A1BCM43228%E5%AE%89%E8%A3%85%E9%A9%B1%E5%8A%A8/" rel="next" title="在CentOS7.6上为网卡BCM43228安装驱动">
+                  在CentOS7.6上为网卡BCM43228安装驱动 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要本文将介绍如何使Intel MPI在RoCE协议上通信">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mvapich使用RoCEv2协议的方法">
+<meta property="og:url" content="http://blog.sysu.tech/RoCE/Intel%20MPI%E4%BD%BF%E7%94%A8RoCEv2%E5%8D%8F%E8%AE%AE%E7%9A%84%E6%96%B9%E6%B3%95/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要本文将介绍如何使Intel MPI在RoCE协议上通信">
+<meta property="og:locale">
+<meta property="article:published_time" content="2019-02-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.227Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="RoCE">
+<meta property="article:tag" content="Intel MPI">
+<meta property="article:tag" content="MPI">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/RoCE/Intel%20MPI%E4%BD%BF%E7%94%A8RoCEv2%E5%8D%8F%E8%AE%AE%E7%9A%84%E6%96%B9%E6%B3%95/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>Mvapich使用RoCEv2协议的方法 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F"><span class="nav-number">2.</span> <span class="nav-text">系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE"><span class="nav-number">3.</span> <span class="nav-text">设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E7%BB%93%E6%9E%9C%E6%A0%B7%E4%BE%8B"><span class="nav-number">4.</span> <span class="nav-text">运行结果样例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%A6%E5%AE%BD%E6%B5%8B%E8%AF%95"><span class="nav-number">4.1.</span> <span class="nav-text">带宽测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BB%B6%E8%BF%9F%E6%B5%8B%E8%AF%95"><span class="nav-number">4.2.</span> <span class="nav-text">延迟测试</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8IB%E6%A8%A1%E5%BC%8F"><span class="nav-number">5.</span> <span class="nav-text">使用IB模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%A6%E5%AE%BD%E6%B5%8B%E8%AF%95-1"><span class="nav-number">5.1.</span> <span class="nav-text">带宽测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BB%B6%E8%BF%9F%E6%B5%8B%E8%AF%95-1"><span class="nav-number">5.2.</span> <span class="nav-text">延迟测试</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E4%BB%A5%E5%A4%AA%E7%BD%91%E5%8D%A1%E4%B8%8A%E4%BD%BF%E7%94%A8TCP-IP%E5%8D%8F%E8%AE%AE"><span class="nav-number">6.</span> <span class="nav-text">在以太网卡上使用TCP&#x2F;IP协议</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%A6%E5%AE%BD%E6%B5%8B%E8%AF%95-2"><span class="nav-number">6.1.</span> <span class="nav-text">带宽测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BB%B6%E8%BF%9F%E6%B5%8B%E8%AF%95-2"><span class="nav-number">6.2.</span> <span class="nav-text">延迟测试</span></a></li></ol></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/RoCE/Intel%20MPI%E4%BD%BF%E7%94%A8RoCEv2%E5%8D%8F%E8%AE%AE%E7%9A%84%E6%96%B9%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Mvapich使用RoCEv2协议的方法
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-02-19 00:00:00" itemprop="dateCreated datePublished" datetime="2019-02-19T00:00:00+08:00">2019-02-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/RoCE/" itemprop="url" rel="index"><span itemprop="name">RoCE</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>本文将介绍如何使Intel MPI在RoCE协议上通信</p>
+<a id="more"></a> 
+
+<p>参考：<a target="_blank" rel="noopener" href="https://hpcadvisorycouncil.atlassian.net/wiki/spaces/HPCWORKS/pages/156237831/How+to+set+up+IntelMPI+over+RoCEv2" title="https://hpcadvisorycouncil.atlassian.net/wiki/spaces/HPCWORKS/pages/156237831/How+to+set+up+IntelMPI+over+RoCEv2">https://hpcadvisorycouncil.atlassian.net/wiki/spaces/HPCWORKS/pages/156237831/How+to+set+up+IntelMPI+over+RoCEv2</a></p>
+<h2 id="系统"><a href="#系统" class="headerlink" title="系统"></a>系统</h2><p>内核版本：</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ <span class="token function">uname</span> -r
+<span class="token number">3.10</span>.0-514.el7.lustre.zqh.20170930.x86_64<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>操作系统：</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">cat</span> /etc/redhat-release
+Red Hat Enterprise Linux Server release <span class="token number">7.3</span> <span class="token punctuation">(</span>Maipo<span class="token punctuation">)</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p><code>Intel Parallel Studio</code>版本：<code>2018 update4</code></p>
+<h2 id="设置"><a href="#设置" class="headerlink" title="设置"></a>设置</h2><ol>
+<li>通过<code>ibdev2netdev</code>确认以太网卡的名称，然后确认该网卡的链路层是以太网模式。<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ ibdev2netdev
+mlx5_0 port <span class="token number">1</span> <span class="token operator">==</span><span class="token operator">></span> eth4 <span class="token punctuation">(</span>Up<span class="token punctuation">)</span>
+mlx5_1 port <span class="token number">1</span> <span class="token operator">==</span><span class="token operator">></span> eth5 <span class="token punctuation">(</span>Down<span class="token punctuation">)</span>
+mlx5_2 port <span class="token number">1</span> <span class="token operator">==</span><span class="token operator">></span> ib2 <span class="token punctuation">(</span>Up<span class="token punctuation">)</span>
+$ ibstat mlx5_0
+CA <span class="token string">'mlx5_0'</span>
+	CA type: MT4117
+	Number of ports: <span class="token number">1</span>
+	Firmware version: <span class="token number">14.23</span>.1020
+	Hardware version: <span class="token number">0</span>
+	Node GUID: 0xec0d9a03009e9fae
+	System image GUID: 0xec0d9a03009e9fae
+	Port <span class="token number">1</span>:
+		State: Active
+		Physical state: LinkUp
+		Rate: <span class="token number">25</span>
+		Base lid: <span class="token number">0</span>
+		LMC: <span class="token number">0</span>
+		SM lid: <span class="token number">0</span>
+		Capability mask: 0x04010000
+		Port GUID: 0xee0d9afffe9e9fae
+		Link layer: Ethernet<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<ol start="2">
+<li>设置和确认使用的是RoCEv2协议<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ <span class="token function">sudo</span> cma_roce_mode -d mlx5_0 -p <span class="token number">1</span>
+IB/RoCE v1
+$ <span class="token function">sudo</span> cma_roce_mode -d mlx5_0 -p <span class="token number">1</span> -m <span class="token number">2</span>
+RoCE v2
+$ <span class="token function">sudo</span> cma_roce_mode -d mlx5_0 -p <span class="token number">1</span>
+RoCE v2<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></li>
+<li>新建如下的<code>dat.conf</code>，并将下面的<code>eth4</code>用你<code>ibdev2netdev</code>对应的设备名称替代<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ <span class="token function">cat</span> dat.conf
+ofa-v2-cma-roe-eth4 u2.0 nonthreadsafe default libdaplofa.so.2 dapl.2.0 <span class="token string">"eth4 0"</span> <span class="token string">""</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre></li>
+<li>用下面的命令来运行你的程序，同样将下面的<code>enp5s0f1</code>用你<code>ibdev2netdev</code>对应的设备名称替代<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">mpirun -n <span class="token number">2</span> -machinefile machinefile -genv I_MPI_DEBUG <span class="token number">4</span> -genv I_MPI_FALLBACK <span class="token number">0</span> -genv I_MPI_FABRICS shm:dapl -genv DAT_OVERRIDE ./dat.conf -genv I_MPI_DAT_LIBRARY /usr/lib64/libdat2.so -genv <span class="token assign-left variable">I_MPI_DAPL_PROVIDER</span><span class="token operator">=</span>ofa-v2-cma-roe-eth4 ./osu_bw<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></li>
+</ol>
+<strong>注意：一定要使用<code>-genv I_MPI_FABRICS shm:dapl</code>和<code>-genv I_MPI_FALLBACK 0</code>而不要只使用<code>-dapl</code>, this will guarantee that no fabric fallback will happen. If they simply use -dapl this allows the fabric to fallback to other DAPL capable device.</strong></li>
+</ol>
+<h2 id="运行结果样例"><a href="#运行结果样例" class="headerlink" title="运行结果样例"></a>运行结果样例</h2><h3 id="带宽测试"><a href="#带宽测试" class="headerlink" title="带宽测试"></a>带宽测试</h3><pre class="line-numbers language-none"><code class="language-none">$ mpirun -n 2 -machinefile machinefile -genv I_MPI_DEBUG 4 -genv I_MPI_FALLBACK 0 -genv I_MPI_FABRICS shm:dapl -genv DAT_OVERRIDE .&#x2F;dat.conf -genv I_MPI_DAT_LIBRARY &#x2F;usr&#x2F;lib64&#x2F;libdat2.so -genv I_MPI_DAPL_PROVIDER&#x3D;ofa-v2-cma-roe-eth4 .&#x2F;osu_bw
+[0] MPI startup(): Multi-threaded optimized library
+[1] DAPL startup(): trying to open DAPL provider from I_MPI_DAPL_PROVIDER: ofa-v2-cma-roe-eth4
+[0] DAPL startup(): trying to open DAPL provider from I_MPI_DAPL_PROVIDER: ofa-v2-cma-roe-eth4
+[1] MPI startup(): DAPL provider ofa-v2-cma-roe-eth4
+[1] MPI startup(): shm and dapl data transfer modes
+[0] MPI startup(): DAPL provider ofa-v2-cma-roe-eth4
+[0] MPI startup(): shm and dapl data transfer modes
+[1] MPID_nem_init_dapl_coll_fns(): User set DAPL collective mask &#x3D; 0000
+[1] MPID_nem_init_dapl_coll_fns(): Effective DAPL collective mask &#x3D; 0000
+[0] MPID_nem_init_dapl_coll_fns(): User set DAPL collective mask &#x3D; 0000
+[0] MPID_nem_init_dapl_coll_fns(): Effective DAPL collective mask &#x3D; 0000
+[0] MPI startup(): Rank    Pid      Node name  Pin cpu
+[0] MPI startup(): 0       12475    cpn57      &#123;0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,
+                                 30,31,32,33,34,35&#125;
+[0] MPI startup(): 1       12458    cpn58      &#123;0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,
+                                 30,31,32,33,34,35&#125;
+# OSU MPI Bandwidth Test v5.4.3
+# Size      Bandwidth (MB&#x2F;s)
+1                       1.60
+2                       3.70
+4                       9.99
+8                      19.96
+16                     36.36
+32                    102.25
+64                    200.68
+128                   380.51
+256                   714.27
+512                  1223.09
+1024                 1878.35
+2048                 2390.97
+4096                 2591.60
+8192                 2699.45
+16384                2753.60
+32768                2777.68
+65536                2789.97
+131072               2797.27
+262144               2081.49
+524288               2326.99
+1048576              2479.62
+2097152              2541.34
+4194304              2542.35<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="延迟测试"><a href="#延迟测试" class="headerlink" title="延迟测试"></a>延迟测试</h3><pre class="line-numbers language-none"><code class="language-none">$ mpirun -n 2 -machinefile machinefile -genv I_MPI_DEBUG 4 -genv I_MPI_FALLBACK 0 -genv I_MPI_FABRICS shm:dapl -genv DAT_OVERRIDE .&#x2F;dat.conf -genv I_MPI_DAT_LIBRARY &#x2F;usr&#x2F;lib64&#x2F;libdat2.so -genv I_MPI_DAPL_PROVIDER&#x3D;ofa-v2-cma-roe-eth4 .&#x2F;osu_latency
+[0] MPI startup(): Multi-threaded optimized library
+[0] DAPL startup(): trying to open DAPL provider from I_MPI_DAPL_PROVIDER: ofa-v2-cma-roe-eth4
+[1] DAPL startup(): trying to open DAPL provider from I_MPI_DAPL_PROVIDER: ofa-v2-cma-roe-eth4
+[1] MPI startup(): DAPL provider ofa-v2-cma-roe-eth4
+[1] MPI startup(): shm and dapl data transfer modes
+[0] MPI startup(): DAPL provider ofa-v2-cma-roe-eth4
+[0] MPI startup(): shm and dapl data transfer modes
+[0] MPID_nem_init_dapl_coll_fns(): User set DAPL collective mask &#x3D; 0000
+[0] MPID_nem_init_dapl_coll_fns(): Effective DAPL collective mask &#x3D; 0000
+[1] MPID_nem_init_dapl_coll_fns(): User set DAPL collective mask &#x3D; 0000
+[1] MPID_nem_init_dapl_coll_fns(): Effective DAPL collective mask &#x3D; 0000
+[0] MPI startup(): Rank    Pid      Node name  Pin cpu
+[0] MPI startup(): 0       12562    cpn57      &#123;0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,
+                                 30,31,32,33,34,35&#125;
+[0] MPI startup(): 1       12596    cpn58      &#123;0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,
+                                 30,31,32,33,34,35&#125;
+# OSU MPI Latency Test v5.4.3
+# Size          Latency (us)
+0                       1.87
+1                       1.75
+2                       1.71
+4                       1.68
+8                       1.67
+16                      1.67
+32                      2.10
+64                      2.10
+128                     2.16
+256                     2.25
+512                     2.42
+1024                    2.76
+2048                    3.28
+4096                    4.32
+8192                    6.27
+16384                   9.00
+32768                  14.69
+65536                  26.58
+131072                 50.04
+262144                128.51
+524288                231.12
+1048576               432.05
+2097152               829.53
+4194304              1652.17<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="使用IB模式"><a href="#使用IB模式" class="headerlink" title="使用IB模式"></a>使用IB模式</h2><h3 id="带宽测试-1"><a href="#带宽测试-1" class="headerlink" title="带宽测试"></a>带宽测试</h3><p>使用参数<code>-genv I_MPI_FABRICS shm:ofi</code></p>
+<pre class="line-numbers language-none"><code class="language-none">$ mpirun -n 2 -machinefile machinefile -genv I_MPI_FABRICS shm:ofa .&#x2F;osu_bw
+# OSU MPI Bandwidth Test v5.4.3
+# Size      Bandwidth (MB&#x2F;s)
+1                       1.12
+2                       2.80
+4                       8.06
+8                      16.35
+16                     35.22
+32                     71.54
+64                    133.99
+128                   265.80
+256                   523.78
+512                  1033.38
+1024                 1939.45
+2048                 3421.43
+4096                 5653.31
+8192                 8185.46
+16384                8365.28
+32768               10282.42
+65536               10514.72
+131072              11812.39
+262144              11900.89
+524288              11885.06
+1048576             11981.25
+2097152             12003.02
+4194304             12000.84<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="延迟测试-1"><a href="#延迟测试-1" class="headerlink" title="延迟测试"></a>延迟测试</h3><pre class="line-numbers language-none"><code class="language-none">$ mpirun -n 2 -machinefile machinefile -genv I_MPI_FABRICS shm:ofa .&#x2F;osu_latency
+# OSU MPI Latency Test v5.4.3
+# Size          Latency (us)
+0                       1.46
+1                       1.29
+2                       1.25
+4                       1.22
+8                       1.20
+16                      1.19
+32                      1.25
+64                      1.64
+128                     1.67
+256                     1.71
+512                     1.79
+1024                    1.94
+2048                    2.33
+4096                    2.85
+8192                    4.04
+16384                   5.03
+32768                   7.24
+65536                  10.86
+131072                 18.44
+262144                 32.05
+524288                 99.48
+1048576               162.69
+2097152               313.73
+4194304               594.18<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="在以太网卡上使用TCP-IP协议"><a href="#在以太网卡上使用TCP-IP协议" class="headerlink" title="在以太网卡上使用TCP/IP协议"></a>在以太网卡上使用TCP/IP协议</h2><p>使用以下指令即可</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">mpirun -n <span class="token number">2</span> -machinefile machinefile -genv I_MPI_FABRICS shm:tcp ./osu_bw<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h3 id="带宽测试-2"><a href="#带宽测试-2" class="headerlink" title="带宽测试"></a>带宽测试</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ mpirun -n <span class="token number">2</span> -machinefile machinefile -genv I_MPI_FABRICS shm:tcp ./osu_bw
+<span class="token comment"># OSU MPI Bandwidth Test v5.4.3</span>
+<span class="token comment"># Size      Bandwidth (MB/s)</span>
+<span class="token number">1</span>                       <span class="token number">0.39</span>
+<span class="token number">2</span>                       <span class="token number">0.97</span>
+<span class="token number">4</span>                       <span class="token number">2.25</span>
+<span class="token number">8</span>                       <span class="token number">4.47</span>
+<span class="token number">16</span>                      <span class="token number">9.73</span>
+<span class="token number">32</span>                     <span class="token number">18.02</span>
+<span class="token number">64</span>                     <span class="token number">37.26</span>
+<span class="token number">128</span>                    <span class="token number">70.90</span>
+<span class="token number">256</span>                   <span class="token number">127.02</span>
+<span class="token number">512</span>                   <span class="token number">242.17</span>
+<span class="token number">1024</span>                  <span class="token number">359.32</span>
+<span class="token number">2048</span>                  <span class="token number">575.46</span>
+<span class="token number">4096</span>                 <span class="token number">1009.76</span>
+<span class="token number">8192</span>                 <span class="token number">1644.98</span>
+<span class="token number">16384</span>                <span class="token number">2413.53</span>
+<span class="token number">32768</span>                <span class="token number">2711.62</span>
+<span class="token number">65536</span>                <span class="token number">2842.15</span>
+<span class="token number">131072</span>               <span class="token number">2882.19</span>
+<span class="token number">262144</span>               <span class="token number">2883.33</span>
+<span class="token number">524288</span>               <span class="token number">2908.10</span>
+<span class="token number">1048576</span>              <span class="token number">2914.79</span>
+<span class="token number">2097152</span>              <span class="token number">2757.24</span>
+<span class="token number">4194304</span>              <span class="token number">2695.78</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="延迟测试-2"><a href="#延迟测试-2" class="headerlink" title="延迟测试"></a>延迟测试</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ mpirun -n <span class="token number">2</span> -machinefile machinefile -genv I_MPI_FABRICS shm:tcp ./osu_latency
+<span class="token comment"># OSU MPI Latency Test v5.4.3</span>
+<span class="token comment"># Size          Latency (us)</span>
+<span class="token number">0</span>                      <span class="token number">13.55</span>
+<span class="token number">1</span>                      <span class="token number">12.81</span>
+<span class="token number">2</span>                      <span class="token number">13.04</span>
+<span class="token number">4</span>                      <span class="token number">13.08</span>
+<span class="token number">8</span>                      <span class="token number">12.80</span>
+<span class="token number">16</span>                     <span class="token number">12.83</span>
+<span class="token number">32</span>                     <span class="token number">13.00</span>
+<span class="token number">64</span>                     <span class="token number">13.02</span>
+<span class="token number">128</span>                    <span class="token number">13.00</span>
+<span class="token number">256</span>                    <span class="token number">13.51</span>
+<span class="token number">512</span>                    <span class="token number">13.89</span>
+<span class="token number">1024</span>                   <span class="token number">15.13</span>
+<span class="token number">2048</span>                   <span class="token number">23.55</span>
+<span class="token number">4096</span>                   <span class="token number">31.95</span>
+<span class="token number">8192</span>                   <span class="token number">30.90</span>
+<span class="token number">16384</span>                  <span class="token number">32.39</span>
+<span class="token number">32768</span>                  <span class="token number">39.90</span>
+<span class="token number">65536</span>                  <span class="token number">90.76</span>
+<span class="token number">131072</span>                <span class="token number">108.62</span>
+<span class="token number">262144</span>                <span class="token number">169.00</span>
+<span class="token number">524288</span>                <span class="token number">250.63</span>
+<span class="token number">1048576</span>               <span class="token number">426.61</span>
+<span class="token number">2097152</span>               <span class="token number">827.51</span>
+<span class="token number">4194304</span>              <span class="token number">1607.94</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/RoCE/" rel="tag"># RoCE</a>
+              <a href="/tags/Intel-MPI/" rel="tag"># Intel MPI</a>
+              <a href="/tags/MPI/" rel="tag"># MPI</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/RoCE/Mvapich%E4%BD%BF%E7%94%A8RoCEv2%E5%8D%8F%E8%AE%AE%E7%9A%84%E6%96%B9%E6%B3%95/" rel="prev" title="Mvapich使用RoCEv2协议的方法">
+                  <i class="fa fa-chevron-left"></i> Mvapich使用RoCEv2协议的方法
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Benchmark/%E5%A6%82%E4%BD%95%E8%AE%A1%E7%AE%97CPU%E7%AE%97%E5%8A%9B%E7%90%86%E8%AE%BA%E5%B3%B0%E5%80%BC/" rel="next" title="如何计算CPU算力理论峰值">
+                  如何计算CPU算力理论峰值 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

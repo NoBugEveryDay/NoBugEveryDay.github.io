@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要HPCC是一个测试集，包含RandomAcess，PTRANS，DGEMM，STREAM，FFT，Latency&#x2F;Bandwidth，HPL。 本文简要介绍如何编译运行HPCC。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何进行HPCC测试">
+<meta property="og:url" content="http://blog.sysu.tech/Benchmark/%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8CHPCC%E6%B5%8B%E8%AF%95/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要HPCC是一个测试集，包含RandomAcess，PTRANS，DGEMM，STREAM，FFT，Latency&#x2F;Bandwidth，HPL。 本文简要介绍如何编译运行HPCC。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2020-05-12T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.077Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Benchmark">
+<meta property="article:tag" content="HPCC">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Benchmark/%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8CHPCC%E6%B5%8B%E8%AF%95/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>如何进行HPCC测试 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E8%BF%90%E8%A1%8C"><span class="nav-number">2.</span> <span class="nav-text">编译运行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BUG"><span class="nav-number">3.</span> <span class="nav-text">BUG</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E4%BB%A3%E7%A0%81%E5%8F%AA%E8%BF%90%E8%A1%8C%E9%83%A8%E5%88%86%E6%B5%8B%E8%AF%95"><span class="nav-number">4.</span> <span class="nav-text">修改代码只运行部分测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E6%9E%9C%E8%A7%A3%E8%AF%BB"><span class="nav-number">5.</span> <span class="nav-text">结果解读</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%89%8D%E7%BC%80%E6%84%8F%E4%B9%89"><span class="nav-number">5.1.</span> <span class="nav-text">前缀意义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-RandomAccess"><span class="nav-number">5.2.</span> <span class="nav-text">1. RandomAccess</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-MPIRandomAccess"><span class="nav-number">5.2.1.</span> <span class="nav-text">1.1. MPIRandomAccess</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-StarRandomAccess"><span class="nav-number">5.2.2.</span> <span class="nav-text">1.2. StarRandomAccess</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-SingleRandomAccess"><span class="nav-number">5.2.3.</span> <span class="nav-text">1.3. SingleRandomAccess</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-4-MPIRandomAccess-LCG"><span class="nav-number">5.2.4.</span> <span class="nav-text">1.4. MPIRandomAccess LCG</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-5-StarRandomAccess-LCG"><span class="nav-number">5.2.5.</span> <span class="nav-text">1.5. StarRandomAccess LCG</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-6-SingleRandomAccess-LCG"><span class="nav-number">5.2.6.</span> <span class="nav-text">1.6. SingleRandomAccess LCG</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-PTRANS"><span class="nav-number">5.3.</span> <span class="nav-text">2. PTRANS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-DGEMM"><span class="nav-number">5.4.</span> <span class="nav-text">3. DGEMM</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-StarDGEMM"><span class="nav-number">5.4.1.</span> <span class="nav-text">3.1. StarDGEMM</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-SingleDGEMM"><span class="nav-number">5.4.2.</span> <span class="nav-text">3.2. SingleDGEMM</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-STREAM"><span class="nav-number">5.5.</span> <span class="nav-text">4.STREAM</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#4-1-StarSTREAM"><span class="nav-number">5.5.1.</span> <span class="nav-text">4.1 StarSTREAM</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-2-SingleSTREAM"><span class="nav-number">5.5.2.</span> <span class="nav-text">4.2 SingleSTREAM</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-FFT"><span class="nav-number">5.6.</span> <span class="nav-text">5. FFT</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-MPIFFT"><span class="nav-number">5.6.1.</span> <span class="nav-text">5.1. MPIFFT</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-2-StarFFT"><span class="nav-number">5.6.2.</span> <span class="nav-text">5.2. StarFFT</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-3-SingleFFT"><span class="nav-number">5.6.3.</span> <span class="nav-text">5.3. SingleFFT</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-Latency-Bandwidth"><span class="nav-number">5.7.</span> <span class="nav-text">6. Latency&#x2F;Bandwidth</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-HPL"><span class="nav-number">5.8.</span> <span class="nav-text">7. HPL</span></a></li></ol></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Benchmark/%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8CHPCC%E6%B5%8B%E8%AF%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          如何进行HPCC测试
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-05-13 00:00:00" itemprop="dateCreated datePublished" datetime="2020-05-13T00:00:00+08:00">2020-05-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Benchmark/" itemprop="url" rel="index"><span itemprop="name">Benchmark</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>HPCC是一个测试集，包含<code>RandomAcess</code>，<code>PTRANS</code>，<code>DGEMM</code>，<code>STREAM</code>，<code>FFT</code>，<code>Latency/Bandwidth</code>，<code>HPL</code>。</p>
+<p>本文简要介绍如何编译运行HPCC。</p>
+<a id="more"></a> 
+
+<p><strong>本文内容为荣裕大佬的测试记录，非原创内容</strong></p>
+<h2 id="编译运行"><a href="#编译运行" class="headerlink" title="编译运行"></a>编译运行</h2><p>HPCC编译主要依赖HPL内的Makefile，修改其中的makefile即可</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">cp</span> ./hpl/setup/Make.xxxx ./hpl/<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>一堆Makefile里随便CP一个</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">vi</span> ./hpl/Make.Linux<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>以下为使用ICC+MKL的Makefile</p>
+<pre class="line-numbers language-makefile" data-language="makefile"><code class="language-makefile"><span class="token comment">#  </span>
+<span class="token comment">#  -- High Performance Computing Linpack Benchmark (HPL)                </span>
+<span class="token comment">#     HPL - 2.0 - September 10, 2008                          </span>
+<span class="token comment">#     Antoine P. Petitet                                                </span>
+<span class="token comment">#     University of Tennessee, Knoxville                                </span>
+<span class="token comment">#     Innovative Computing Laboratory                                 </span>
+<span class="token comment">#     (C) Copyright 2000-2008 All Rights Reserved                       </span>
+<span class="token comment">#                                                                       </span>
+<span class="token comment">#  -- Copyright notice and Licensing terms:                             </span>
+<span class="token comment">#                                                                       </span>
+<span class="token comment">#  Redistribution  and  use in  source and binary forms, with or without</span>
+<span class="token comment">#  modification, are  permitted provided  that the following  conditions</span>
+<span class="token comment">#  are met:                                                             </span>
+<span class="token comment">#                                                                       </span>
+<span class="token comment">#  1. Redistributions  of  source  code  must retain the above copyright</span>
+<span class="token comment">#  notice, this list of conditions and the following disclaimer.        </span>
+<span class="token comment">#                                                                       </span>
+<span class="token comment">#  2. Redistributions in binary form must reproduce  the above copyright</span>
+<span class="token comment">#  notice, this list of conditions,  and the following disclaimer in the</span>
+<span class="token comment">#  documentation and/or other materials provided with the distribution. </span>
+<span class="token comment">#                                                                       </span>
+<span class="token comment">#  3. All  advertising  materials  mentioning  features  or  use of this</span>
+<span class="token comment">#  software must display the following acknowledgement:                 </span>
+<span class="token comment">#  This  product  includes  software  developed  at  the  University  of</span>
+<span class="token comment">#  Tennessee, Knoxville, Innovative Computing Laboratory.             </span>
+<span class="token comment">#                                                                       </span>
+<span class="token comment">#  4. The name of the  University,  the name of the  Laboratory,  or the</span>
+<span class="token comment">#  names  of  its  contributors  may  not  be used to endorse or promote</span>
+<span class="token comment">#  products  derived   from   this  software  without  specific  written</span>
+<span class="token comment">#  permission.                                                          </span>
+<span class="token comment">#                                                                       </span>
+<span class="token comment">#  -- Disclaimer:                                                       </span>
+<span class="token comment">#                                                                       </span>
+<span class="token comment">#  THIS  SOFTWARE  IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS</span>
+<span class="token comment">#  ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,  INCLUDING,  BUT NOT</span>
+<span class="token comment">#  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR</span>
+<span class="token comment">#  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE UNIVERSITY</span>
+<span class="token comment">#  OR  CONTRIBUTORS  BE  LIABLE FOR ANY  DIRECT,  INDIRECT,  INCIDENTAL,</span>
+<span class="token comment">#  SPECIAL,  EXEMPLARY,  OR  CONSEQUENTIAL DAMAGES  (INCLUDING,  BUT NOT</span>
+<span class="token comment">#  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,</span>
+<span class="token comment">#  DATA OR PROFITS; OR BUSINESS INTERRUPTION)  HOWEVER CAUSED AND ON ANY</span>
+<span class="token comment">#  THEORY OF LIABILITY, WHETHER IN CONTRACT,  STRICT LIABILITY,  OR TORT</span>
+<span class="token comment">#  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="token comment">#  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. </span>
+<span class="token comment"># ######################################################################</span>
+<span class="token comment">#  </span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment"># - shell --------------------------------------------------------------</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment">#</span>
+SHELL        <span class="token operator">=</span> /bin/sh
+<span class="token comment">#</span>
+CD           <span class="token operator">=</span> cd
+CP           <span class="token operator">=</span> cp
+LN_S         <span class="token operator">=</span> ln -s
+MKDIR        <span class="token operator">=</span> mkdir
+RM           <span class="token operator">=</span> /bin/rm -f
+TOUCH        <span class="token operator">=</span> touch
+<span class="token comment">#</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment"># - Platform identifier ------------------------------------------------</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment">#</span>
+ARCH         <span class="token operator">=</span> <span class="token variable">$</span><span class="token punctuation">(</span>arch<span class="token punctuation">)</span>
+<span class="token comment">#</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment"># - HPL Directory Structure / HPL library ------------------------------</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment">#</span>
+TOPdir       <span class="token operator">=</span> ../../..
+INCdir       <span class="token operator">=</span> <span class="token variable">$</span><span class="token punctuation">(</span>TOPdir<span class="token punctuation">)</span>/<span class="token keyword">include</span>
+BINdir       <span class="token operator">=</span> <span class="token variable">$</span><span class="token punctuation">(</span>TOPdir<span class="token punctuation">)</span>/bin/<span class="token variable">$</span><span class="token punctuation">(</span>ARCH<span class="token punctuation">)</span>
+LIBdir       <span class="token operator">=</span> <span class="token variable">$</span><span class="token punctuation">(</span>TOPdir<span class="token punctuation">)</span>/lib/<span class="token variable">$</span><span class="token punctuation">(</span>ARCH<span class="token punctuation">)</span>
+<span class="token comment">#</span>
+HPLlib       <span class="token operator">=</span> <span class="token variable">$</span><span class="token punctuation">(</span>LIBdir<span class="token punctuation">)</span>/libhpl.a 
+<span class="token comment">#</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment"># - Message Passing library (MPI) --------------------------------------</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment"># MPinc tells the  C  compiler where to find the Message Passing library</span>
+<span class="token comment"># header files,  MPlib  is defined  to be the name of  the library to be</span>
+<span class="token comment"># used. The variable MPdir is only used for defining MPinc and MPlib.</span>
+<span class="token comment">#</span>
+<span class="token comment"># Mlib 可以选择静态连接mpiicxx.a</span>
+MPdir        <span class="token operator">=</span> <span class="token variable">$</span><span class="token punctuation">&#123;</span>I_MPI_ROOT<span class="token punctuation">&#125;</span>
+MPinc        <span class="token operator">=</span> -I<span class="token variable">$</span><span class="token punctuation">(</span>MPdir<span class="token punctuation">)</span>/intel64/<span class="token keyword">include</span>
+Mlib         <span class="token operator">=</span> 
+<span class="token comment">#</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment"># - Linear Algebra library (BLAS or VSIPL) -----------------------------</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment"># LAinc tells the  C  compiler where to find the Linear Algebra  library</span>
+<span class="token comment"># header files,  LAlib  is defined  to be the name of  the library to be</span>
+<span class="token comment"># used. The variable LAdir is only used for defining LAinc and LAlib.</span>
+<span class="token comment"># 关于MKL的fftw2编译之后提及</span>
+LAdir        <span class="token operator">=</span> <span class="token variable">$</span><span class="token punctuation">&#123;</span>MKLROOT<span class="token punctuation">&#125;</span>
+LAinc        <span class="token operator">=</span> -I<span class="token variable">$</span><span class="token punctuation">(</span>LAdir<span class="token punctuation">)</span>/<span class="token keyword">include</span> -I<span class="token variable">$</span><span class="token punctuation">(</span>LAdir<span class="token punctuation">)</span>/<span class="token keyword">include</span>/fftw
+LAlib        <span class="token operator">=</span> <span class="token variable">$</span><span class="token punctuation">&#123;</span>MKLROOT<span class="token punctuation">&#125;</span>/lib/intel64/libmkl_scalapack_lp64.a -Wl,--start-group <span class="token variable">$</span><span class="token punctuation">&#123;</span>MKLROOT<span class="token punctuation">&#125;</span>/lib/intel64/libmkl_intel_lp64.a \
+               <span class="token variable">$</span><span class="token punctuation">&#123;</span>MKLROOT<span class="token punctuation">&#125;</span>/lib/intel64/libmkl_intel_thread.a\
+               <span class="token variable">$</span><span class="token punctuation">&#123;</span>MKLROOT<span class="token punctuation">&#125;</span>/lib/intel64/libmkl_core.a \
+               <span class="token variable">$</span><span class="token punctuation">&#123;</span>MKLROOT<span class="token punctuation">&#125;</span>/lib/intel64/libmkl_cdft_core.a \
+               <span class="token variable">$</span><span class="token punctuation">&#123;</span>MKLROOT<span class="token punctuation">&#125;</span>/lib/intel64/libfftw2xc_double_intel.a \
+	       <span class="token variable">$</span><span class="token punctuation">&#123;</span>MKLROOT<span class="token punctuation">&#125;</span>/lib/intel64/libmkl_blacs_intelmpi_lp64.a \
+               <span class="token variable">$</span><span class="token punctuation">&#123;</span>MKLROOT<span class="token punctuation">&#125;</span>/lib/intel64/libfftw2x_cdft_DOUBLE_ilp64.a \
+               -Wl,--end-group -liomp5 -lpthread -lm -ldl
+<span class="token comment">#</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment"># - F77 / C interface --------------------------------------------------</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment"># You can skip this section  if and only if  you are not planning to use</span>
+<span class="token comment"># a  BLAS  library featuring a Fortran 77 interface.  Otherwise,  it  is</span>
+<span class="token comment"># necessary  to  fill out the  F2CDEFS  variable  with  the  appropriate</span>
+<span class="token comment"># options.  **One and only one**  option should be chosen in **each** of</span>
+<span class="token comment"># the 3 following categories:</span>
+<span class="token comment">#</span>
+<span class="token comment"># 1) name space (How C calls a Fortran 77 routine)</span>
+<span class="token comment">#</span>
+<span class="token comment"># -DAdd_              : all lower case and a suffixed underscore  (Suns,</span>
+<span class="token comment">#                       Intel, ...),                           [default]</span>
+<span class="token comment"># -DNoChange          : all lower case (IBM RS6000),</span>
+<span class="token comment"># -DUpCase            : all upper case (Cray),</span>
+<span class="token comment"># -DAdd__             : the FORTRAN compiler in use is f2c.</span>
+<span class="token comment">#</span>
+<span class="token comment"># 2) C and Fortran 77 integer mapping</span>
+<span class="token comment">#</span>
+<span class="token comment"># -DF77_INTEGER=int   : Fortran 77 INTEGER is a C int,         [default]</span>
+<span class="token comment"># -DF77_INTEGER=long  : Fortran 77 INTEGER is a C long,</span>
+<span class="token comment"># -DF77_INTEGER=short : Fortran 77 INTEGER is a C short.</span>
+<span class="token comment">#</span>
+<span class="token comment"># 3) Fortran 77 string handling</span>
+<span class="token comment">#</span>
+<span class="token comment"># -DStringSunStyle    : The string address is passed at the string loca-</span>
+<span class="token comment">#                       tion on the stack, and the string length is then</span>
+<span class="token comment">#                       passed as  an  F77_INTEGER  after  all  explicit</span>
+<span class="token comment">#                       stack arguments,                       [default]</span>
+<span class="token comment"># -DStringStructPtr   : The address  of  a  structure  is  passed  by  a</span>
+<span class="token comment">#                       Fortran 77  string,  and the structure is of the</span>
+<span class="token comment">#                       form: struct &#123;char *cp; F77_INTEGER len;&#125;,</span>
+<span class="token comment"># -DStringStructVal   : A structure is passed by value for each  Fortran</span>
+<span class="token comment">#                       77 string,  and  the  structure is  of the form:</span>
+<span class="token comment">#                       struct &#123;char *cp; F77_INTEGER len;&#125;,</span>
+<span class="token comment"># -DStringCrayStyle   : Special option for  Cray  machines,  which  uses</span>
+<span class="token comment">#                       Cray  fcd  (fortran  character  descriptor)  for</span>
+<span class="token comment">#                       interoperation.</span>
+<span class="token comment">#</span>
+F2CDEFS      <span class="token operator">=</span> -DAdd_ -DF77_INTEGER<span class="token operator">=</span>long -DStringSunStyle 
+<span class="token comment">#</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment"># - HPL includes / libraries / specifics -------------------------------</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment">#</span>
+HPL_INCLUDES <span class="token operator">=</span> -I<span class="token variable">$</span><span class="token punctuation">(</span>INCdir<span class="token punctuation">)</span> -I<span class="token variable">$</span><span class="token punctuation">(</span>INCdir<span class="token punctuation">)</span>/<span class="token variable">$</span><span class="token punctuation">(</span>ARCH<span class="token punctuation">)</span> <span class="token variable">$</span><span class="token punctuation">(</span>LAinc<span class="token punctuation">)</span> <span class="token variable">$</span><span class="token punctuation">(</span>MPinc<span class="token punctuation">)</span>
+HPL_LIBS     <span class="token operator">=</span> <span class="token variable">$</span><span class="token punctuation">(</span>HPLlib<span class="token punctuation">)</span> <span class="token variable">$</span><span class="token punctuation">(</span>LAlib<span class="token punctuation">)</span> <span class="token variable">$</span><span class="token punctuation">(</span>MPlib<span class="token punctuation">)</span> -lm
+<span class="token comment">#</span>
+<span class="token comment"># - Compile time options -----------------------------------------------</span>
+<span class="token comment">#</span>
+<span class="token comment"># -DHPL_COPY_L           force the copy of the panel L before bcast;</span>
+<span class="token comment"># -DHPL_CALL_CBLAS       call the cblas interface;</span>
+<span class="token comment"># -DHPL_CALL_VSIPL       call the vsip  library;</span>
+<span class="token comment"># -DHPL_DETAILED_TIMING  enable detailed timers;</span>
+<span class="token comment">#</span>
+<span class="token comment"># By default HPL will:</span>
+<span class="token comment">#    *) not copy L before broadcast,</span>
+<span class="token comment">#    *) call the BLAS Fortran 77 interface,</span>
+<span class="token comment">#    *) not display detailed timing information.</span>
+<span class="token comment">#</span>
+HPL_OPTS     <span class="token operator">=</span> -DHPL_CALL_CBLAS -DUSING_FFTW -DRA_SANDIA_OPT2 -DLONG_IS_64BITS -DHPCC_MEMALLCTR -DMKL_INT<span class="token operator">=</span>long -DHPCC_FFT_235
+<span class="token comment">#</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment">#</span>
+HPL_DEFS     <span class="token operator">=</span> <span class="token variable">$</span><span class="token punctuation">(</span>F2CDEFS<span class="token punctuation">)</span> <span class="token variable">$</span><span class="token punctuation">(</span>HPL_OPTS<span class="token punctuation">)</span> <span class="token variable">$</span><span class="token punctuation">(</span>HPL_INCLUDES<span class="token punctuation">)</span>
+<span class="token comment">#</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment"># - Compilers / linkers - Optimization flags ---------------------------</span>
+<span class="token comment"># ----------------------------------------------------------------------</span>
+<span class="token comment">#</span>
+CC           <span class="token operator">=</span> mpiicc
+CCNOOPT      <span class="token operator">=</span> <span class="token variable">$</span><span class="token punctuation">(</span>HPL_DEFS<span class="token punctuation">)</span>
+CCFLAGS      <span class="token operator">=</span> <span class="token variable">$</span><span class="token punctuation">(</span>HPL_DEFS<span class="token punctuation">)</span>  -std<span class="token operator">=</span>c99 -xHOST -O3 -ipo -no-prec-div -static-intel -fp-model fast<span class="token operator">=</span>2 -ansi-alias -fno-alias 
+<span class="token comment">#</span>
+<span class="token comment"># On some platforms,  it is necessary  to use the Fortran linker to find</span>
+<span class="token comment"># the Fortran internals used in the BLAS library.</span>
+<span class="token comment">#</span>
+LINKER       <span class="token operator">=</span> mpiicc 
+LINKFLAGS    <span class="token operator">=</span> <span class="token variable">$</span><span class="token punctuation">(</span>CCFLAGS<span class="token punctuation">)</span> -z relro -z now -Wl,-R<span class="token string">'$$ORIGIN/lib/intel64'</span> -liomp5 -L<span class="token variable">$</span><span class="token punctuation">(</span>MKL_LIB<span class="token punctuation">)</span> -mkl
+<span class="token comment">#</span>
+ARCHIVER     <span class="token operator">=</span> xiar
+ARFLAGS      <span class="token operator">=</span> r
+RANLIB       <span class="token operator">=</span> echo
+<span class="token comment">#</span>
+<span class="token comment"># ----------------------------------------------------------------------</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p><strong>之后编译MKL库中的fftw2</strong></p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">su</span>
+module load nvme/intel/2018.4
+<span class="token builtin class-name">cd</span> <span class="token variable">$MKLROOT</span>
+<span class="token builtin class-name">cd</span> interfaces/
+<span class="token builtin class-name">cd</span> fftw2xc 
+<span class="token function">make</span> libintel64 <span class="token assign-left variable">PRECISION</span><span class="token operator">=</span>MKL_DOUBLE <span class="token assign-left variable">interface</span><span class="token operator">=</span>ilp64 <span class="token assign-left variable">compiler</span><span class="token operator">=</span>intel
+<span class="token builtin class-name">cd</span> <span class="token punctuation">..</span>
+<span class="token builtin class-name">cd</span> fftw2x_cdft
+<span class="token function">make</span> libintel64 <span class="token assign-left variable">PRECISION</span><span class="token operator">=</span>MKL_DOUBLE <span class="token assign-left variable">interface</span><span class="token operator">=</span>ilp64 <span class="token assign-left variable">compiler</span><span class="token operator">=</span>intel<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p><em>注意这里需要ilp64 主要问题是其接口为 int 不然有可能出现爆int</em>, 但其他时候不需要ilp64,会使得HPL出现段错误</p>
+<p><strong>正式编译</strong></p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">make</span> <span class="token assign-left variable">arch</span><span class="token operator">=</span>Linux -j<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>之后会生成<code>_hpccinf.txt</code></p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">cp</span> _hpccinf.txt hpccinfo.txt<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p><strong>运行</strong></p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">mpirun -n xxx ./hpcc
+<span class="token comment"># 结果在 hpccout.txt中</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p><strong>关于编译选项</strong></p>
+<pre class="line-numbers language-none"><code class="language-none">-DHPCC_FFT_235&#96; ：如没有此定义 运行&#96;MPIFFT&#96;时 N(进程数)会自动变为2的幂，当使用此定义时&#96;N&#x3D;2^x * 3^y * 5^z<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p><code>-DHPCC_FFTW_ESTIMATE</code>：影响FFTW库的调用方式，会降低性能，但会加速FFT时间。</p>
+<p><code>-DHPCC_MEMALLCTR</code>： 可以很大的N</p>
+<p><code>-DHPL_USE_GETPROCESSTIMES</code> ： 将使用特定于Windows的GetProcessTimes（）函数来测量经过的CPU时间。</p>
+<p><code>-DUSE_MULTIPLE_RECV</code>： 同时多个非阻塞接收，默认只有一个非阻塞接收。</p>
+<p><code>-DRA_SANDIA_NOPT</code>：如果定义了此符号，则不会使用Global RandomAccess的HPC Challenge标准算法。 相反，将使用桑迪亚国家实验室的替代实施方案。 它通过MPI进程形成的虚拟超立方体拓扑在软件中路由消息。</p>
+<p><code>-DRA_SANDIA_OPT2</code> ： 如果定义了此符号，则不会使用Global RandomAccess的HPC Challenge标准算法。 相反，将使用桑迪亚国家实验室的替代实施方案。 该实现针对作为2的幂的处理器的数量进行了优化。 优化是在发送和展开数据更新循环之前对数据进行排序。 如果进程数不是幂2，则代码与使用RA_SANDIA_NOPT设置执行的代码相同。</p>
+<p><code>-DRA_TIME_BOUND_DISABLE</code> ： 如果定义了此符号，则将使用标准的Global RandomAccess代码而不受时间限制。 对于大多数运行，这是不鼓励的，因为对于大型阵列大小，标准算法往往很慢，因为短MPI消息的开销很大。</p>
+<p><code>-DUSING_FFTW</code> ： 使用FFTW库</p>
+<h2 id="BUG"><a href="#BUG" class="headerlink" title="BUG"></a>BUG</h2><p>修改注释掉一处 fftw_destroy_plan(p);</p>
+<p>位置：<code>./FFT/tstfft.c</code></p>
+<p>原因：N开大后段错误</p>
+<p>影响：没有销毁释放内存，无其他影响</p>
+<h2 id="修改代码只运行部分测试"><a href="#修改代码只运行部分测试" class="headerlink" title="修改代码只运行部分测试"></a>修改代码只运行部分测试</h2><p>修改 <code>src/hpcc.c</code></p>
+<p>注释掉不要测试的注释即可</p>
+<h2 id="结果解读"><a href="#结果解读" class="headerlink" title="结果解读"></a>结果解读</h2><h3 id="前缀意义"><a href="#前缀意义" class="headerlink" title="前缀意义"></a>前缀意义</h3><ul>
+<li><p>MPI 全集群</p>
+</li>
+<li><p>Star 所有进程自己跑自己的</p>
+</li>
+<li><p>Single 所有进程按顺序跑</p>
+</li>
+</ul>
+<p>一般来说Single的性能会好于Star，因为多核一起跑往往会导致CPU降频还有共享内存带宽的问题</p>
+<h3 id="1-RandomAccess"><a href="#1-RandomAccess" class="headerlink" title="1. RandomAccess"></a>1. RandomAccess</h3><p>RandomAccess measures the rate of random updates of memory.</p>
+<h4 id="1-1-MPIRandomAccess"><a href="#1-1-MPIRandomAccess" class="headerlink" title="1.1. MPIRandomAccess"></a>1.1. MPIRandomAccess</h4><h4 id="1-2-StarRandomAccess"><a href="#1-2-StarRandomAccess" class="headerlink" title="1.2. StarRandomAccess"></a>1.2. StarRandomAccess</h4><h4 id="1-3-SingleRandomAccess"><a href="#1-3-SingleRandomAccess" class="headerlink" title="1.3. SingleRandomAccess"></a>1.3. SingleRandomAccess</h4><h4 id="1-4-MPIRandomAccess-LCG"><a href="#1-4-MPIRandomAccess-LCG" class="headerlink" title="1.4. MPIRandomAccess LCG"></a>1.4. MPIRandomAccess LCG</h4><p> LCG = Linear Congruential Generator 线性同余生成器</p>
+<p>我的理解就是生成的数可能更随机了叭</p>
+<h4 id="1-5-StarRandomAccess-LCG"><a href="#1-5-StarRandomAccess-LCG" class="headerlink" title="1.5. StarRandomAccess LCG"></a>1.5. StarRandomAccess LCG</h4><h4 id="1-6-SingleRandomAccess-LCG"><a href="#1-6-SingleRandomAccess-LCG" class="headerlink" title="1.6. SingleRandomAccess LCG"></a>1.6. SingleRandomAccess LCG</h4><h3 id="2-PTRANS"><a href="#2-PTRANS" class="headerlink" title="2. PTRANS"></a>2. PTRANS</h3><p>PTRANS measures the rate of transfer for large arrays of data from multiprocessor’s memory.</p>
+<p>全集群运行，使用HPL中的参数变化而成</p>
+<p>M=N=HPL(N/2)</p>
+<p>NB=MB=HPL(NB)</p>
+<p>P=HPL(Q)</p>
+<p>Q=HPL(Q)</p>
+<h3 id="3-DGEMM"><a href="#3-DGEMM" class="headerlink" title="3. DGEMM"></a>3. DGEMM</h3><p>DGEMM measures the floating point execution rate for double precision real matrix-matrix multiplication.</p>
+<h4 id="3-1-StarDGEMM"><a href="#3-1-StarDGEMM" class="headerlink" title="3.1. StarDGEMM"></a>3.1. StarDGEMM</h4><h4 id="3-2-SingleDGEMM"><a href="#3-2-SingleDGEMM" class="headerlink" title="3.2. SingleDGEMM"></a>3.2. SingleDGEMM</h4><h3 id="4-STREAM"><a href="#4-STREAM" class="headerlink" title="4.STREAM"></a>4.STREAM</h3><p>STREAM is a benchmark that measures sustainable memory bandwidth (in GB/s).</p>
+<h4 id="4-1-StarSTREAM"><a href="#4-1-StarSTREAM" class="headerlink" title="4.1 StarSTREAM"></a>4.1 StarSTREAM</h4><h4 id="4-2-SingleSTREAM"><a href="#4-2-SingleSTREAM" class="headerlink" title="4.2 SingleSTREAM"></a>4.2 SingleSTREAM</h4><h3 id="5-FFT"><a href="#5-FFT" class="headerlink" title="5. FFT"></a>5. FFT</h3><p>FFT measures the floating point rate of execution of double precision complex one-dimensional Discrete Fourier Tranform (DFT).</p>
+<h4 id="5-1-MPIFFT"><a href="#5-1-MPIFFT" class="headerlink" title="5.1. MPIFFT"></a>5.1. MPIFFT</h4><p>在这个测试中，如果结果不稳定，可能是因为N开得不够大</p>
+<h4 id="5-2-StarFFT"><a href="#5-2-StarFFT" class="headerlink" title="5.2. StarFFT"></a>5.2. StarFFT</h4><h4 id="5-3-SingleFFT"><a href="#5-3-SingleFFT" class="headerlink" title="5.3. SingleFFT"></a>5.3. SingleFFT</h4><h3 id="6-Latency-Bandwidth"><a href="#6-Latency-Bandwidth" class="headerlink" title="6. Latency/Bandwidth"></a>6. Latency/Bandwidth</h3><h3 id="7-HPL"><a href="#7-HPL" class="headerlink" title="7. HPL"></a>7. HPL</h3><p>不建议跑这个测试</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Benchmark/" rel="tag"># Benchmark</a>
+              <a href="/tags/HPCC/" rel="tag"># HPCC</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/MPI/Mpich/Mpich%E5%B8%B8%E7%94%A8%E6%8A%80%E5%B7%A7/" rel="prev" title="Mpich常用技巧">
+                  <i class="fa fa-chevron-left"></i> Mpich常用技巧
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/%E6%97%85%E6%B8%B8/%E5%8D%97%E6%BE%B3%E6%97%85%E6%B8%B8%E8%AE%A1%E5%88%92/" rel="next" title="南澳旅游计划">
+                  南澳旅游计划 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

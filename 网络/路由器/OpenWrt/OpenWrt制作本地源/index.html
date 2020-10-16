@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要由于OpenWrt的源总是更新得非常快，内核总是升级，每次升级的时候opkg install一些内核的东西时候日常内核版本不兼容导致很多包装不上。一个比较方便的方法是在刷了一次机之后顺便把所有包爬下来，做成本地源。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenWrt制作本地源">
+<meta property="og:url" content="http://blog.sysu.tech/%E7%BD%91%E7%BB%9C/%E8%B7%AF%E7%94%B1%E5%99%A8/OpenWrt/OpenWrt%E5%88%B6%E4%BD%9C%E6%9C%AC%E5%9C%B0%E6%BA%90/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要由于OpenWrt的源总是更新得非常快，内核总是升级，每次升级的时候opkg install一些内核的东西时候日常内核版本不兼容导致很多包装不上。一个比较方便的方法是在刷了一次机之后顺便把所有包爬下来，做成本地源。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2019-08-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.273Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="网络">
+<meta property="article:tag" content="路由器">
+<meta property="article:tag" content="OpenWrt">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/%E7%BD%91%E7%BB%9C/%E8%B7%AF%E7%94%B1%E5%99%A8/OpenWrt/OpenWrt%E5%88%B6%E4%BD%9C%E6%9C%AC%E5%9C%B0%E6%BA%90/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>OpenWrt制作本地源 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E7%8E%AF%E5%A2%83"><span class="nav-number">2.</span> <span class="nav-text">实验环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%88%AC%E5%8F%96%E6%89%80%E6%9C%89%E5%8C%85"><span class="nav-number">3.</span> <span class="nav-text">爬取所有包</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%90%AD%E5%BB%BA%E2%80%9C%E9%9D%9E%E6%9C%AC%E5%9C%B0%E2%80%9D%E6%BA%90"><span class="nav-number">4.</span> <span class="nav-text">搭建“非本地”源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8D%A2%E6%BA%90"><span class="nav-number">5.</span> <span class="nav-text">第一次换源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%82%E8%BD%BDU%E7%9B%98"><span class="nav-number">6.</span> <span class="nav-text">挂载U盘</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%90%AD%E5%BB%BA%E2%80%9C%E6%9C%AC%E5%9C%B0%E2%80%9D%E6%BA%90"><span class="nav-number">7.</span> <span class="nav-text">搭建“本地”源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%90%E6%9E%9C"><span class="nav-number">8.</span> <span class="nav-text">成果</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/%E7%BD%91%E7%BB%9C/%E8%B7%AF%E7%94%B1%E5%99%A8/OpenWrt/OpenWrt%E5%88%B6%E4%BD%9C%E6%9C%AC%E5%9C%B0%E6%BA%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OpenWrt制作本地源
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-08-11 00:00:00" itemprop="dateCreated datePublished" datetime="2019-08-11T00:00:00+08:00">2019-08-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">网络</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BD%91%E7%BB%9C/%E8%B7%AF%E7%94%B1%E5%99%A8/" itemprop="url" rel="index"><span itemprop="name">路由器</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BD%91%E7%BB%9C/%E8%B7%AF%E7%94%B1%E5%99%A8/OpenWrt/" itemprop="url" rel="index"><span itemprop="name">OpenWrt</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>由于OpenWrt的源总是更新得非常快，内核总是升级，每次升级的时候<code>opkg install</code>一些内核的东西时候日常内核版本不兼容导致很多包装不上。一个比较方便的方法是在刷了一次机之后顺便把所有包爬下来，做成本地源。</p>
+<a id="more"></a> 
+
+<h2 id="实验环境"><a href="#实验环境" class="headerlink" title="实验环境"></a>实验环境</h2><p>路由器：歌华链 GHL-R-001</p>
+<p>OpenWrt内核：4.14.134</p>
+<h2 id="爬取所有包"><a href="#爬取所有包" class="headerlink" title="爬取所有包"></a>爬取所有包</h2><p>首先需要把当前内核对应的所有包都下载下来，下载地址可以在<code>/etc/opkg/distfeeds.conf</code>找到，我把里面的每个链接的内容都全部下载到一个单独的文件夹内。</p>
+<p>下载需要使用脚本，在网上找到了一两个脚本，然而似乎都由于官方源的网页出现了一些变化，所以用不了，必须改一下，这里贴上我当前能用的版本。</p>
+<p>（修改基于<a target="_blank" rel="noopener" href="https://www.cnblogs.com/sohobloo/p/5837313.html">https://www.cnblogs.com/sohobloo/p/5837313.html</a>）</p>
+<pre class="line-numbers language-python" data-language="python"><code class="language-python"><span class="token comment">#!/usr/bin/env python</span>
+<span class="token comment">#coding=utf-8</span>
+<span class="token comment">#</span>
+<span class="token comment"># Openwrt Package Grabber</span>
+<span class="token comment">#</span>
+<span class="token comment"># Copyright (C) 2016 sohobloo.me</span>
+<span class="token comment">#</span>
+
+<span class="token keyword">import</span> urllib2
+<span class="token keyword">import</span> re
+<span class="token keyword">import</span> os
+<span class="token keyword">import</span> time
+
+<span class="token comment"># the url of package list page, end with "/"</span>
+baseurl <span class="token operator">=</span> <span class="token string">'http://downloads.openwrt.org/snapshots/targets/ramips/mt7621/packages/'</span>
+
+<span class="token comment"># which directory to save all the packages, end with "/"</span>
+time <span class="token operator">=</span> time<span class="token punctuation">.</span>strftime<span class="token punctuation">(</span><span class="token string">"%Y%m%d%H%M%S"</span><span class="token punctuation">,</span> time<span class="token punctuation">.</span>localtime<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+savedir <span class="token operator">=</span> <span class="token string">'./openwrt_core/'</span>
+pattern <span class="token operator">=</span> <span class="token string">r'&lt;a href="([^\?].*?)">'</span>
+<span class="token keyword">def</span> <span class="token function">fetch</span><span class="token punctuation">(</span>url<span class="token punctuation">,</span> path <span class="token operator">=</span> <span class="token string">''</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> <span class="token keyword">not</span> os<span class="token punctuation">.</span>path<span class="token punctuation">.</span>exists<span class="token punctuation">(</span>savedir <span class="token operator">+</span> path<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        os<span class="token punctuation">.</span>makedirs<span class="token punctuation">(</span>savedir <span class="token operator">+</span> path<span class="token punctuation">)</span>
+    <span class="token keyword">print</span> <span class="token string">'fetching package list from '</span> <span class="token operator">+</span> url<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">+</span> path
+    content <span class="token operator">=</span> urllib2<span class="token punctuation">.</span>urlopen<span class="token punctuation">(</span>url<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">+</span> path<span class="token punctuation">,</span> timeout<span class="token operator">=</span><span class="token number">15</span><span class="token punctuation">)</span><span class="token punctuation">.</span>read<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    content <span class="token operator">=</span> content<span class="token punctuation">[</span>content<span class="token punctuation">.</span>index<span class="token punctuation">(</span><span class="token string">'&lt;table>'</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token punctuation">]</span>
+    <span class="token comment"># print content</span>
+    <span class="token comment"># return</span>
+    items <span class="token operator">=</span> re<span class="token punctuation">.</span>findall<span class="token punctuation">(</span>pattern<span class="token punctuation">,</span> content<span class="token punctuation">)</span>
+    <span class="token keyword">for</span> item <span class="token keyword">in</span> items<span class="token punctuation">:</span>
+        <span class="token comment"># print "current item : " + item</span>
+        <span class="token keyword">if</span> item <span class="token operator">==</span> <span class="token string">'../'</span> <span class="token keyword">or</span> item <span class="token operator">==</span> <span class="token string">'/'</span><span class="token punctuation">:</span>
+            <span class="token keyword">continue</span>
+        <span class="token keyword">elif</span> item<span class="token punctuation">.</span>endswith<span class="token punctuation">(</span><span class="token string">'/'</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            fetch<span class="token punctuation">(</span>url<span class="token punctuation">,</span> path <span class="token operator">+</span> item<span class="token punctuation">)</span>
+        <span class="token keyword">else</span><span class="token punctuation">:</span>
+            <span class="token keyword">print</span> <span class="token string">'downloading item : '</span> <span class="token operator">+</span> path <span class="token operator">+</span> item
+            <span class="token keyword">if</span> os<span class="token punctuation">.</span>path<span class="token punctuation">.</span>isfile<span class="token punctuation">(</span>savedir <span class="token operator">+</span> path <span class="token operator">+</span> item<span class="token punctuation">)</span><span class="token punctuation">:</span>
+                <span class="token keyword">print</span> <span class="token string">'file exists, ignored.'</span>
+            <span class="token keyword">else</span><span class="token punctuation">:</span>
+                rfile <span class="token operator">=</span> urllib2<span class="token punctuation">.</span>urlopen<span class="token punctuation">(</span>baseurl <span class="token operator">+</span> path <span class="token operator">+</span> item<span class="token punctuation">)</span>
+                <span class="token keyword">with</span> <span class="token builtin">open</span><span class="token punctuation">(</span>savedir <span class="token operator">+</span> path <span class="token operator">+</span> item<span class="token punctuation">,</span> <span class="token string">"wb"</span><span class="token punctuation">)</span> <span class="token keyword">as</span> code<span class="token punctuation">:</span>
+                    code<span class="token punctuation">.</span>write<span class="token punctuation">(</span>rfile<span class="token punctuation">.</span>read<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+fetch<span class="token punctuation">(</span>baseurl<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span> <span class="token string">'done!'</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>把所有包爬下来了就有挺多种方法可以构建本地源了，由于我的路由器上有一个usb3.0接口，个人更偏向于直接把本地源直接丢在U盘里。但是此时我的路由器还没装上能使路由器挂载U盘的包，OpenWrt官方源又已经更新了，但好在在过期之前我已经把所有包爬下来了。所以必须要先在别的地方做一个源，把挂载U盘所需要的包装上，再把包都转移到路由器上的U盘里。</p>
+<h2 id="搭建“非本地”源"><a href="#搭建“非本地”源" class="headerlink" title="搭建“非本地”源"></a>搭建“非本地”源</h2><p>在我自己的VPS上，我已经运行了一个<code>Apache Tomcat8</code>服务器，并且有域名，所以我选择直接把整个源丢到<code>/var/lib/tomcat8/webapps</code>内的一个项目文件夹内，然后通过<code>http://域名/项目/openwrt/随便一个包</code>看下能不能下载，确认源搭建承购</p>
+<h2 id="第一次换源"><a href="#第一次换源" class="headerlink" title="第一次换源"></a>第一次换源</h2><p>这里比较神奇的是通过我常规理解的方法都没有办法正常换源，最后是通过如下方法换源的</p>
+<ol>
+<li><p>把<code>/etc/opkg/distfeeds.conf</code>做个备份为<code>bak.distfeeds.conf</code>，然后把里<code>distfeeds.conf</code>面所有东西都删掉</p>
+</li>
+<li><p>无视<code>/etc/opkg/customfeeds.conf</code>，这里提一下只是因为这个东西虽然里面带<code>custom</code>，但是不知道为啥改这个并没有用……</p>
+</li>
+<li><p>修改<code>/etc/opkg.conf</code>，在最后添加如下内容</p>
+<pre class="line-numbers language-none"><code class="language-none">src&#x2F;gz openwrt_core http:&#x2F;&#x2F;域名&#x2F;项目名&#x2F;openwrt&#x2F;openwrt_core
+src&#x2F;gz openwrt_kmods http:&#x2F;&#x2F;域名&#x2F;项目名&#x2F;openwrt&#x2F;openwrt_kmods
+src&#x2F;gz openwrt_base http:&#x2F;&#x2F;域名&#x2F;项目名&#x2F;openwrt&#x2F;openwrt_base
+src&#x2F;gz openwrt_luci http:&#x2F;&#x2F;域名&#x2F;项目名&#x2F;openwrt&#x2F;openwrt_luci
+src&#x2F;gz openwrt_packages http:&#x2F;&#x2F;域名&#x2F;项目名&#x2F;openwrt&#x2F;openwrt_packages
+src&#x2F;gz openwrt_routing http:&#x2F;&#x2F;域名&#x2F;项目名&#x2F;openwrt&#x2F;openwrt_routing
+src&#x2F;gz openwrt_telephony http:&#x2F;&#x2F;域名&#x2F;项目名&#x2F;openwrt&#x2F;openwrt_telephony<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+</li>
+<li><p>最后再<code>opkg update</code>并安装需要的包，虽然会报一些错，但是并不用管，包依然能安装上，报错大概如下</p>
+<pre class="line-numbers language-none"><code class="language-none">Collected errors:
+ * opkg_conf_parse_file: Duplicate src declaration (openwrt_core http:&#x2F;&#x2F;downloads.openwrt.org&#x2F;snapshots&#x2F;targets&#x2F;ramips&#x2F;mt7621&#x2F;packages). Skipping.
+ * opkg_conf_parse_file: Duplicate src declaration (openwrt_kmods http:&#x2F;&#x2F;downloads.openwrt.org&#x2F;snapshots&#x2F;targets&#x2F;ramips&#x2F;mt7621&#x2F;kmods&#x2F;4.14.134-1-e3bb11c75868213c8fc8d86f0273a6a5). Skipping.
+ * opkg_conf_parse_file: Duplicate src declaration (openwrt_base http:&#x2F;&#x2F;downloads.openwrt.org&#x2F;snapshots&#x2F;packages&#x2F;mipsel_24kc&#x2F;base). Skipping.
+ * opkg_conf_parse_file: Duplicate src declaration (openwrt_luci http:&#x2F;&#x2F;downloads.openwrt.org&#x2F;snapshots&#x2F;packages&#x2F;mipsel_24kc&#x2F;luci). Skipping.
+ * opkg_conf_parse_file: Duplicate src declaration (openwrt_packages http:&#x2F;&#x2F;downloads.openwrt.org&#x2F;snapshots&#x2F;packages&#x2F;mipsel_24kc&#x2F;packages). Skipping.
+ * opkg_conf_parse_file: Duplicate src declaration (openwrt_routing http:&#x2F;&#x2F;downloads.openwrt.org&#x2F;snapshots&#x2F;packages&#x2F;mipsel_24kc&#x2F;routing). Skipping.
+ * opkg_conf_parse_file: Duplicate src declaration (openwrt_telephony http:&#x2F;&#x2F;downloads.openwrt.org&#x2F;snapshots&#x2F;packages&#x2F;mipsel_24kc&#x2F;telephony). Skipping.<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+
+</li>
+</ol>
+<h2 id="挂载U盘"><a href="#挂载U盘" class="headerlink" title="挂载U盘"></a>挂载U盘</h2><ol>
+<li>安装所需要的包<code>fdisk e2fsprogs kmod-fs-ext4</code>（可能有遗漏）</li>
+<li>通过<code>fdisk</code>和<code>mkfs.ext4</code>和<code>mount</code>像普通LINUX那样挂载U盘即可，我挂到了<code>/root/sda1</code></li>
+<li>然后再把源全部拉到这个U盘上</li>
+</ol>
+<p>由于我还想这个U盘里能装一点别的东西，便于做离线下载或者暂存一点别的东西，所以接下将在路由器上搭建一个HFS。</p>
+<h2 id="搭建“本地”源"><a href="#搭建“本地”源" class="headerlink" title="搭建“本地”源"></a>搭建“本地”源</h2><p>由于<code>OpenWrt</code>的<code>luci</code>就有网页服务器，所以我们直接把东西丢到<code>/www</code>这个目录下就行。我的把所有的包都已经放到<code>/root/sda1/openwrt</code>目录下，所以直接<code>ln -s /root/sda1/openwrt /www/openwrt</code>，再把<code>/etc/opkg.conf</code>刚刚添加的内容修改为如下</p>
+<pre class="line-numbers language-none"><code class="language-none">src&#x2F;gz openwrt_core http:&#x2F;&#x2F;127.0.0.1&#x2F;openwrt&#x2F;openwrt_core
+src&#x2F;gz openwrt_kmods http:&#x2F;&#x2F;127.0.0.1&#x2F;openwrt&#x2F;openwrt_kmods
+src&#x2F;gz openwrt_base http:&#x2F;&#x2F;127.0.0.1&#x2F;openwrt&#x2F;openwrt_base
+src&#x2F;gz openwrt_luci http:&#x2F;&#x2F;127.0.0.1&#x2F;openwrt&#x2F;openwrt_luci
+src&#x2F;gz openwrt_packages http:&#x2F;&#x2F;127.0.0.1&#x2F;openwrt&#x2F;openwrt_packages
+src&#x2F;gz openwrt_routing http:&#x2F;&#x2F;127.0.0.1&#x2F;openwrt&#x2F;openwrt_routing
+src&#x2F;gz openwrt_telephony http:&#x2F;&#x2F;127.0.0.1&#x2F;openwrt&#x2F;openwrt_telephony<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="成果"><a href="#成果" class="headerlink" title="成果"></a>成果</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">opkg <span class="token function">install</span> iperf3
+Installing iperf3 <span class="token punctuation">(</span><span class="token number">3.7</span>-1<span class="token punctuation">)</span> to root<span class="token punctuation">..</span>.
+Downloading http://127.0.0.1/openwrt/openwrt_base/iperf3_3.7-1_mipsel_24kc.ipk
+Configuring iperf3.<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>可以看到就从本地拉取安装包了</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%BD%91%E7%BB%9C/" rel="tag"># 网络</a>
+              <a href="/tags/%E8%B7%AF%E7%94%B1%E5%99%A8/" rel="tag"># 路由器</a>
+              <a href="/tags/OpenWrt/" rel="tag"># OpenWrt</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Hexo/Hexo%E7%BE%8E%E5%8C%96%E8%AE%BE%E7%BD%AE/" rel="prev" title="Hexo美化设置">
+                  <i class="fa fa-chevron-left"></i> Hexo美化设置
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E6%93%8D%E4%BD%9C%E5%B0%8F%E6%8A%80%E5%B7%A7%E6%B1%87%E6%80%BB/" rel="next" title="Linux操作小技巧汇总">
+                  Linux操作小技巧汇总 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

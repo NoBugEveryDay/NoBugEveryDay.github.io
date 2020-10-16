@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="前言前段时间给笔记本换了一块网卡，随便买了一块博通的BCM43228，然后在装centos的时候就翻车了，网上找的教程有不完善的地方，反复弄了好几次，终于弄好了，在这里整理一下过程。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在CentOS7.6上为网卡BCM43228安装驱动">
+<meta property="og:url" content="http://blog.sysu.tech/Linux/CentOS/%E5%9C%A8CentOS7.6%E4%B8%8A%E4%B8%BA%E7%BD%91%E5%8D%A1BCM43228%E5%AE%89%E8%A3%85%E9%A9%B1%E5%8A%A8/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="前言前段时间给笔记本换了一块网卡，随便买了一块博通的BCM43228，然后在装centos的时候就翻车了，网上找的教程有不完善的地方，反复弄了好几次，终于弄好了，在这里整理一下过程。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2019-05-01T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.125Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="CentOS">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Linux/CentOS/%E5%9C%A8CentOS7.6%E4%B8%8A%E4%B8%BA%E7%BD%91%E5%8D%A1BCM43228%E5%AE%89%E8%A3%85%E9%A9%B1%E5%8A%A8/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>在CentOS7.6上为网卡BCM43228安装驱动 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">2.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83"><span class="nav-number">3.</span> <span class="nav-text">环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C"><span class="nav-number">4.</span> <span class="nav-text">准备工作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E7%BC%96%E8%AF%91%E5%99%A8"><span class="nav-number">4.1.</span> <span class="nav-text">安装编译器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BD%E9%A9%B1%E5%8A%A8"><span class="nav-number">4.2.</span> <span class="nav-text">下载驱动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BD%E6%94%B9%E4%BB%A3%E7%A0%81%E8%84%9A%E6%9C%AC"><span class="nav-number">4.3.</span> <span class="nav-text">下载改代码脚本</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E8%AF%91"><span class="nav-number">5.</span> <span class="nav-text">编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%86%E9%A9%B1%E5%8A%A8%E6%A8%A1%E5%9D%97%E8%A3%85%E5%85%A5%E5%86%85%E6%A0%B8%E4%B8%AD"><span class="nav-number">6.</span> <span class="nav-text">将驱动模块装入内核中</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A3%80%E6%9F%A5"><span class="nav-number">7.</span> <span class="nav-text">检查</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E5%BC%80%E6%9C%BA%E6%97%B6%E5%B0%86%E9%A9%B1%E5%8A%A8%E6%A8%A1%E5%9D%97%E8%A3%85%E5%85%A5%E5%86%85%E6%A0%B8%E4%B8%AD"><span class="nav-number">8.</span> <span class="nav-text">设置开机时将驱动模块装入内核中</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%80%E6%9C%BA%E8%87%AA%E5%8A%A8%E8%BF%9E%E6%8E%A5wifi"><span class="nav-number">9.</span> <span class="nav-text">开机自动连接wifi</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Linux/CentOS/%E5%9C%A8CentOS7.6%E4%B8%8A%E4%B8%BA%E7%BD%91%E5%8D%A1BCM43228%E5%AE%89%E8%A3%85%E9%A9%B1%E5%8A%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          在CentOS7.6上为网卡BCM43228安装驱动
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-05-02 00:00:00" itemprop="dateCreated datePublished" datetime="2019-05-02T00:00:00+08:00">2019-05-02</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/CentoS/" itemprop="url" rel="index"><span itemprop="name">CentoS</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>前段时间给笔记本换了一块网卡，随便买了一块博通的BCM43228，然后在装centos的时候就翻车了，网上找的教程有不完善的地方，反复弄了好几次，终于弄好了，在这里整理一下过程。</p>
+<a id="more"></a> 
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://my.oschina.net/itblog/blog/1023484" title="CentOS7 Broadcom无线网卡驱动安装">CentOS7 Broadcom无线网卡驱动安装</a><br><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/15b3406ce6a2" title="安装CentOS 7双系统（四）——解决博通无线网卡问题">安装CentOS 7双系统（四）——解决博通无线网卡问题</a><br><a target="_blank" rel="noopener" href="https://wiki.centos.org/zh/HowTos/Laptops/Wireless/Broadcom#head-be5655789eb917182a033f1e934c2c48dec57d29" title="以 Broadcom Corporation BCM4311, BCM4312, BCM4313, BCM4321, BCM4322, BCM43224, BCM43225, BCM43227 和 BCM43228 为基础的无线网络卡">以 Broadcom Corporation BCM4311, BCM4312, BCM4313, BCM4321, BCM4322, BCM43224, BCM43225, BCM43227 和 BCM43228 为基础的无线网络卡</a></p>
+<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><p>系统：centos7.6<br>内核：3.10.0-957.el7.x86_64</p>
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><h3 id="安装编译器"><a href="#安装编译器" class="headerlink" title="安装编译器"></a>安装编译器</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">yum <span class="token function">install</span> kernel-headers kernel-devel gcc<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h3 id="下载驱动"><a href="#下载驱动" class="headerlink" title="下载驱动"></a>下载驱动</h3><p>从<a target="_blank" rel="noopener" href="http://www.broadcom.com/support/802.11/linux_sta.php" title="博通官网">博通官网</a>的驱动中找到<code>Linux® STA 64-bit driver</code>下载</p>
+<h3 id="下载改代码脚本"><a href="#下载改代码脚本" class="headerlink" title="下载改代码脚本"></a>下载改代码脚本</h3><p>由于这个驱动里面有不适配centos7.6的地方，所以需要通过脚本改一部分代码。将这个<a target="_blank" rel="noopener" href="https://wiki.centos.org/HowTos/Laptops/Wireless/Broadcom?action=AttachFile" title="链接">链接</a>中的全部脚本下载待用（虽然有一个并不会用到）</p>
+<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><p>执行以下命令</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">tar</span> -xvf hybrid-v35_64-nodebug-pcoem-6_30_223_271.tar.gz
+patch -p1 <span class="token operator">&lt;</span> ./wl-kmod-fix-ioctl-handling.patch
+patch -p1 <span class="token operator">&lt;</span> ./wl-kmod-01_kernel_4.7_IEEE80211_BAND_to_NL80211_BAND.patch
+patch -p1 <span class="token operator">&lt;</span> ./wl-kmod-02_kernel_4.8_add_cfg80211_scan_info_struct.patch
+patch -p1 <span class="token operator">&lt;</span> ./wl-kmod-03_fix_kernel_warnings.patch
+patch -p1 <span class="token operator">&lt;</span> ./wl-kmod-04_kernel_4.11_remove_last_rx_in_net_device_struct.patch
+patch -p1 <span class="token operator">&lt;</span> ./wl-kmod-05_kernel_4.12_add_cfg80211_roam_info_struct.patch<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>如果执行正确，输出大致如下：</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token punctuation">[</span>user@host hybrid-wl<span class="token punctuation">]</span>$ patch -p1 <span class="token operator">&lt;</span> <span class="token punctuation">..</span>/wl-kmod-fix-ioctl-handling.patch
+patching <span class="token function">file</span> src/wl/sys/wl_cfg80211_hybrid.c
+Hunk <span class="token comment">#1 succeeded at 1467 (offset 17 lines).</span>
+patching <span class="token function">file</span> src/wl/sys/wl_linux.c
+Hunk <span class="token comment">#1 succeeded at 1659 (offset 8 lines).</span>
+<span class="token punctuation">[</span>user@host hybrid-wl<span class="token punctuation">]</span>$ patch -p1 <span class="token operator">&lt;</span> <span class="token punctuation">..</span>/wl-kmod-01_kernel_4.7_IEEE80211_BAND_to_NL80211_BAND.patch
+patching <span class="token function">file</span> src/wl/sys/wl_cfg80211_hybrid.c
+Hunk <span class="token comment">#6 succeeded at 1911 (offset 3 lines).</span>
+Hunk <span class="token comment">#7 succeeded at 2040 (offset 3 lines).</span>
+Hunk <span class="token comment">#8 succeeded at 2160 (offset 3 lines).</span>
+Hunk <span class="token comment">#9 succeeded at 2298 (offset 3 lines).</span>
+Hunk <span class="token comment">#10 succeeded at 2941 (offset 3 lines).</span>
+<span class="token punctuation">[</span>user@host hybrid-wl<span class="token punctuation">]</span>$ patch -p1 <span class="token operator">&lt;</span> <span class="token punctuation">..</span>/wl-kmod-02_kernel_4.8_add_cfg80211_scan_info_struct.patch
+patching <span class="token function">file</span> src/wl/sys/wl_cfg80211_hybrid.c
+Hunk <span class="token comment">#1 succeeded at 2442 (offset 3 lines).</span>
+Hunk <span class="token comment">#2 succeeded at 2553 (offset 3 lines).</span>
+Hunk <span class="token comment">#3 succeeded at 2989 (offset 3 lines).</span>
+<span class="token punctuation">[</span>user@host hybrid-wl<span class="token punctuation">]</span>$ patch -p1 <span class="token operator">&lt;</span> <span class="token punctuation">..</span>/wl-kmod-03_fix_kernel_warnings.patch
+patching <span class="token function">file</span> src/wl/sys/wl_cfg80211_hybrid.c
+Hunk <span class="token comment">#1 succeeded at 2008 (offset 3 lines).</span>
+Hunk <span class="token comment">#2 succeeded at 2032 (offset 3 lines).</span>
+Hunk <span class="token comment">#3 succeeded at 2056 (offset 3 lines).</span>
+Hunk <span class="token comment">#4 succeeded at 2071 (offset 3 lines).</span>
+Hunk <span class="token comment">#5 succeeded at 2107 (offset 3 lines).</span>
+Hunk <span class="token comment">#6 succeeded at 2386 (offset 3 lines).</span>
+Hunk <span class="token comment">#7 succeeded at 2401 (offset 3 lines).</span>
+Hunk <span class="token comment">#8 succeeded at 2441 (offset 3 lines).</span>
+<span class="token punctuation">[</span>user@host hybrid-wl<span class="token punctuation">]</span>$ patch -p1 <span class="token operator">&lt;</span> <span class="token punctuation">..</span>/wl-kmod-04_kernel_4.11_remove_last_rx_in_net_device_struct.patch
+patching <span class="token function">file</span> src/wl/sys/wl_cfg80211_hybrid.c
+patching <span class="token function">file</span> src/wl/sys/wl_linux.c
+Hunk <span class="token comment">#1 succeeded at 2911 (offset -18 lines).</span>
+<span class="token punctuation">[</span>user@host hybrid-wl<span class="token punctuation">]</span>$ patch -p1 <span class="token operator">&lt;</span> <span class="token punctuation">..</span>/wl-kmod-05_kernel_4.12_add_cfg80211_roam_info_struct.patch
+patching <span class="token function">file</span> src/wl/sys/wl_cfg80211_hybrid.c
+Hunk <span class="token comment">#3 succeeded at 2450 (offset 3 lines).</span>
+Hunk <span class="token comment">#4 succeeded at 2466 (offset 3 lines).</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>注意Hunk的数量以及是否succeed<br>在执行以下命令</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">sed</span> -i <span class="token string">'s/[ >][>=] KERNEL_VERSION(2, 6, 3.)/>= KERNEL_VERSION(2, 6, 32)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/[ >][>=] KERNEL_VERSION(3, ., .)/>= KERNEL_VERSION(2, 6, 32)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/[ >][>=] KERNEL_VERSION(3, 11, .)/>= KERNEL_VERSION(2, 6, 32)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/&lt; KERNEL_VERSION(3, 18, .)/&lt; KERNEL_VERSION(2, 6, 30)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/[ >][>=] KERNEL_VERSION(3, 15, .)/>= KERNEL_VERSION(2, 6, 32)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/[ >][>=] KERNEL_VERSION(4, 0, 0)/>= KERNEL_VERSION(2, 6, 32)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/&lt; KERNEL_VERSION(4,2,0)/&lt; KERNEL_VERSION(2, 6, 30)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+
+<span class="token function">sed</span> -i <span class="token string">'s/ >= KERNEL_VERSION(3, 11, 0)/ >= KERNEL_VERSION(3, 10, 0)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/ >= KERNEL_VERSION(3, 15, 0)/ >= KERNEL_VERSION(3, 10, 0)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/ &lt; KERNEL_VERSION(3, 18, 0)/ &lt; KERNEL_VERSION(3, 9, 0)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/ >= KERNEL_VERSION(4, 0, 0)/ >= KERNEL_VERSION(3, 10, 0)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/ &lt; KERNEL_VERSION(4,2,0)/ &lt; KERNEL_VERSION(3, 9, 0)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/ >= KERNEL_VERSION(4, 7, 0)/ >= KERNEL_VERSION(3, 10, 0)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/ >= KERNEL_VERSION(4, 8, 0)/ >= KERNEL_VERSION(3, 10, 0)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/ >= KERNEL_VERSION(4, 11, 0)/ >= KERNEL_VERSION(3, 10, 0)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/ &lt; KERNEL_VERSION(4, 12, 0)/ &lt; KERNEL_VERSION(3, 9, 0)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/ >= KERNEL_VERSION(4, 12, 0)/ >= KERNEL_VERSION(3, 10, 0)/'</span> src/wl/sys/wl_cfg80211_hybrid.c
+<span class="token function">sed</span> -i <span class="token string">'s/ &lt;= KERNEL_VERSION(4, 10, 0)/ &lt; KERNEL_VERSION(3, 9, 0)/'</span> src/wl/sys/wl_linux.c<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>然后再make就好，正常输入大致如下，会有一个warning</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">make: Entering directory <span class="token variable"><span class="token variable">`</span>/usr/src/kernels/2.6.32-573.7.1.el6.x86_64'
+CFG80211 API is prefered <span class="token keyword">for</span> this kernel version
+Using CFG80211 API
+  LD /usr/local/src/hybrid-wl/built-in.o
+  CC <span class="token punctuation">[</span>M<span class="token punctuation">]</span> /usr/local/src/hybrid-wl/src/shared/linux_osl.o
+  CC <span class="token punctuation">[</span>M<span class="token punctuation">]</span> /usr/local/src/hybrid-wl/src/wl/sys/wl_linux.o
+  CC <span class="token punctuation">[</span>M<span class="token punctuation">]</span> /usr/local/src/hybrid-wl/src/wl/sys/wl_iw.o
+  CC <span class="token punctuation">[</span>M<span class="token punctuation">]</span> /usr/local/src/hybrid-wl/src/wl/sys/wl_cfg80211_hybrid.o
+/usr/local/src/hybrid-wl/src/wl/sys/wl_cfg80211_hybrid.c:1802: warning: initialization from incompatible pointer <span class="token builtin class-name">type</span>
+  LD <span class="token punctuation">[</span>M<span class="token punctuation">]</span> /usr/local/src/hybrid-wl/wl.o
+  Building modules, stage <span class="token number">2</span>.
+CFG80211 API is prefered <span class="token keyword">for</span> this kernel version
+Using CFG80211 API
+  MODPOST <span class="token number">1</span> modules
+  CC /usr/local/src/hybrid-wl/wl.mod.o
+  LD <span class="token punctuation">[</span>M<span class="token punctuation">]</span> /usr/local/src/hybrid-wl/wl.ko.unsigned
+  NO SIGN <span class="token punctuation">[</span>M<span class="token punctuation">]</span> /usr/local/src/hybrid-wl/wl.ko
+make: Leaving directory <span class="token variable">`</span></span>/usr/src/kernels/2.6.32-573.7.1.el6.x86_64'<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="将驱动模块装入内核中"><a href="#将驱动模块装入内核中" class="headerlink" title="将驱动模块装入内核中"></a>将驱动模块装入内核中</h2><p>先卸载一些模块</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">modprobe -r bcm43xx
+modprobe -r b43
+modprobe -r b43legacy
+modprobe -r ssb
+modprobe -r bcma
+modprobe -r brcmsmac
+modprobe -r ndiswrapper<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>将驱动模块的文件复制到一个可以让内核找到它的地方：</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">cp</span> -vi /usr/local/src/hybrid-wl/wl.ko /lib/modules/<span class="token variable"><span class="token variable">`</span><span class="token function">uname</span> -r<span class="token variable">`</span></span>/extra/<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>这样做是为了与其它已经／将会从 kmod 组件安装的外置模块（例如：fuse、ntfs-3g、等）保持一贯性。<br>按著，执行：</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">depmod <span class="token variable"><span class="token variable">$(</span><span class="token function">uname</span> -r<span class="token variable">)</span></span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>以便能创建一个模块的互赖性清单。现在我们装入驱动模块：</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">insmod wl.ko<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>假如这一步失败了并伴有如下提示信息：</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">insmod: error inserting <span class="token string">'wl.ko'</span><span class="token builtin class-name">:</span> -1 Unknown symbol <span class="token keyword">in</span> module<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>首先尝试创建模块依赖：</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">depmod <span class="token variable"><span class="token variable">`</span><span class="token function">uname</span> -r<span class="token variable">`</span></span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然后装入驱动模块：</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">modprobe wl<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h2 id="检查"><a href="#检查" class="headerlink" title="检查"></a>检查</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">iw dev<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>应该就有网卡出来了</p>
+<h2 id="设置开机时将驱动模块装入内核中"><a href="#设置开机时将驱动模块装入内核中" class="headerlink" title="设置开机时将驱动模块装入内核中"></a>设置开机时将驱动模块装入内核中</h2><p>这一步使用参考资料中的方法似乎对于我的环境无用，所以我改成了鞋开机启动脚本的形式，开机启动脚本如下</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">modprobe -r bcma <span class="token comment"># 因为我的centos只有这一个碍事的脚本</span>
+modprobe -r wl <span class="token comment"># 不知道为啥必须要先卸载掉</span>
+depmod <span class="token variable"><span class="token variable">`</span><span class="token function">uname</span> -r<span class="token variable">`</span></span>
+modprobe wl<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="开机自动连接wifi"><a href="#开机自动连接wifi" class="headerlink" title="开机自动连接wifi"></a>开机自动连接wifi</h2><p>再在启动脚本中添加如下内容</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">ip</span> <span class="token function">link</span> <span class="token builtin class-name">set</span> dev wlp3s0 up
+systemctl start network-manager.service
+nmcli dev wifi connect <span class="token string">"WIFI SSID"</span> password <span class="token string">"WIFI PASSWORD"</span>
+dhclient wlp3s0 up<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>非常迷的是，貌似是因为network-manager升级了之后，就无法使用了，即使命令变成了<code>systemctl start NetworkManager.service</code><br>会出现内核级别的网卡报错<code>wlp3s0 scan_results error -22</code><br>我屈服了……放弃了……</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/CentOS/" rel="tag"># CentOS</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E6%8C%82%E8%BD%BD%E7%A1%AC%E7%9B%98/" rel="prev" title="Linux挂载硬盘">
+                  <i class="fa fa-chevron-left"></i> Linux挂载硬盘
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Linux/CentOS/CentOS%E8%AE%BE%E7%BD%AE%E5%BC%80%E6%9C%BA%E5%90%AF%E5%8A%A8%E8%84%9A%E6%9C%AC/" rel="next" title="CentOS设置开机启动脚本">
+                  CentOS设置开机启动脚本 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

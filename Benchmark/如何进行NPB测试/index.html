@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要NPB(Nas Parallel Benchmark)是NASA整的一套高性能测试集，大概是1990+年的时候弄出来的，现在已经到了v3.4版本了（2018年更新的），采用上古语言Fortran编写（不知道为啥既然挺多人喜欢用的不出一个C版本的），以下内容将简单介绍这玩意的安装与使用。因为是第一次踩坑，可能有些地方说的不对~">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何进行NPB测试">
+<meta property="og:url" content="http://blog.sysu.tech/Benchmark/%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8CNPB%E6%B5%8B%E8%AF%95/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要NPB(Nas Parallel Benchmark)是NASA整的一套高性能测试集，大概是1990+年的时候弄出来的，现在已经到了v3.4版本了（2018年更新的），采用上古语言Fortran编写（不知道为啥既然挺多人喜欢用的不出一个C版本的），以下内容将简单介绍这玩意的安装与使用。因为是第一次踩坑，可能有些地方说的不对~">
+<meta property="og:locale">
+<meta property="article:published_time" content="2020-05-09T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.081Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Benchmark">
+<meta property="article:tag" content="NPB">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Benchmark/%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8CNPB%E6%B5%8B%E8%AF%95/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>如何进行NPB测试 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%88%E6%9C%AC%E5%8C%BA%E5%88%86"><span class="nav-number">2.</span> <span class="nav-text">版本区分</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#NPB-3-4"><span class="nav-number">2.1.</span> <span class="nav-text">NPB 3.4</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NPB-3-4-MZ"><span class="nav-number">2.2.</span> <span class="nav-text">NPB 3.4-MZ</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GridNPB-3-1"><span class="nav-number">2.3.</span> <span class="nav-text">GridNPB 3.1</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85-NPB-3-4"><span class="nav-number">3.</span> <span class="nav-text">编译安装 NPB 3.4</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C"><span class="nav-number">4.</span> <span class="nav-text">运行</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IS"><span class="nav-number">4.1.</span> <span class="nav-text">IS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#EP"><span class="nav-number">4.2.</span> <span class="nav-text">EP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CG"><span class="nav-number">4.3.</span> <span class="nav-text">CG</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MG"><span class="nav-number">4.4.</span> <span class="nav-text">MG</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FT"><span class="nav-number">4.5.</span> <span class="nav-text">FT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BT"><span class="nav-number">4.6.</span> <span class="nav-text">BT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SP"><span class="nav-number">4.7.</span> <span class="nav-text">SP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#LU"><span class="nav-number">4.8.</span> <span class="nav-text">LU</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">5.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Benchmark/%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8CNPB%E6%B5%8B%E8%AF%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          如何进行NPB测试
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-05-10 00:00:00" itemprop="dateCreated datePublished" datetime="2020-05-10T00:00:00+08:00">2020-05-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Benchmark/" itemprop="url" rel="index"><span itemprop="name">Benchmark</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p><a target="_blank" rel="noopener" href="https://www.nas.nasa.gov/publications/npb.html">NPB(Nas Parallel Benchmark)</a>是NASA整的一套高性能测试集，大概是1990+年的时候弄出来的，现在已经到了<code>v3.4</code>版本了（2018年更新的），采用上古语言Fortran编写（不知道为啥既然挺多人喜欢用的不出一个C版本的），以下内容将简单介绍这玩意的安装与使用。因为是第一次踩坑，可能有些地方说的不对~</p>
+<a id="more"></a> 
+
+<h2 id="版本区分"><a href="#版本区分" class="headerlink" title="版本区分"></a>版本区分</h2><p>这玩意有好几个测试子集，分别是<a target="_blank" rel="noopener" href="https://www.nas.nasa.gov/assets/npb/NPB3.4.tar.gz">NPB 3.4</a>，<a target="_blank" rel="noopener" href="https://www.nas.nasa.gov/assets/npb/NPB3.4-MZ.tar.gz">NPB 3.4-MZ</a>，<a target="_blank" rel="noopener" href="https://www.nas.nasa.gov/assets/npb/GridNPB3.1.tar.gz">GridNPB 3.1</a>。这几个东西每个里面包含的测试内容还不一样</p>
+<p><em>这些不好翻译，直接丢原文</em></p>
+<h3 id="NPB-3-4"><a href="#NPB-3-4" class="headerlink" title="NPB 3.4"></a>NPB 3.4</h3><p>一般提到NPB一般都是指这个叭，它里面包含的内容如下，</p>
+<ul>
+<li>five kernels<ul>
+<li>IS - Integer Sort, random memory access</li>
+<li>EP - Embarrassingly Parallel</li>
+<li>CG - Conjugate Gradient, irregular memory access and communication</li>
+<li>MG - Multi-Grid on a sequence of meshes, long- and short-distance communication, memory intensive</li>
+<li>FT - discrete 3D fast Fourier Transform, all-to-all communication</li>
+</ul>
+</li>
+<li>three pseudo applications<ul>
+<li>BT - Block Tri-diagonal solver</li>
+<li>SP - Scalar Penta-diagonal solver</li>
+<li>LU - Lower-Upper Gauss-Seidel solver</li>
+</ul>
+</li>
+<li>Benchmarks for unstructured computation, parallel I/O, and data movement<ul>
+<li>UA - Unstructured Adaptive mesh, dynamic and irregular memory access</li>
+<li>BT-IO - test of different parallel I/O techniques</li>
+<li>DC - Data Cube</li>
+<li>DT - Data Traffic</li>
+</ul>
+</li>
+</ul>
+<h3 id="NPB-3-4-MZ"><a href="#NPB-3-4-MZ" class="headerlink" title="NPB 3.4-MZ"></a>NPB 3.4-MZ</h3><ul>
+<li>BT-MZ - uneven-size zones within a problem class, increased number of zones as problem class grows</li>
+<li>SP-MZ - even-size zones within a problem class, increased number of zones as problem class grows</li>
+<li>LU-MZ - even-size zones within a problem class, a fixed number of zones for all problem classes</li>
+</ul>
+<h3 id="GridNPB-3-1"><a href="#GridNPB-3-1" class="headerlink" title="GridNPB 3.1"></a>GridNPB 3.1</h3><ul>
+<li>ED - Embarrassingly Distributed</li>
+<li>HC - Helical Chain</li>
+<li>VP - Visualization Pipeline</li>
+<li>MB - Mixed Bag</li>
+</ul>
+<h2 id="编译安装-NPB-3-4"><a href="#编译安装-NPB-3-4" class="headerlink" title="编译安装 NPB 3.4"></a>编译安装 NPB 3.4</h2><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">wget</span> https://www.nas.nasa.gov/assets/npb/NPB3.4.tar.gz
+<span class="token function">tar</span> -xvf NPB3.4.tar.gz
+<span class="token builtin class-name">cd</span> NPB3.4/NPB3.4-MPI/config
+<span class="token function">cp</span> make.def.template make.def
+
+<span class="token function">vim</span> make.def
+<span class="token comment"># 根据需要修改编译器及编译参数</span>
+
+<span class="token function">make</span> ft <span class="token assign-left variable">CLASS</span><span class="token operator">=</span>S
+<span class="token comment"># ft是根据上面的版本选择要编译的模块，CLASS是运算量的大小</span>
+
+<span class="token comment"># 没有报错就可以修改如下文件来进行批量编译</span>
+<span class="token function">vim</span> config/suite.def
+<span class="token function">make</span> suite<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>每一个测试模块的算例大小在编译是用<code>CLASS=</code>来指定，从小到大是<code>S,W,A,B,C,D,E,F</code>，部分测试模块可能没有某些大小的测试模块，具体的算例大小参数见<a target="_blank" rel="noopener" href="https://www.nas.nasa.gov/publications/npb_problem_sizes.html%E3%80%82">https://www.nas.nasa.gov/publications/npb_problem_sizes.html。</a></p>
+<p>网传的很多编译里面有用<code>NPROCS=</code>来指定编译出指定进程数运行的版本，但是这个参数貌似已经失效了？试了一下并没有用</p>
+<h2 id="运行"><a href="#运行" class="headerlink" title="运行"></a>运行</h2><p>编译出来的可执行文件在<code>bin</code>里面，运行会发现很多都要求进程数为2的指数，如果不是2的指数，要么不能运行，要么不做验证且会变慢</p>
+<h3 id="IS"><a href="#IS" class="headerlink" title="IS"></a>IS</h3><ul>
+<li><code>E</code>算例需要约480G内存</li>
+</ul>
+<h3 id="EP"><a href="#EP" class="headerlink" title="EP"></a>EP</h3><ul>
+<li><code>E</code>算例需要约55G内存</li>
+<li><code>F</code>算例需要约55G内存</li>
+</ul>
+<p>这个测试需要的内存似乎生恒定的</p>
+<h3 id="CG"><a href="#CG" class="headerlink" title="CG"></a>CG</h3><ul>
+<li><code>D</code>算例需要约100G内存</li>
+<li><code>E</code>算例需要约320G内存</li>
+</ul>
+<h3 id="MG"><a href="#MG" class="headerlink" title="MG"></a>MG</h3><ul>
+<li><code>E</code>算例需要约300G内存</li>
+<li><code>F</code>算例需要约1760G内存</li>
+</ul>
+<h3 id="FT"><a href="#FT" class="headerlink" title="FT"></a>FT</h3><ul>
+<li>进程数必须为2的指数</li>
+<li><code>D</code>算例需要256G内存</li>
+<li><code>E</code>算例需要约1024G内存</li>
+</ul>
+<h3 id="BT"><a href="#BT" class="headerlink" title="BT"></a>BT</h3><ul>
+<li><code>E</code>算例需要约512G内存</li>
+</ul>
+<h3 id="SP"><a href="#SP" class="headerlink" title="SP"></a>SP</h3><ul>
+<li>E算例需要416G内存</li>
+</ul>
+<h3 id="LU"><a href="#LU" class="headerlink" title="LU"></a>LU</h3><ul>
+<li>E算例需要233.6G内存</li>
+</ul>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a target="_blank" rel="noopener" href="https://www.nas.nasa.gov/publications/npb.html">https://www.nas.nasa.gov/publications/npb.html</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Benchmark/" rel="tag"># Benchmark</a>
+              <a href="/tags/NPB/" rel="tag"># NPB</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/%E5%85%B6%E4%BB%96/Lingo%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" rel="prev" title="Lingo学习笔记">
+                  <i class="fa fa-chevron-left"></i> Lingo学习笔记
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/MPI/Mpich/Mpich%E5%B8%B8%E7%94%A8%E6%8A%80%E5%B7%A7/" rel="next" title="Mpich常用技巧">
+                  Mpich常用技巧 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

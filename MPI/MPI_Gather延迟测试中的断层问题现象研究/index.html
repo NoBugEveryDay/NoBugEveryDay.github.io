@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MPI_Gather延迟测试中的断层问题现象研究">
+<meta property="og:url" content="http://blog.sysu.tech/MPI/MPI_Gather%E5%BB%B6%E8%BF%9F%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E6%96%AD%E5%B1%82%E9%97%AE%E9%A2%98%E7%8E%B0%E8%B1%A1%E7%A0%94%E7%A9%B6/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/MPI/MPI_Gather%E5%BB%B6%E8%BF%9F%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E6%96%AD%E5%B1%82%E9%97%AE%E9%A2%98%E7%8E%B0%E8%B1%A1%E7%A0%94%E7%A9%B6/aaa5505120f78c47b360d2402be6846f.png">
+<meta property="og:image" content="http://blog.sysu.tech/MPI/MPI_Gather%E5%BB%B6%E8%BF%9F%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E6%96%AD%E5%B1%82%E9%97%AE%E9%A2%98%E7%8E%B0%E8%B1%A1%E7%A0%94%E7%A9%B6/470a837f92abf7911ac1a794715a8b57.png">
+<meta property="og:image" content="http://blog.sysu.tech/MPI/MPI_Gather%E5%BB%B6%E8%BF%9F%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E6%96%AD%E5%B1%82%E9%97%AE%E9%A2%98%E7%8E%B0%E8%B1%A1%E7%A0%94%E7%A9%B6/1b5e0e55f09ceab8d73db64ce362c5d2.png">
+<meta property="article:published_time" content="2019-03-13T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.204Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="MPI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/MPI/MPI_Gather%E5%BB%B6%E8%BF%9F%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E6%96%AD%E5%B1%82%E9%97%AE%E9%A2%98%E7%8E%B0%E8%B1%A1%E7%A0%94%E7%A9%B6/aaa5505120f78c47b360d2402be6846f.png">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/MPI/MPI_Gather%E5%BB%B6%E8%BF%9F%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E6%96%AD%E5%B1%82%E9%97%AE%E9%A2%98%E7%8E%B0%E8%B1%A1%E7%A0%94%E7%A9%B6/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>MPI_Gather延迟测试中的断层问题现象研究 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E7%8E%AF%E5%A2%83"><span class="nav-number"></span> <span class="nav-text">实验环境</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%AF%E8%A7%86%E5%8C%96%E5%AE%9E%E9%AA%8C%E7%8E%B0%E8%B1%A1%E5%9B%BE"><span class="nav-number"></span> <span class="nav-text">可视化实验现象图</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%83%A8%E5%88%86%E5%AE%9E%E9%AA%8C%E7%8E%B0%E8%B1%A1%E7%BB%86%E8%8A%82%E5%80%BC%EF%BC%88%E5%8F%AF%E7%9C%81%E7%95%A5%E7%9B%B4%E6%8E%A5%E7%9C%8B%E6%9C%AC%E8%8A%82%E7%BB%93%E8%AE%BA%EF%BC%89"><span class="nav-number"></span> <span class="nav-text">部分实验现象细节值（可省略直接看本节结论）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#OpenMPI"><span class="nav-number">0.1.</span> <span class="nav-text">OpenMPI</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#8%E8%BF%9B%E7%A8%8B"><span class="nav-number">0.1.1.</span> <span class="nav-text">8进程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#16%E8%BF%9B%E7%A8%8B"><span class="nav-number">0.1.2.</span> <span class="nav-text">16进程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Intel-MPI"><span class="nav-number">0.2.</span> <span class="nav-text">Intel MPI</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#8%E8%BF%9B%E7%A8%8B-1"><span class="nav-number">0.2.1.</span> <span class="nav-text">8进程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#16%E8%BF%9B%E7%A8%8B-1"><span class="nav-number">0.2.2.</span> <span class="nav-text">16进程</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%9B%E4%B8%80%E6%AD%A5%E7%9A%84%E5%AE%9E%E9%AA%8C"><span class="nav-number"></span> <span class="nav-text">进一步的实验</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Future-Work"><span class="nav-number"></span> <span class="nav-text">Future Work</span></a></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/MPI/MPI_Gather%E5%BB%B6%E8%BF%9F%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E6%96%AD%E5%B1%82%E9%97%AE%E9%A2%98%E7%8E%B0%E8%B1%A1%E7%A0%94%E7%A9%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MPI_Gather延迟测试中的断层问题现象研究
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-03-14 00:00:00" itemprop="dateCreated datePublished" datetime="2019-03-14T00:00:00+08:00">2019-03-14</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/MPI/" itemprop="url" rel="index"><span itemprop="name">MPI</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><a id="more"></a> 
+
+<p>在IB网上使用OSU和IMB对MPI_Gather进行测试时，会发现在测试结果中有一段的延迟增长非常快，可以达到10倍左右甚至以上。我们期望的延迟增长应该是随着消息大小增大一倍，一次Gather操作所花的时间也应该增大一倍左右。一个典型的实验现象如下：</p>
+<!-- more --> 
+
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token comment"># OSU MPI Gather Latency Test v5.4.3</span>
+<span class="token comment"># Size       Avg Latency(us)</span>
+<span class="token number">1</span>                       <span class="token number">0.59</span>
+<span class="token number">2</span>                       <span class="token number">0.53</span>
+<span class="token number">4</span>                       <span class="token number">0.51</span>
+<span class="token number">8</span>                       <span class="token number">0.51</span>
+<span class="token number">16</span>                      <span class="token number">0.51</span>
+<span class="token number">32</span>                      <span class="token number">0.50</span>
+<span class="token number">64</span>                      <span class="token number">0.60</span>
+<span class="token number">128</span>                     <span class="token number">0.73</span>
+<span class="token number">256</span>                     <span class="token number">0.85</span>
+<span class="token number">512</span>                     <span class="token number">0.95</span>
+<span class="token number">1024</span>                    <span class="token number">1.10</span>
+<span class="token number">2048</span>                    <span class="token number">1.27</span>
+<span class="token number">4096</span>                    <span class="token number">1.68</span>
+<span class="token number">8192</span>                   <span class="token number">14.99</span> <span class="token comment"># 这里的延迟较上一个包增长了将近10倍</span>
+<span class="token number">16384</span>                  <span class="token number">26.85</span>
+<span class="token number">32768</span>                  <span class="token number">30.94</span>
+<span class="token number">65536</span>                  <span class="token number">37.80</span>
+<span class="token number">131072</span>                 <span class="token number">85.37</span>
+<span class="token number">262144</span>                <span class="token number">124.70</span>
+<span class="token number">524288</span>                <span class="token number">239.80</span>
+<span class="token number">1048576</span>               <span class="token number">518.77</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h1 id="实验环境"><a href="#实验环境" class="headerlink" title="实验环境"></a>实验环境</h1><p>内核版本：</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ <span class="token function">uname</span> -r
+<span class="token number">3.10</span>.0-514.el7.lustre.zqh.20170930.x86_64<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>操作系统：</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">cat</span> /etc/redhat-release
+Red Hat Enterprise Linux Server release <span class="token number">7.3</span> <span class="token punctuation">(</span>Maipo<span class="token punctuation">)</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>网络：<br>100G IB网<br>网卡：Mellanox Technologies MT27700 Family [ConnectX-4]<br>OpenMPI版本：1.10.7<br>编译器：gcc 4.8.5<br>Intel Parallel Studio版本：2018 update4</p>
+<h1 id="可视化实验现象图"><a href="#可视化实验现象图" class="headerlink" title="可视化实验现象图"></a>可视化实验现象图</h1><p>本小节将使用Intel MPI、OpenMPI在IB网环境下，使用IMB Gather测试对同的进程数进行测试</p>
+<img src="/MPI/MPI_Gather%E5%BB%B6%E8%BF%9F%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E6%96%AD%E5%B1%82%E9%97%AE%E9%A2%98%E7%8E%B0%E8%B1%A1%E7%A0%94%E7%A9%B6/aaa5505120f78c47b360d2402be6846f.png" class="">
+
+<p><strong>注意这幅图中的消息大小和延迟均为取LOG2之后的对应值，以方便观察</strong><br>可以看到无论是Intel MPI还是OpenMPI均在会在一个地方出现爆炸式增长，并且进程数越多，增长越快。</p>
+<h1 id="部分实验现象细节值（可省略直接看本节结论）"><a href="#部分实验现象细节值（可省略直接看本节结论）" class="headerlink" title="部分实验现象细节值（可省略直接看本节结论）"></a>部分实验现象细节值（可省略直接看本节结论）</h1><p>在这里记录使用Intel MPI、OpenMPI在IB网环境下使用osu_gather进行8进程、16进程测试的结果，作为baseline</p>
+<h3 id="OpenMPI"><a href="#OpenMPI" class="headerlink" title="OpenMPI"></a>OpenMPI</h3><h4 id="8进程"><a href="#8进程" class="headerlink" title="8进程"></a>8进程</h4><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token comment"># OSU MPI Gather Latency Test v5.4.3</span>
+<span class="token comment"># Size       Avg Latency(us)</span>
+<span class="token number">1</span>                       <span class="token number">0.59</span>
+<span class="token number">2</span>                       <span class="token number">0.53</span>
+<span class="token number">4</span>                       <span class="token number">0.51</span>
+<span class="token number">8</span>                       <span class="token number">0.51</span>
+<span class="token number">16</span>                      <span class="token number">0.51</span>
+<span class="token number">32</span>                      <span class="token number">0.50</span>
+<span class="token number">64</span>                      <span class="token number">0.60</span>
+<span class="token number">128</span>                     <span class="token number">0.73</span>
+<span class="token number">256</span>                     <span class="token number">0.85</span>
+<span class="token number">512</span>                     <span class="token number">0.95</span>
+<span class="token number">1024</span>                    <span class="token number">1.10</span>
+<span class="token number">2048</span>                    <span class="token number">1.27</span>
+<span class="token number">4096</span>                    <span class="token number">1.68</span>
+<span class="token number">8192</span>                   <span class="token number">14.99</span>
+<span class="token number">16384</span>                  <span class="token number">26.85</span>
+<span class="token number">32768</span>                  <span class="token number">30.94</span>
+<span class="token number">65536</span>                  <span class="token number">37.80</span>
+<span class="token number">131072</span>                 <span class="token number">85.37</span>
+<span class="token number">262144</span>                <span class="token number">124.70</span>
+<span class="token number">524288</span>                <span class="token number">239.80</span>
+<span class="token number">1048576</span>               <span class="token number">518.77</span>
+<span class="token comment">#----------------------------------------------------------------</span>
+<span class="token comment"># Benchmarking Gather</span>
+<span class="token comment"># #processes = 8</span>
+<span class="token comment">#----------------------------------------------------------------</span>
+       <span class="token comment">#bytes #repetitions  t_min[usec]  t_max[usec]  t_avg[usec]</span>
+            <span class="token number">0</span>         <span class="token number">1000</span>         <span class="token number">0.04</span>         <span class="token number">0.04</span>         <span class="token number">0.04</span>
+            <span class="token number">1</span>         <span class="token number">1000</span>         <span class="token number">0.14</span>         <span class="token number">2.69</span>         <span class="token number">0.48</span>
+            <span class="token number">2</span>         <span class="token number">1000</span>         <span class="token number">0.14</span>         <span class="token number">2.66</span>         <span class="token number">0.46</span>
+            <span class="token number">4</span>         <span class="token number">1000</span>         <span class="token number">0.14</span>         <span class="token number">2.67</span>         <span class="token number">0.46</span>
+            <span class="token number">8</span>         <span class="token number">1000</span>         <span class="token number">0.14</span>         <span class="token number">2.73</span>         <span class="token number">0.47</span>
+           <span class="token number">16</span>         <span class="token number">1000</span>         <span class="token number">0.14</span>         <span class="token number">2.73</span>         <span class="token number">0.47</span>
+           <span class="token number">32</span>         <span class="token number">1000</span>         <span class="token number">0.14</span>         <span class="token number">2.65</span>         <span class="token number">0.46</span>
+           <span class="token number">64</span>         <span class="token number">1000</span>         <span class="token number">0.14</span>         <span class="token number">3.32</span>         <span class="token number">0.55</span>
+          <span class="token number">128</span>         <span class="token number">1000</span>         <span class="token number">0.15</span>         <span class="token number">4.61</span>         <span class="token number">0.72</span>
+          <span class="token number">256</span>         <span class="token number">1000</span>         <span class="token number">0.16</span>         <span class="token number">5.16</span>         <span class="token number">0.79</span>
+          <span class="token number">512</span>         <span class="token number">1000</span>         <span class="token number">0.18</span>         <span class="token number">5.86</span>         <span class="token number">0.90</span>
+         <span class="token number">1024</span>         <span class="token number">1000</span>         <span class="token number">0.22</span>         <span class="token number">6.51</span>         <span class="token number">1.02</span>
+         <span class="token number">2048</span>         <span class="token number">1000</span>         <span class="token number">0.24</span>         <span class="token number">7.76</span>         <span class="token number">1.20</span>
+         <span class="token number">4096</span>         <span class="token number">1000</span>         <span class="token number">0.30</span>        <span class="token number">10.31</span>         <span class="token number">1.59</span>
+         <span class="token number">8192</span>         <span class="token number">1000</span>         <span class="token number">1.14</span>        <span class="token number">31.90</span>        <span class="token number">15.18</span>
+        <span class="token number">16384</span>         <span class="token number">1000</span>        <span class="token number">13.04</span>        <span class="token number">37.76</span>        <span class="token number">27.11</span>
+        <span class="token number">32768</span>         <span class="token number">1000</span>        <span class="token number">16.49</span>        <span class="token number">42.11</span>        <span class="token number">31.30</span>
+        <span class="token number">65536</span>          <span class="token number">640</span>        <span class="token number">19.98</span>        <span class="token number">52.50</span>        <span class="token number">38.29</span>
+       <span class="token number">131072</span>          <span class="token number">320</span>        <span class="token number">34.31</span>       <span class="token number">124.55</span>        <span class="token number">85.63</span>
+       <span class="token number">262144</span>          <span class="token number">160</span>        <span class="token number">56.40</span>       <span class="token number">178.13</span>       <span class="token number">124.28</span>
+       <span class="token number">524288</span>           <span class="token number">80</span>       <span class="token number">113.65</span>       <span class="token number">328.06</span>       <span class="token number">234.09</span>
+      <span class="token number">1048576</span>           <span class="token number">40</span>       <span class="token number">301.80</span>       <span class="token number">632.51</span>       <span class="token number">508.27</span>
+      <span class="token number">2097152</span>           <span class="token number">20</span>       <span class="token number">879.76</span>      <span class="token number">1240.88</span>      <span class="token number">1102.90</span>
+      <span class="token number">4194304</span>           <span class="token number">10</span>      <span class="token number">2010.39</span>      <span class="token number">2463.74</span>      <span class="token number">2254.52</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h4 id="16进程"><a href="#16进程" class="headerlink" title="16进程"></a>16进程</h4><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token comment"># OSU MPI Gather Latency Test v5.4.3</span>
+<span class="token comment"># Size       Avg Latency(us)</span>
+<span class="token number">1</span>                       <span class="token number">3.01</span>
+<span class="token number">2</span>                       <span class="token number">2.90</span>
+<span class="token number">4</span>                       <span class="token number">2.80</span>
+<span class="token number">8</span>                       <span class="token number">2.85</span>
+<span class="token number">16</span>                      <span class="token number">2.88</span>
+<span class="token number">32</span>                      <span class="token number">3.00</span>
+<span class="token number">64</span>                      <span class="token number">3.15</span>
+<span class="token number">128</span>                     <span class="token number">3.40</span>
+<span class="token number">256</span>                     <span class="token number">3.58</span>
+<span class="token number">512</span>                     <span class="token number">3.87</span>
+<span class="token number">1024</span>                    <span class="token number">1.04</span>
+<span class="token number">2048</span>                    <span class="token number">1.11</span>
+<span class="token number">4096</span>                    <span class="token number">1.50</span>
+<span class="token number">8192</span>                   <span class="token number">33.28</span>
+<span class="token number">16384</span>                  <span class="token number">47.53</span>
+<span class="token number">32768</span>                  <span class="token number">51.87</span>
+<span class="token number">65536</span>                  <span class="token number">61.20</span>
+<span class="token number">131072</span>                <span class="token number">152.89</span>
+<span class="token number">262144</span>                <span class="token number">213.20</span>
+<span class="token number">524288</span>                <span class="token number">411.94</span>
+<span class="token number">1048576</span>               <span class="token number">857.93</span>
+<span class="token comment">#----------------------------------------------------------------</span>
+<span class="token comment"># Benchmarking Gather</span>
+<span class="token comment"># #processes = 16</span>
+<span class="token comment">#----------------------------------------------------------------</span>
+       <span class="token comment">#bytes #repetitions  t_min[usec]  t_max[usec]  t_avg[usec]</span>
+            <span class="token number">0</span>         <span class="token number">1000</span>         <span class="token number">0.04</span>         <span class="token number">0.04</span>         <span class="token number">0.04</span>
+            <span class="token number">1</span>         <span class="token number">1000</span>         <span class="token number">0.14</span>        <span class="token number">10.94</span>         <span class="token number">2.65</span>
+            <span class="token number">2</span>         <span class="token number">1000</span>         <span class="token number">0.14</span>        <span class="token number">10.97</span>         <span class="token number">2.65</span>
+            <span class="token number">4</span>         <span class="token number">1000</span>         <span class="token number">0.14</span>        <span class="token number">11.00</span>         <span class="token number">2.66</span>
+            <span class="token number">8</span>         <span class="token number">1000</span>         <span class="token number">0.14</span>        <span class="token number">11.29</span>         <span class="token number">2.70</span>
+           <span class="token number">16</span>         <span class="token number">1000</span>         <span class="token number">0.14</span>        <span class="token number">12.05</span>         <span class="token number">2.81</span>
+           <span class="token number">32</span>         <span class="token number">1000</span>         <span class="token number">0.14</span>        <span class="token number">12.75</span>         <span class="token number">2.90</span>
+           <span class="token number">64</span>         <span class="token number">1000</span>         <span class="token number">0.14</span>        <span class="token number">13.68</span>         <span class="token number">3.13</span>
+          <span class="token number">128</span>         <span class="token number">1000</span>         <span class="token number">0.16</span>        <span class="token number">14.90</span>         <span class="token number">3.54</span>
+          <span class="token number">256</span>         <span class="token number">1000</span>         <span class="token number">0.17</span>        <span class="token number">15.76</span>         <span class="token number">3.62</span>
+          <span class="token number">512</span>         <span class="token number">1000</span>         <span class="token number">0.20</span>        <span class="token number">17.80</span>         <span class="token number">3.93</span>
+         <span class="token number">1024</span>         <span class="token number">1000</span>         <span class="token number">0.22</span>        <span class="token number">11.59</span>         <span class="token number">0.95</span>
+         <span class="token number">2048</span>         <span class="token number">1000</span>         <span class="token number">0.24</span>        <span class="token number">13.67</span>         <span class="token number">1.11</span>
+         <span class="token number">4096</span>         <span class="token number">1000</span>         <span class="token number">0.31</span>        <span class="token number">19.09</span>         <span class="token number">1.53</span>
+         <span class="token number">8192</span>         <span class="token number">1000</span>         <span class="token number">1.23</span>        <span class="token number">72.16</span>        <span class="token number">33.30</span>
+        <span class="token number">16384</span>         <span class="token number">1000</span>        <span class="token number">13.17</span>        <span class="token number">79.35</span>        <span class="token number">47.76</span>
+        <span class="token number">32768</span>         <span class="token number">1000</span>        <span class="token number">16.59</span>        <span class="token number">84.80</span>        <span class="token number">52.39</span>
+        <span class="token number">65536</span>          <span class="token number">640</span>        <span class="token number">20.92</span>       <span class="token number">102.20</span>        <span class="token number">64.84</span>
+       <span class="token number">131072</span>          <span class="token number">320</span>        <span class="token number">34.59</span>       <span class="token number">259.48</span>       <span class="token number">152.99</span>
+       <span class="token number">262144</span>          <span class="token number">160</span>        <span class="token number">56.40</span>       <span class="token number">355.35</span>       <span class="token number">214.13</span>
+       <span class="token number">524288</span>           <span class="token number">80</span>       <span class="token number">113.16</span>       <span class="token number">678.98</span>       <span class="token number">408.39</span>
+      <span class="token number">1048576</span>           <span class="token number">40</span>       <span class="token number">300.51</span>      <span class="token number">1330.02</span>       <span class="token number">843.47</span>
+      <span class="token number">2097152</span>           <span class="token number">20</span>       <span class="token number">938.04</span>      <span class="token number">2632.70</span>      <span class="token number">1844.78</span>
+      <span class="token number">4194304</span>           <span class="token number">10</span>      <span class="token number">2319.03</span>      <span class="token number">5243.26</span>      <span class="token number">3882.33</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Intel-MPI"><a href="#Intel-MPI" class="headerlink" title="Intel MPI"></a>Intel MPI</h3><h4 id="8进程-1"><a href="#8进程-1" class="headerlink" title="8进程"></a>8进程</h4><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token comment"># OSU MPI Gather Latency Test v5.4.3</span>
+<span class="token comment"># Size       Avg Latency(us)</span>
+<span class="token number">1</span>                       <span class="token number">0.95</span>
+<span class="token number">2</span>                       <span class="token number">0.93</span>
+<span class="token number">4</span>                       <span class="token number">0.88</span>
+<span class="token number">8</span>                       <span class="token number">0.87</span>
+<span class="token number">16</span>                      <span class="token number">0.87</span>
+<span class="token number">32</span>                      <span class="token number">0.87</span>
+<span class="token number">64</span>                      <span class="token number">0.92</span>
+<span class="token number">128</span>                     <span class="token number">0.93</span>
+<span class="token number">256</span>                     <span class="token number">0.94</span>
+<span class="token number">512</span>                     <span class="token number">0.96</span>
+<span class="token number">1024</span>                    <span class="token number">1.01</span>
+<span class="token number">2048</span>                    <span class="token number">1.19</span>
+<span class="token number">4096</span>                    <span class="token number">1.41</span>
+<span class="token number">8192</span>                    <span class="token number">1.88</span>
+<span class="token number">16384</span>                   <span class="token number">3.01</span>
+<span class="token number">32768</span>                   <span class="token number">4.81</span>
+<span class="token number">65536</span>                   <span class="token number">8.87</span>
+<span class="token number">131072</span>                 <span class="token number">18.77</span>
+<span class="token number">262144</span>                 <span class="token number">38.06</span>
+<span class="token number">524288</span>                <span class="token number">377.36</span>
+<span class="token number">1048576</span>               <span class="token number">733.46</span>
+<span class="token comment">#----------------------------------------------------------------</span>
+<span class="token comment"># Benchmarking Gather</span>
+<span class="token comment"># #processes = 8</span>
+<span class="token comment">#----------------------------------------------------------------</span>
+       <span class="token comment">#bytes #repetitions  t_min[usec]  t_max[usec]  t_avg[usec]</span>
+            <span class="token number">0</span>         <span class="token number">1000</span>         <span class="token number">0.05</span>         <span class="token number">0.07</span>         <span class="token number">0.06</span>
+            <span class="token number">1</span>         <span class="token number">1000</span>         <span class="token number">0.30</span>         <span class="token number">4.37</span>         <span class="token number">0.83</span>
+            <span class="token number">2</span>         <span class="token number">1000</span>         <span class="token number">0.32</span>         <span class="token number">4.27</span>         <span class="token number">0.83</span>
+            <span class="token number">4</span>         <span class="token number">1000</span>         <span class="token number">0.31</span>         <span class="token number">4.33</span>         <span class="token number">0.83</span>
+            <span class="token number">8</span>         <span class="token number">1000</span>         <span class="token number">0.33</span>         <span class="token number">4.08</span>         <span class="token number">0.81</span>
+           <span class="token number">16</span>         <span class="token number">1000</span>         <span class="token number">0.33</span>         <span class="token number">4.32</span>         <span class="token number">0.84</span>
+           <span class="token number">32</span>         <span class="token number">1000</span>         <span class="token number">0.32</span>         <span class="token number">4.15</span>         <span class="token number">0.83</span>
+           <span class="token number">64</span>         <span class="token number">1000</span>         <span class="token number">0.32</span>         <span class="token number">4.81</span>         <span class="token number">0.91</span>
+          <span class="token number">128</span>         <span class="token number">1000</span>         <span class="token number">0.33</span>         <span class="token number">4.70</span>         <span class="token number">0.91</span>
+          <span class="token number">256</span>         <span class="token number">1000</span>         <span class="token number">0.35</span>         <span class="token number">5.01</span>         <span class="token number">0.94</span>
+          <span class="token number">512</span>         <span class="token number">1000</span>         <span class="token number">0.35</span>         <span class="token number">4.98</span>         <span class="token number">0.95</span>
+         <span class="token number">1024</span>         <span class="token number">1000</span>         <span class="token number">0.37</span>         <span class="token number">5.36</span>         <span class="token number">1.02</span>
+         <span class="token number">2048</span>         <span class="token number">1000</span>         <span class="token number">0.40</span>         <span class="token number">6.15</span>         <span class="token number">1.14</span>
+         <span class="token number">4096</span>         <span class="token number">1000</span>         <span class="token number">0.48</span>         <span class="token number">7.59</span>         <span class="token number">1.39</span>
+         <span class="token number">8192</span>         <span class="token number">1000</span>         <span class="token number">0.61</span>        <span class="token number">10.55</span>         <span class="token number">1.87</span>
+        <span class="token number">16384</span>         <span class="token number">1000</span>         <span class="token number">1.15</span>        <span class="token number">18.92</span>         <span class="token number">3.46</span>
+        <span class="token number">32768</span>         <span class="token number">1000</span>         <span class="token number">1.90</span>        <span class="token number">26.08</span>         <span class="token number">5.08</span>
+        <span class="token number">65536</span>          <span class="token number">640</span>         <span class="token number">3.79</span>        <span class="token number">48.18</span>         <span class="token number">9.53</span>
+       <span class="token number">131072</span>          <span class="token number">320</span>         <span class="token number">7.20</span>       <span class="token number">100.52</span>        <span class="token number">19.12</span>
+       <span class="token number">262144</span>          <span class="token number">160</span>        <span class="token number">15.36</span>       <span class="token number">209.99</span>        <span class="token number">40.75</span>
+       <span class="token number">524288</span>           <span class="token number">80</span>       <span class="token number">259.98</span>       <span class="token number">431.49</span>       <span class="token number">374.85</span>
+      <span class="token number">1048576</span>           <span class="token number">40</span>       <span class="token number">536.65</span>       <span class="token number">840.25</span>       <span class="token number">746.30</span>
+      <span class="token number">2097152</span>           <span class="token number">20</span>      <span class="token number">1108.71</span>      <span class="token number">1625.62</span>      <span class="token number">1463.41</span>
+      <span class="token number">4194304</span>           <span class="token number">10</span>      <span class="token number">2306.89</span>      <span class="token number">3291.18</span>      <span class="token number">2990.85</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h4 id="16进程-1"><a href="#16进程-1" class="headerlink" title="16进程"></a>16进程</h4><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token comment"># OSU MPI Gather Latency Test v5.4.3</span>
+<span class="token comment"># Size       Avg Latency(us)</span>
+<span class="token number">1</span>                       <span class="token number">0.86</span>
+<span class="token number">2</span>                       <span class="token number">0.81</span>
+<span class="token number">4</span>                       <span class="token number">0.78</span>
+<span class="token number">8</span>                       <span class="token number">0.77</span>
+<span class="token number">16</span>                      <span class="token number">0.74</span>
+<span class="token number">32</span>                      <span class="token number">0.79</span>
+<span class="token number">64</span>                      <span class="token number">0.79</span>
+<span class="token number">128</span>                     <span class="token number">0.79</span>
+<span class="token number">256</span>                     <span class="token number">0.80</span>
+<span class="token number">512</span>                     <span class="token number">0.84</span>
+<span class="token number">1024</span>                    <span class="token number">0.90</span>
+<span class="token number">2048</span>                    <span class="token number">1.03</span>
+<span class="token number">4096</span>                    <span class="token number">1.18</span>
+<span class="token number">8192</span>                    <span class="token number">1.63</span>
+<span class="token number">16384</span>                   <span class="token number">2.81</span>
+<span class="token number">32768</span>                   <span class="token number">4.92</span>
+<span class="token number">65536</span>                   <span class="token number">9.96</span>
+<span class="token number">131072</span>                 <span class="token number">19.15</span>
+<span class="token number">262144</span>                 <span class="token number">40.60</span>
+<span class="token number">524288</span>                <span class="token number">651.16</span>
+<span class="token number">1048576</span>              <span class="token number">1254.97</span>
+<span class="token comment">#----------------------------------------------------------------</span>
+<span class="token comment"># Benchmarking Gather</span>
+<span class="token comment"># #processes = 16</span>
+<span class="token comment">#----------------------------------------------------------------</span>
+       <span class="token comment">#bytes #repetitions  t_min[usec]  t_max[usec]  t_avg[usec]</span>
+            <span class="token number">0</span>         <span class="token number">1000</span>         <span class="token number">0.05</span>         <span class="token number">0.08</span>         <span class="token number">0.06</span>
+            <span class="token number">1</span>         <span class="token number">1000</span>         <span class="token number">0.32</span>         <span class="token number">5.99</span>         <span class="token number">0.70</span>
+            <span class="token number">2</span>         <span class="token number">1000</span>         <span class="token number">0.31</span>         <span class="token number">5.93</span>         <span class="token number">0.69</span>
+            <span class="token number">4</span>         <span class="token number">1000</span>         <span class="token number">0.31</span>         <span class="token number">5.93</span>         <span class="token number">0.69</span>
+            <span class="token number">8</span>         <span class="token number">1000</span>         <span class="token number">0.32</span>         <span class="token number">5.95</span>         <span class="token number">0.69</span>
+           <span class="token number">16</span>         <span class="token number">1000</span>         <span class="token number">0.30</span>         <span class="token number">6.00</span>         <span class="token number">0.70</span>
+           <span class="token number">32</span>         <span class="token number">1000</span>         <span class="token number">0.33</span>         <span class="token number">6.05</span>         <span class="token number">0.71</span>
+           <span class="token number">64</span>         <span class="token number">1000</span>         <span class="token number">0.33</span>         <span class="token number">6.57</span>         <span class="token number">0.74</span>
+          <span class="token number">128</span>         <span class="token number">1000</span>         <span class="token number">0.34</span>         <span class="token number">6.53</span>         <span class="token number">0.75</span>
+          <span class="token number">256</span>         <span class="token number">1000</span>         <span class="token number">0.35</span>         <span class="token number">6.81</span>         <span class="token number">0.77</span>
+          <span class="token number">512</span>         <span class="token number">1000</span>         <span class="token number">0.36</span>         <span class="token number">7.22</span>         <span class="token number">0.81</span>
+         <span class="token number">1024</span>         <span class="token number">1000</span>         <span class="token number">0.35</span>         <span class="token number">8.00</span>         <span class="token number">0.88</span>
+         <span class="token number">2048</span>         <span class="token number">1000</span>         <span class="token number">0.40</span>         <span class="token number">9.87</span>         <span class="token number">1.04</span>
+         <span class="token number">4096</span>         <span class="token number">1000</span>         <span class="token number">0.46</span>        <span class="token number">12.15</span>         <span class="token number">1.25</span>
+         <span class="token number">8192</span>         <span class="token number">1000</span>         <span class="token number">0.62</span>        <span class="token number">17.55</span>         <span class="token number">1.73</span>
+        <span class="token number">16384</span>         <span class="token number">1000</span>         <span class="token number">1.12</span>        <span class="token number">29.58</span>         <span class="token number">2.99</span>
+        <span class="token number">32768</span>         <span class="token number">1000</span>         <span class="token number">1.90</span>        <span class="token number">53.40</span>         <span class="token number">5.38</span>
+        <span class="token number">65536</span>          <span class="token number">640</span>         <span class="token number">3.82</span>       <span class="token number">109.65</span>        <span class="token number">10.64</span>
+       <span class="token number">131072</span>          <span class="token number">320</span>         <span class="token number">7.21</span>       <span class="token number">212.86</span>        <span class="token number">20.45</span>
+       <span class="token number">262144</span>          <span class="token number">160</span>        <span class="token number">15.25</span>       <span class="token number">440.21</span>        <span class="token number">42.88</span>
+       <span class="token number">524288</span>           <span class="token number">80</span>       <span class="token number">359.64</span>       <span class="token number">831.49</span>       <span class="token number">636.55</span>
+      <span class="token number">1048576</span>           <span class="token number">40</span>       <span class="token number">586.35</span>      <span class="token number">1591.95</span>      <span class="token number">1211.63</span>
+      <span class="token number">2097152</span>           <span class="token number">20</span>      <span class="token number">1222.41</span>      <span class="token number">3164.04</span>      <span class="token number">2428.03</span>
+      <span class="token number">4194304</span>           <span class="token number">10</span>      <span class="token number">2675.99</span>      <span class="token number">6338.31</span>      <span class="token number">4884.85</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>从这些结果中还可以得到以下两个结论：<br>\1. 使用OSU和IMB的测试效果差距不大，故后面只使用OSU进行测试（因为好改源码）。<br>\2. 不同的MPI产生断层的地方是不一样的，这和前面的可视化的图的结果是一致的，但一定都会有一个大断层。后面将选用在后期才断层的Intel MPI进行实验</p>
+<h1 id="进一步的实验"><a href="#进一步的实验" class="headerlink" title="进一步的实验"></a>进一步的实验</h1><p>从前面IMB的测试可以注意到t_max和t_min的时间差距特别远，对OSU也使用<code>-f</code>参数输出最大值和最小值，使用<code>-m 67108864</code>增大最大消息大小，并且修改源码查看每个进程所花的时间</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token comment"># OSU MPI Gather Latency Test v5.4.3</span>
+<span class="token comment"># Size       Avg Latency(us)   Min Latency(us)   Max Latency(us)  Iterations</span>
+<span class="token number">1</span>                       <span class="token number">0.92</span>              <span class="token number">0.20</span>              <span class="token number">5.55</span>        <span class="token number">1000</span>
+<span class="token number">2</span>                       <span class="token number">0.92</span>              <span class="token number">0.18</span>              <span class="token number">5.62</span>        <span class="token number">1000</span>
+<span class="token number">4</span>                       <span class="token number">1.12</span>              <span class="token number">0.18</span>              <span class="token number">6.83</span>        <span class="token number">1000</span>
+<span class="token number">8</span>                       <span class="token number">1.03</span>              <span class="token number">0.19</span>              <span class="token number">6.45</span>        <span class="token number">1000</span>
+<span class="token number">16</span>                      <span class="token number">0.98</span>              <span class="token number">0.18</span>              <span class="token number">6.06</span>        <span class="token number">1000</span>
+<span class="token number">32</span>                      <span class="token number">1.07</span>              <span class="token number">0.22</span>              <span class="token number">6.65</span>        <span class="token number">1000</span>
+<span class="token number">64</span>                      <span class="token number">1.10</span>              <span class="token number">0.21</span>              <span class="token number">6.68</span>        <span class="token number">1000</span>
+<span class="token number">128</span>                     <span class="token number">1.09</span>              <span class="token number">0.21</span>              <span class="token number">6.78</span>        <span class="token number">1000</span>
+<span class="token number">256</span>                     <span class="token number">1.11</span>              <span class="token number">0.20</span>              <span class="token number">6.84</span>        <span class="token number">1000</span>
+<span class="token number">512</span>                     <span class="token number">1.11</span>              <span class="token number">0.23</span>              <span class="token number">6.89</span>        <span class="token number">1000</span>
+<span class="token number">1024</span>                    <span class="token number">1.24</span>              <span class="token number">0.25</span>              <span class="token number">7.59</span>        <span class="token number">1000</span>
+<span class="token number">2048</span>                    <span class="token number">1.53</span>              <span class="token number">0.27</span>              <span class="token number">9.80</span>        <span class="token number">1000</span>
+<span class="token number">4096</span>                    <span class="token number">2.30</span>              <span class="token number">0.32</span>             <span class="token number">15.03</span>        <span class="token number">1000</span>
+<span class="token number">8192</span>                    <span class="token number">3.74</span>              <span class="token number">0.43</span>             <span class="token number">25.49</span>        <span class="token number">1000</span>
+<span class="token number">16384</span>                   <span class="token number">7.45</span>              <span class="token number">1.75</span>             <span class="token number">46.07</span>         <span class="token number">100</span>
+<span class="token number">32768</span>                  <span class="token number">14.60</span>              <span class="token number">2.85</span>             <span class="token number">86.64</span>         <span class="token number">100</span>
+<span class="token number">65536</span>                  <span class="token number">32.86</span>              <span class="token number">5.83</span>            <span class="token number">168.52</span>         <span class="token number">100</span>
+<span class="token number">131072</span>                <span class="token number">113.56</span>             <span class="token number">51.16</span>            <span class="token number">333.00</span>         <span class="token number">100</span>
+<span class="token number">262144</span>                <span class="token number">723.46</span>            <span class="token number">635.76</span>            <span class="token number">774.66</span>         <span class="token number">100</span>
+<span class="token number">524288</span>               <span class="token number">1410.58</span>           <span class="token number">1191.46</span>           <span class="token number">1501.59</span>         <span class="token number">100</span>
+<span class="token number">1048576</span>              <span class="token number">2761.69</span>           <span class="token number">2343.98</span>           <span class="token number">2926.72</span>         <span class="token number">100</span>
+<span class="token number">2097152</span>              <span class="token number">5540.65</span>           <span class="token number">5220.03</span>           <span class="token number">5785.99</span>         <span class="token number">100</span>
+<span class="token number">4194304</span>             <span class="token number">11149.36</span>          <span class="token number">10389.16</span>          <span class="token number">11772.69</span>         <span class="token number">100</span>
+<span class="token number">8388608</span>             <span class="token number">22412.04</span>          <span class="token number">21585.84</span>          <span class="token number">23605.34</span>         <span class="token number">100</span>
+<span class="token number">16777216</span>            <span class="token number">45466.04</span>          <span class="token number">43798.31</span>          <span class="token number">47738.80</span>         <span class="token number">100</span>
+<span class="token number">33554432</span>            <span class="token number">92076.78</span>          <span class="token number">89692.44</span>          <span class="token number">96626.01</span>         <span class="token number">100</span>
+<span class="token number">67108864</span>           <span class="token number">184738.00</span>         <span class="token number">179055.89</span>         <span class="token number">194026.17</span>         <span class="token number">100</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>将每个进程所花的时间部分可视化</p>
+<img src="/MPI/MPI_Gather%E5%BB%B6%E8%BF%9F%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E6%96%AD%E5%B1%82%E9%97%AE%E9%A2%98%E7%8E%B0%E8%B1%A1%E7%A0%94%E7%A9%B6/470a837f92abf7911ac1a794715a8b57.png" class="">
+<p>可以看到一开始除了根进程要花费的时间多，其他的都很快能完成，但到了后面，其他进程所花的时间多<br>将延迟取log2之后重新观察</p>
+<img src="/MPI/MPI_Gather%E5%BB%B6%E8%BF%9F%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E6%96%AD%E5%B1%82%E9%97%AE%E9%A2%98%E7%8E%B0%E8%B1%A1%E7%A0%94%E7%A9%B6/1b5e0e55f09ceab8d73db64ce362c5d2.png" class="">
+<p>发现根进程在大约在2048之后确实是线性增长的，这是正常的<br><strong>产生断层的原因是：发送的数据包的大小增长时，链路上的拥塞点的缓存逐渐被填满，非根进程需要开始平分带宽，故它们的耗时开始逐渐贴近根进程的用时，但始终不会超过根进程的用时。而非根进程数量众多，根进程只有1个，当非根进程的用时开始增长时，就导致了延时看起来像是爆炸式增长。所以在观察gather的性能时，不应该只看平均值，而要看最大值和最小值的变化</strong></p>
+<h1 id="Future-Work"><a href="#Future-Work" class="headerlink" title="Future Work"></a>Future Work</h1><p>为啥这个地方每个进程要开始平分带宽呢？如果一个一个进程来发送数据，并且让中间切换时的带宽的利用率尽可能高，这样就可以一部分进程先发送完，从而进行后面的计算，可以平均减少非根进程一半的耗时。虽然说这样依然存在着短板效应，但是有没有什么应用场景是可以利用这一点的呢？</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MPI/" rel="tag"># MPI</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/RoCE/Mellanox%20SN2410%E4%BA%A4%E6%8D%A2%E6%9C%BARoCE%E5%8D%8F%E8%AE%AE%E9%85%8D%E7%BD%AE/" rel="prev" title="Mellanox SN2410交换机RoCE协议配置">
+                  <i class="fa fa-chevron-left"></i> Mellanox SN2410交换机RoCE协议配置
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/MPI/OpenMPI/OpenMPI1.10.7+Intel2018u4%E5%AE%89%E8%A3%85/" rel="next" title="OpenMPI1.10.7+Intel2018u4安装">
+                  OpenMPI1.10.7+Intel2018u4安装 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

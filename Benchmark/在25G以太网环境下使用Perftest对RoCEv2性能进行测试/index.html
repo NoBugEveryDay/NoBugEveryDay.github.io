@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要perftest package is a collection of tests written over uverbs intended for use as a performance micro-benchmark. The tests may be used for tuning as well as for functional testing.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在25G以太网环境下使用Perftest对RoCEv2性能进行测试">
+<meta property="og:url" content="http://blog.sysu.tech/Benchmark/%E5%9C%A825G%E4%BB%A5%E5%A4%AA%E7%BD%91%E7%8E%AF%E5%A2%83%E4%B8%8B%E4%BD%BF%E7%94%A8Perftest%E5%AF%B9RoCEv2%E6%80%A7%E8%83%BD%E8%BF%9B%E8%A1%8C%E6%B5%8B%E8%AF%95/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要perftest package is a collection of tests written over uverbs intended for use as a performance micro-benchmark. The tests may be used for tuning as well as for functional testing.">
+<meta property="og:locale">
+<meta property="article:published_time" content="2019-02-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.071Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Benchmark">
+<meta property="article:tag" content="RoCE">
+<meta property="article:tag" content="Perftest">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Benchmark/%E5%9C%A825G%E4%BB%A5%E5%A4%AA%E7%BD%91%E7%8E%AF%E5%A2%83%E4%B8%8B%E4%BD%BF%E7%94%A8Perftest%E5%AF%B9RoCEv2%E6%80%A7%E8%83%BD%E8%BF%9B%E8%A1%8C%E6%B5%8B%E8%AF%95/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>在25G以太网环境下使用Perftest对RoCEv2性能进行测试 | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%A6%E5%AE%BD"><span class="nav-number">2.</span> <span class="nav-text">带宽</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ib-send-bw"><span class="nav-number">2.1.</span> <span class="nav-text">ib_send_bw</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ib-write-bw"><span class="nav-number">2.2.</span> <span class="nav-text">ib_write_bw</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ib-read-bw"><span class="nav-number">2.3.</span> <span class="nav-text">ib_read_bw</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ib-atomic-bw"><span class="nav-number">2.4.</span> <span class="nav-text">ib_atomic_bw</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BB%B6%E8%BF%9F"><span class="nav-number">3.</span> <span class="nav-text">延迟</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ib-send-lat"><span class="nav-number">3.1.</span> <span class="nav-text">ib_send_lat</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ib-write-lat"><span class="nav-number">3.2.</span> <span class="nav-text">ib_write_lat</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ib-read-lat"><span class="nav-number">3.3.</span> <span class="nav-text">ib_read_lat</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ib-atomic-lat"><span class="nav-number">3.4.</span> <span class="nav-text">ib_atomic_lat</span></a></li></ol></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Benchmark/%E5%9C%A825G%E4%BB%A5%E5%A4%AA%E7%BD%91%E7%8E%AF%E5%A2%83%E4%B8%8B%E4%BD%BF%E7%94%A8Perftest%E5%AF%B9RoCEv2%E6%80%A7%E8%83%BD%E8%BF%9B%E8%A1%8C%E6%B5%8B%E8%AF%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          在25G以太网环境下使用Perftest对RoCEv2性能进行测试
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-02-19 00:00:00" itemprop="dateCreated datePublished" datetime="2019-02-19T00:00:00+08:00">2019-02-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Benchmark/" itemprop="url" rel="index"><span itemprop="name">Benchmark</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>perftest package is a collection of tests written over uverbs intended for use as a performance micro-benchmark. The tests may be used for tuning as well as for functional testing.</p>
+<a id="more"></a> 
+
+<p>包含以下的测试<br>– InfiniBand / RoCE<br>ib_send_bw<br>ib_send_lat<br>ib_write_bw<br>ib_write_lat<br>ib_read_bw<br>ib_read_lat<br>ib_atomic_bw<br>ib_atomic_lat</p>
+<h2 id="带宽"><a href="#带宽" class="headerlink" title="带宽"></a>带宽</h2><h3 id="ib-send-bw"><a href="#ib-send-bw" class="headerlink" title="ib_send_bw"></a>ib_send_bw</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ ib_send_bw -a -F -d mlx5_0 -R cpn57-eth4
+Requested SQ size might be too big. Try reducing TX depth and/or inline size.
+Current TX depth is <span class="token number">128</span> and  inline size is <span class="token number">0</span> <span class="token builtin class-name">.</span>
+---------------------------------------------------------------------------------------
+                    Send BW Test
+ Dual-port       <span class="token builtin class-name">:</span> OFF      Device         <span class="token builtin class-name">:</span> mlx5_0
+ Number of qps   <span class="token builtin class-name">:</span> <span class="token number">1</span>        Transport <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> IB
+ Connection <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> RC       Using SRQ      <span class="token builtin class-name">:</span> OFF
+ TX depth        <span class="token builtin class-name">:</span> <span class="token number">128</span>
+ CQ Moderation   <span class="token builtin class-name">:</span> <span class="token number">100</span>
+ Mtu             <span class="token builtin class-name">:</span> <span class="token number">1024</span><span class="token punctuation">[</span>B<span class="token punctuation">]</span>
+ Link <span class="token builtin class-name">type</span>       <span class="token builtin class-name">:</span> Ethernet
+ GID index       <span class="token builtin class-name">:</span> <span class="token number">3</span>
+ Max inline data <span class="token builtin class-name">:</span> <span class="token number">0</span><span class="token punctuation">[</span>B<span class="token punctuation">]</span>
+ rdma_cm QPs     <span class="token builtin class-name">:</span> ON
+ Data ex. method <span class="token builtin class-name">:</span> rdma_cm
+---------------------------------------------------------------------------------------
+ <span class="token builtin class-name">local</span> address: LID 0000 QPN 0x01a2 PSN 0x8cc3b8
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:58
+ remote address: LID 0000 QPN 0x01a5 PSN 0xda91dc
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:57
+---------------------------------------------------------------------------------------
+ <span class="token comment">#bytes     #iterations    BW peak[MB/sec]    BW average[MB/sec]   MsgRate[Mpps]</span>
+ <span class="token number">2</span>          <span class="token number">1000</span>             <span class="token number">7.13</span>               <span class="token number">7.09</span>           <span class="token number">3.719685</span>
+ <span class="token number">4</span>          <span class="token number">1000</span>             <span class="token number">28.30</span>              <span class="token number">28.29</span>          <span class="token number">7.414812</span>
+ <span class="token number">8</span>          <span class="token number">1000</span>             <span class="token number">56.75</span>              <span class="token number">56.62</span>          <span class="token number">7.421375</span>
+ <span class="token number">16</span>         <span class="token number">1000</span>             <span class="token number">113.81</span>             <span class="token number">108.27</span>         <span class="token number">7.095815</span>
+ <span class="token number">32</span>         <span class="token number">1000</span>             <span class="token number">234.75</span>             <span class="token number">234.20</span>         <span class="token number">7.674423</span>
+ <span class="token number">64</span>         <span class="token number">1000</span>             <span class="token number">469.50</span>             <span class="token number">468.97</span>         <span class="token number">7.683683</span>
+ <span class="token number">128</span>        <span class="token number">1000</span>             <span class="token number">936.33</span>             <span class="token number">934.62</span>         <span class="token number">7.656447</span>
+ <span class="token number">256</span>        <span class="token number">1000</span>             <span class="token number">1841.28</span>            <span class="token number">1837.05</span>        <span class="token number">7.524538</span>
+ <span class="token number">512</span>        <span class="token number">1000</span>             <span class="token number">2496.89</span>            <span class="token number">2494.85</span>        <span class="token number">5.109456</span>
+ <span class="token number">1024</span>       <span class="token number">1000</span>             <span class="token number">2712.67</span>            <span class="token number">2694.83</span>        <span class="token number">2.759506</span>
+ <span class="token number">2048</span>       <span class="token number">1000</span>             <span class="token number">2736.60</span>            <span class="token number">2736.28</span>        <span class="token number">1.400974</span>
+ <span class="token number">4096</span>       <span class="token number">1000</span>             <span class="token number">2752.32</span>            <span class="token number">2751.69</span>        <span class="token number">0.704432</span>
+ <span class="token number">8192</span>       <span class="token number">1000</span>             <span class="token number">2758.80</span>            <span class="token number">2758.75</span>        <span class="token number">0.353121</span>
+ <span class="token number">16384</span>      <span class="token number">1000</span>             <span class="token number">2762.59</span>            <span class="token number">2762.44</span>        <span class="token number">0.176796</span>
+ <span class="token number">32768</span>      <span class="token number">1000</span>             <span class="token number">2764.22</span>            <span class="token number">2764.15</span>        <span class="token number">0.088453</span>
+ <span class="token number">65536</span>      <span class="token number">1000</span>             <span class="token number">2765.03</span>            <span class="token number">2765.01</span>        <span class="token number">0.044240</span>
+ <span class="token number">131072</span>     <span class="token number">1000</span>             <span class="token number">2765.42</span>            <span class="token number">2765.41</span>        <span class="token number">0.022123</span>
+ <span class="token number">262144</span>     <span class="token number">1000</span>             <span class="token number">2765.60</span>            <span class="token number">2765.59</span>        <span class="token number">0.011062</span>
+ <span class="token number">524288</span>     <span class="token number">1000</span>             <span class="token number">2765.75</span>            <span class="token number">2765.75</span>        <span class="token number">0.005531</span>
+ <span class="token number">1048576</span>    <span class="token number">1000</span>             <span class="token number">2765.80</span>            <span class="token number">2765.80</span>        <span class="token number">0.002766</span>
+ <span class="token number">2097152</span>    <span class="token number">1000</span>             <span class="token number">2765.83</span>            <span class="token number">2765.83</span>        <span class="token number">0.001383</span>
+ <span class="token number">4194304</span>    <span class="token number">1000</span>             <span class="token number">2765.84</span>            <span class="token number">2765.84</span>        <span class="token number">0.000691</span>
+ <span class="token number">8388608</span>    <span class="token number">1000</span>             <span class="token number">2765.85</span>            <span class="token number">2765.85</span>        <span class="token number">0.000346</span>
+---------------------------------------------------------------------------------------<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="ib-write-bw"><a href="#ib-write-bw" class="headerlink" title="ib_write_bw"></a>ib_write_bw</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ ib_write_bw -a -d mlx5_0 -R cpn57-eth4
+Requested SQ size might be too big. Try reducing TX depth and/or inline size.
+Current TX depth is <span class="token number">128</span> and  inline size is <span class="token number">0</span> <span class="token builtin class-name">.</span>
+---------------------------------------------------------------------------------------
+                    RDMA_Write BW Test
+ Dual-port       <span class="token builtin class-name">:</span> OFF      Device         <span class="token builtin class-name">:</span> mlx5_0
+ Number of qps   <span class="token builtin class-name">:</span> <span class="token number">1</span>        Transport <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> IB
+ Connection <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> RC       Using SRQ      <span class="token builtin class-name">:</span> OFF
+ TX depth        <span class="token builtin class-name">:</span> <span class="token number">128</span>
+ CQ Moderation   <span class="token builtin class-name">:</span> <span class="token number">100</span>
+ Mtu             <span class="token builtin class-name">:</span> <span class="token number">1024</span><span class="token punctuation">[</span>B<span class="token punctuation">]</span>
+ Link <span class="token builtin class-name">type</span>       <span class="token builtin class-name">:</span> Ethernet
+ GID index       <span class="token builtin class-name">:</span> <span class="token number">3</span>
+ Max inline data <span class="token builtin class-name">:</span> <span class="token number">0</span><span class="token punctuation">[</span>B<span class="token punctuation">]</span>
+ rdma_cm QPs     <span class="token builtin class-name">:</span> ON
+ Data ex. method <span class="token builtin class-name">:</span> rdma_cm
+---------------------------------------------------------------------------------------
+ <span class="token builtin class-name">local</span> address: LID 0000 QPN 0x01a6 PSN 0xb1ad95
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:58
+ remote address: LID 0000 QPN 0x01a9 PSN 0x85d0f3
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:57
+---------------------------------------------------------------------------------------
+ <span class="token comment">#bytes     #iterations    BW peak[MB/sec]    BW average[MB/sec]   MsgRate[Mpps]</span>
+ <span class="token number">2</span>          <span class="token number">5000</span>             <span class="token number">9.26</span>               <span class="token number">9.23</span>           <span class="token number">4.839865</span>
+ <span class="token number">4</span>          <span class="token number">5000</span>             <span class="token number">28.37</span>              <span class="token number">28.12</span>          <span class="token number">7.372481</span>
+ <span class="token number">8</span>          <span class="token number">5000</span>             <span class="token number">56.90</span>              <span class="token number">56.87</span>          <span class="token number">7.454676</span>
+ <span class="token number">16</span>         <span class="token number">5000</span>             <span class="token number">113.50</span>             <span class="token number">112.68</span>         <span class="token number">7.384878</span>
+ <span class="token number">32</span>         <span class="token number">5000</span>             <span class="token number">228.25</span>             <span class="token number">227.74</span>         <span class="token number">7.462513</span>
+ <span class="token number">64</span>         <span class="token number">5000</span>             <span class="token number">455.23</span>             <span class="token number">450.95</span>         <span class="token number">7.388370</span>
+ <span class="token number">128</span>        <span class="token number">5000</span>             <span class="token number">898.06</span>             <span class="token number">874.00</span>         <span class="token number">7.159775</span>
+ <span class="token number">256</span>        <span class="token number">5000</span>             <span class="token number">1805.97</span>            <span class="token number">1787.43</span>        <span class="token number">7.321303</span>
+ <span class="token number">512</span>        <span class="token number">5000</span>             <span class="token number">2496.89</span>            <span class="token number">2495.04</span>        <span class="token number">5.109850</span>
+ <span class="token number">1024</span>       <span class="token number">5000</span>             <span class="token number">2723.88</span>            <span class="token number">2721.20</span>        <span class="token number">2.786512</span>
+ <span class="token number">2048</span>       <span class="token number">5000</span>             <span class="token number">2743.72</span>            <span class="token number">2743.04</span>        <span class="token number">1.404436</span>
+ <span class="token number">4096</span>       <span class="token number">5000</span>             <span class="token number">2755.19</span>            <span class="token number">2754.61</span>        <span class="token number">0.705179</span>
+ <span class="token number">8192</span>       <span class="token number">5000</span>             <span class="token number">2760.24</span>            <span class="token number">2760.23</span>        <span class="token number">0.353309</span>
+ <span class="token number">16384</span>      <span class="token number">5000</span>             <span class="token number">2762.77</span>            <span class="token number">2762.71</span>        <span class="token number">0.176813</span>
+ <span class="token number">32768</span>      <span class="token number">5000</span>             <span class="token number">2764.49</span>            <span class="token number">2764.42</span>        <span class="token number">0.088461</span>
+ <span class="token number">65536</span>      <span class="token number">5000</span>             <span class="token number">2765.17</span>            <span class="token number">2765.15</span>        <span class="token number">0.044242</span>
+ <span class="token number">131072</span>     <span class="token number">5000</span>             <span class="token number">2765.51</span>            <span class="token number">2765.50</span>        <span class="token number">0.022124</span>
+ <span class="token number">262144</span>     <span class="token number">5000</span>             <span class="token number">2765.68</span>            <span class="token number">2765.68</span>        <span class="token number">0.011063</span>
+ <span class="token number">524288</span>     <span class="token number">5000</span>             <span class="token number">2765.77</span>            <span class="token number">2765.77</span>        <span class="token number">0.005532</span>
+ <span class="token number">1048576</span>    <span class="token number">5000</span>             <span class="token number">2765.82</span>            <span class="token number">2765.81</span>        <span class="token number">0.002766</span>
+ <span class="token number">2097152</span>    <span class="token number">5000</span>             <span class="token number">2765.84</span>            <span class="token number">2765.84</span>        <span class="token number">0.001383</span>
+ <span class="token number">4194304</span>    <span class="token number">5000</span>             <span class="token number">2765.85</span>            <span class="token number">2765.85</span>        <span class="token number">0.000691</span>
+ <span class="token number">8388608</span>    <span class="token number">5000</span>             <span class="token number">2765.85</span>            <span class="token number">2765.85</span>        <span class="token number">0.000346</span>
+---------------------------------------------------------------------------------------<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="ib-read-bw"><a href="#ib-read-bw" class="headerlink" title="ib_read_bw"></a>ib_read_bw</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ ib_read_bw -a -d mlx5_0 -R cpn57-eth4
+Requested SQ size might be too big. Try reducing TX depth and/or inline size.
+Current TX depth is <span class="token number">128</span> and  inline size is <span class="token number">0</span> <span class="token builtin class-name">.</span>
+---------------------------------------------------------------------------------------
+                    RDMA_Read BW Test
+ Dual-port       <span class="token builtin class-name">:</span> OFF      Device         <span class="token builtin class-name">:</span> mlx5_0
+ Number of qps   <span class="token builtin class-name">:</span> <span class="token number">1</span>        Transport <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> IB
+ Connection <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> RC       Using SRQ      <span class="token builtin class-name">:</span> OFF
+ TX depth        <span class="token builtin class-name">:</span> <span class="token number">128</span>
+ CQ Moderation   <span class="token builtin class-name">:</span> <span class="token number">100</span>
+ Mtu             <span class="token builtin class-name">:</span> <span class="token number">1024</span><span class="token punctuation">[</span>B<span class="token punctuation">]</span>
+ Link <span class="token builtin class-name">type</span>       <span class="token builtin class-name">:</span> Ethernet
+ GID index       <span class="token builtin class-name">:</span> <span class="token number">3</span>
+ Outstand reads  <span class="token builtin class-name">:</span> <span class="token number">16</span>
+ rdma_cm QPs     <span class="token builtin class-name">:</span> ON
+ Data ex. method <span class="token builtin class-name">:</span> rdma_cm
+---------------------------------------------------------------------------------------
+ <span class="token builtin class-name">local</span> address: LID 0000 QPN 0x01a8 PSN 0xda8e33
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:58
+ remote address: LID 0000 QPN 0x01ab PSN 0x3975f8
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:57
+---------------------------------------------------------------------------------------
+ <span class="token comment">#bytes     #iterations    BW peak[MB/sec]    BW average[MB/sec]   MsgRate[Mpps]</span>
+ <span class="token number">2</span>          <span class="token number">1000</span>             <span class="token number">8.82</span>               <span class="token number">8.63</span>           <span class="token number">4.526966</span>
+ <span class="token number">4</span>          <span class="token number">1000</span>             <span class="token number">19.85</span>              <span class="token number">19.17</span>          <span class="token number">5.025238</span>
+ <span class="token number">8</span>          <span class="token number">1000</span>             <span class="token number">39.84</span>              <span class="token number">39.79</span>          <span class="token number">5.214932</span>
+ <span class="token number">16</span>         <span class="token number">1000</span>             <span class="token number">80.31</span>              <span class="token number">80.14</span>          <span class="token number">5.251999</span>
+ <span class="token number">32</span>         <span class="token number">1000</span>             <span class="token number">157.55</span>             <span class="token number">157.51</span>         <span class="token number">5.161280</span>
+ <span class="token number">64</span>         <span class="token number">1000</span>             <span class="token number">312.11</span>             <span class="token number">311.99</span>         <span class="token number">5.111661</span>
+ <span class="token number">128</span>        <span class="token number">1000</span>             <span class="token number">610.35</span>             <span class="token number">609.87</span>         <span class="token number">4.996022</span>
+ <span class="token number">256</span>        <span class="token number">1000</span>             <span class="token number">1168.76</span>            <span class="token number">1168.64</span>        <span class="token number">4.786759</span>
+ <span class="token number">512</span>        <span class="token number">1000</span>             <span class="token number">2116.15</span>            <span class="token number">2113.60</span>        <span class="token number">4.328657</span>
+ <span class="token number">1024</span>       <span class="token number">1000</span>             <span class="token number">2726.70</span>            <span class="token number">2708.98</span>        <span class="token number">2.773999</span>
+ <span class="token number">2048</span>       <span class="token number">1000</span>             <span class="token number">2742.30</span>            <span class="token number">2742.29</span>        <span class="token number">1.404052</span>
+ <span class="token number">4096</span>       <span class="token number">1000</span>             <span class="token number">2754.47</span>            <span class="token number">2753.80</span>        <span class="token number">0.704972</span>
+ <span class="token number">8192</span>       <span class="token number">1000</span>             <span class="token number">2759.88</span>            <span class="token number">2759.76</span>        <span class="token number">0.353249</span>
+ <span class="token number">16384</span>      <span class="token number">1000</span>             <span class="token number">2762.95</span>            <span class="token number">2762.83</span>        <span class="token number">0.176821</span>
+ <span class="token number">32768</span>      <span class="token number">1000</span>             <span class="token number">2764.40</span>            <span class="token number">2764.31</span>        <span class="token number">0.088458</span>
+ <span class="token number">65536</span>      <span class="token number">1000</span>             <span class="token number">2765.12</span>            <span class="token number">2765.12</span>        <span class="token number">0.044242</span>
+ <span class="token number">131072</span>     <span class="token number">1000</span>             <span class="token number">2765.51</span>            <span class="token number">2765.50</span>        <span class="token number">0.022124</span>
+ <span class="token number">262144</span>     <span class="token number">1000</span>             <span class="token number">2765.62</span>            <span class="token number">2765.62</span>        <span class="token number">0.011062</span>
+ <span class="token number">524288</span>     <span class="token number">1000</span>             <span class="token number">2765.79</span>            <span class="token number">2765.78</span>        <span class="token number">0.005532</span>
+ <span class="token number">1048576</span>    <span class="token number">1000</span>             <span class="token number">2765.84</span>            <span class="token number">2765.84</span>        <span class="token number">0.002766</span>
+ <span class="token number">2097152</span>    <span class="token number">1000</span>             <span class="token number">2765.86</span>            <span class="token number">2765.86</span>        <span class="token number">0.001383</span>
+ <span class="token number">4194304</span>    <span class="token number">1000</span>             <span class="token number">2765.87</span>            <span class="token number">2765.87</span>        <span class="token number">0.000691</span>
+ <span class="token number">8388608</span>    <span class="token number">1000</span>             <span class="token number">2765.88</span>            <span class="token number">2765.88</span>        <span class="token number">0.000346</span>
+---------------------------------------------------------------------------------------<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="ib-atomic-bw"><a href="#ib-atomic-bw" class="headerlink" title="ib_atomic_bw"></a>ib_atomic_bw</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ ib_atomic_bw -a -d mlx5_0 -R cpn57-eth4
+---------------------------------------------------------------------------------------
+                    Atomic FETCH_AND_ADD BW Test
+ Dual-port       <span class="token builtin class-name">:</span> OFF      Device         <span class="token builtin class-name">:</span> mlx5_0
+ Number of qps   <span class="token builtin class-name">:</span> <span class="token number">1</span>        Transport <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> IB
+ Connection <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> RC       Using SRQ      <span class="token builtin class-name">:</span> OFF
+ TX depth        <span class="token builtin class-name">:</span> <span class="token number">128</span>
+ CQ Moderation   <span class="token builtin class-name">:</span> <span class="token number">100</span>
+ Mtu             <span class="token builtin class-name">:</span> <span class="token number">1024</span><span class="token punctuation">[</span>B<span class="token punctuation">]</span>
+ Link <span class="token builtin class-name">type</span>       <span class="token builtin class-name">:</span> Ethernet
+ GID index       <span class="token builtin class-name">:</span> <span class="token number">3</span>
+ Outstand reads  <span class="token builtin class-name">:</span> <span class="token number">16</span>
+ rdma_cm QPs     <span class="token builtin class-name">:</span> ON
+ Data ex. method <span class="token builtin class-name">:</span> rdma_cm
+---------------------------------------------------------------------------------------
+ <span class="token builtin class-name">local</span> address: LID 0000 QPN 0x01aa PSN 0x58ce
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:58
+ remote address: LID 0000 QPN 0x01ad PSN 0xbd22ee
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:57
+---------------------------------------------------------------------------------------
+ <span class="token comment">#bytes     #iterations    BW peak[MB/sec]    BW average[MB/sec]   MsgRate[Mpps]</span>
+ <span class="token number">8</span>          <span class="token number">1000</span>             <span class="token number">16.07</span>              <span class="token number">15.92</span>          <span class="token number">2.086695</span>
+---------------------------------------------------------------------------------------<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="延迟"><a href="#延迟" class="headerlink" title="延迟"></a>延迟</h2><h3 id="ib-send-lat"><a href="#ib-send-lat" class="headerlink" title="ib_send_lat"></a>ib_send_lat</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ ib_send_lat -a -d mlx5_0 -R cpn57-eth4
+Requested SQ size might be too big. Try reducing TX depth and/or inline size.
+Current TX depth is <span class="token number">1</span> and  inline size is <span class="token number">236</span> <span class="token builtin class-name">.</span>
+---------------------------------------------------------------------------------------
+                    Send Latency Test
+ Dual-port       <span class="token builtin class-name">:</span> OFF      Device         <span class="token builtin class-name">:</span> mlx5_0
+ Number of qps   <span class="token builtin class-name">:</span> <span class="token number">1</span>        Transport <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> IB
+ Connection <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> RC       Using SRQ      <span class="token builtin class-name">:</span> OFF
+ TX depth        <span class="token builtin class-name">:</span> <span class="token number">1</span>
+ Mtu             <span class="token builtin class-name">:</span> <span class="token number">1024</span><span class="token punctuation">[</span>B<span class="token punctuation">]</span>
+ Link <span class="token builtin class-name">type</span>       <span class="token builtin class-name">:</span> Ethernet
+ GID index       <span class="token builtin class-name">:</span> <span class="token number">3</span>
+ Max inline data <span class="token builtin class-name">:</span> <span class="token number">236</span><span class="token punctuation">[</span>B<span class="token punctuation">]</span>
+ rdma_cm QPs     <span class="token builtin class-name">:</span> ON
+ Data ex. method <span class="token builtin class-name">:</span> rdma_cm
+---------------------------------------------------------------------------------------
+ <span class="token builtin class-name">local</span> address: LID 0000 QPN 0x01af PSN 0xf1c1aa
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:58
+ remote address: LID 0000 QPN 0x01b2 PSN 0x211ffb
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:57
+---------------------------------------------------------------------------------------
+ <span class="token comment">#bytes #iterations    t_min[usec]    t_max[usec]  t_typical[usec]    t_avg[usec]    t_stdev[usec]   99% percentile[usec]   99.9% percentile[usec] </span>
+ <span class="token number">2</span>       <span class="token number">1000</span>          <span class="token number">1.48</span>           <span class="token number">3.36</span>         <span class="token number">1.53</span>                <span class="token number">1.53</span>         <span class="token number">0.03</span>        <span class="token number">1.59</span>            <span class="token number">3.36</span>   
+ <span class="token number">4</span>       <span class="token number">1000</span>          <span class="token number">1.47</span>           <span class="token number">3.01</span>         <span class="token number">1.51</span>                <span class="token number">1.51</span>         <span class="token number">0.05</span>        <span class="token number">1.57</span>            <span class="token number">3.01</span>   
+ <span class="token number">8</span>       <span class="token number">1000</span>          <span class="token number">1.47</span>           <span class="token number">2.51</span>         <span class="token number">1.51</span>                <span class="token number">1.51</span>         <span class="token number">0.03</span>        <span class="token number">1.55</span>            <span class="token number">2.51</span>   
+ <span class="token number">16</span>      <span class="token number">1000</span>          <span class="token number">1.48</span>           <span class="token number">2.80</span>         <span class="token number">1.51</span>                <span class="token number">1.51</span>         <span class="token number">0.05</span>        <span class="token number">1.55</span>            <span class="token number">2.80</span>   
+ <span class="token number">32</span>      <span class="token number">1000</span>          <span class="token number">1.49</span>           <span class="token number">2.90</span>         <span class="token number">1.52</span>                <span class="token number">1.52</span>         <span class="token number">0.05</span>        <span class="token number">1.57</span>            <span class="token number">2.90</span>   
+ <span class="token number">64</span>      <span class="token number">1000</span>          <span class="token number">1.52</span>           <span class="token number">2.46</span>         <span class="token number">1.56</span>                <span class="token number">1.56</span>         <span class="token number">0.04</span>        <span class="token number">1.59</span>            <span class="token number">2.46</span>   
+ <span class="token number">128</span>     <span class="token number">1000</span>          <span class="token number">1.55</span>           <span class="token number">2.43</span>         <span class="token number">1.59</span>                <span class="token number">1.59</span>         <span class="token number">0.04</span>        <span class="token number">1.62</span>            <span class="token number">2.43</span>   
+ <span class="token number">256</span>     <span class="token number">1000</span>          <span class="token number">2.02</span>           <span class="token number">3.21</span>         <span class="token number">2.07</span>                <span class="token number">2.07</span>         <span class="token number">0.03</span>        <span class="token number">2.18</span>            <span class="token number">3.21</span>   
+ <span class="token number">512</span>     <span class="token number">1000</span>          <span class="token number">2.17</span>           <span class="token number">3.10</span>         <span class="token number">2.22</span>                <span class="token number">2.23</span>         <span class="token number">0.03</span>        <span class="token number">2.32</span>            <span class="token number">3.10</span>   
+ <span class="token number">1024</span>    <span class="token number">1000</span>          <span class="token number">2.49</span>           <span class="token number">3.67</span>         <span class="token number">2.55</span>                <span class="token number">2.60</span>         <span class="token number">0.09</span>        <span class="token number">2.79</span>            <span class="token number">3.67</span>   
+ <span class="token number">2048</span>    <span class="token number">1000</span>          <span class="token number">2.91</span>           <span class="token number">4.50</span>         <span class="token number">2.99</span>                <span class="token number">3.01</span>         <span class="token number">0.04</span>        <span class="token number">3.15</span>            <span class="token number">4.50</span>   
+ <span class="token number">4096</span>    <span class="token number">1000</span>          <span class="token number">3.77</span>           <span class="token number">4.82</span>         <span class="token number">3.90</span>                <span class="token number">3.90</span>         <span class="token number">0.03</span>        <span class="token number">3.94</span>            <span class="token number">4.82</span>   
+ <span class="token number">8192</span>    <span class="token number">1000</span>          <span class="token number">5.15</span>           <span class="token number">6.26</span>         <span class="token number">5.24</span>                <span class="token number">5.27</span>         <span class="token number">0.08</span>        <span class="token number">5.48</span>            <span class="token number">6.26</span>   
+ <span class="token number">16384</span>   <span class="token number">1000</span>          <span class="token number">7.95</span>           <span class="token number">8.81</span>         <span class="token number">8.08</span>                <span class="token number">8.15</span>         <span class="token number">0.14</span>        <span class="token number">8.56</span>            <span class="token number">8.81</span>   
+ <span class="token number">32768</span>   <span class="token number">1000</span>          <span class="token number">13.67</span>          <span class="token number">14.30</span>        <span class="token number">13.78</span>               <span class="token number">13.84</span>        <span class="token number">0.15</span>        <span class="token number">14.25</span>           <span class="token number">14.30</span>  
+ <span class="token number">65536</span>   <span class="token number">1000</span>          <span class="token number">24.91</span>          <span class="token number">25.66</span>        <span class="token number">25.07</span>               <span class="token number">25.13</span>        <span class="token number">0.14</span>        <span class="token number">25.51</span>           <span class="token number">25.66</span>  
+ <span class="token number">131072</span>  <span class="token number">1000</span>          <span class="token number">47.50</span>          <span class="token number">49.10</span>        <span class="token number">47.71</span>               <span class="token number">47.75</span>        <span class="token number">0.13</span>        <span class="token number">48.11</span>           <span class="token number">49.10</span>  
+ <span class="token number">262144</span>  <span class="token number">1000</span>          <span class="token number">92.71</span>          <span class="token number">93.46</span>        <span class="token number">92.94</span>               <span class="token number">92.97</span>        <span class="token number">0.13</span>        <span class="token number">93.29</span>           <span class="token number">93.46</span>  
+ <span class="token number">524288</span>  <span class="token number">1000</span>          <span class="token number">183.12</span>         <span class="token number">183.79</span>       <span class="token number">183.28</span>              <span class="token number">183.30</span>       <span class="token number">0.08</span>        <span class="token number">183.53</span>          <span class="token number">183.79</span> 
+ <span class="token number">1048576</span> <span class="token number">1000</span>          <span class="token number">363.90</span>         <span class="token number">364.60</span>       <span class="token number">364.09</span>              <span class="token number">364.13</span>       <span class="token number">0.13</span>        <span class="token number">364.48</span>          <span class="token number">364.60</span> 
+ <span class="token number">2097152</span> <span class="token number">1000</span>          <span class="token number">725.45</span>         <span class="token number">726.17</span>       <span class="token number">725.63</span>              <span class="token number">725.67</span>       <span class="token number">0.12</span>        <span class="token number">726.05</span>          <span class="token number">726.17</span> 
+ <span class="token number">4194304</span> <span class="token number">1000</span>          <span class="token number">1448.64</span>        <span class="token number">1451.62</span>      <span class="token number">1448.77</span>             <span class="token number">1448.82</span>      <span class="token number">0.14</span>        <span class="token number">1449.28</span>         <span class="token number">1451.62</span>
+ <span class="token number">8388608</span> <span class="token number">1000</span>          <span class="token number">2894.73</span>        <span class="token number">2896.16</span>      <span class="token number">2894.92</span>             <span class="token number">2894.97</span>      <span class="token number">0.14</span>        <span class="token number">2895.43</span>         <span class="token number">2896.16</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="ib-write-lat"><a href="#ib-write-lat" class="headerlink" title="ib_write_lat"></a>ib_write_lat</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ ib_write_lat -a -d mlx5_0 -R cpn57-eth4
+Requested SQ size might be too big. Try reducing TX depth and/or inline size.
+Current TX depth is <span class="token number">1</span> and  inline size is <span class="token number">220</span> <span class="token builtin class-name">.</span>
+---------------------------------------------------------------------------------------
+                    RDMA_Write Latency Test
+ Dual-port       <span class="token builtin class-name">:</span> OFF      Device         <span class="token builtin class-name">:</span> mlx5_0
+ Number of qps   <span class="token builtin class-name">:</span> <span class="token number">1</span>        Transport <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> IB
+ Connection <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> RC       Using SRQ      <span class="token builtin class-name">:</span> OFF
+ TX depth        <span class="token builtin class-name">:</span> <span class="token number">1</span>
+ Mtu             <span class="token builtin class-name">:</span> <span class="token number">1024</span><span class="token punctuation">[</span>B<span class="token punctuation">]</span>
+ Link <span class="token builtin class-name">type</span>       <span class="token builtin class-name">:</span> Ethernet
+ GID index       <span class="token builtin class-name">:</span> <span class="token number">3</span>
+ Max inline data <span class="token builtin class-name">:</span> <span class="token number">220</span><span class="token punctuation">[</span>B<span class="token punctuation">]</span>
+ rdma_cm QPs     <span class="token builtin class-name">:</span> ON
+ Data ex. method <span class="token builtin class-name">:</span> rdma_cm
+---------------------------------------------------------------------------------------
+ <span class="token builtin class-name">local</span> address: LID 0000 QPN 0x01b1 PSN 0x9f4265
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:58
+ remote address: LID 0000 QPN 0x01b4 PSN 0x941b8f
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:57
+---------------------------------------------------------------------------------------
+ <span class="token comment">#bytes #iterations    t_min[usec]    t_max[usec]  t_typical[usec]    t_avg[usec]    t_stdev[usec]   99% percentile[usec]   99.9% percentile[usec] </span>
+ <span class="token number">2</span>       <span class="token number">1000</span>          <span class="token number">1.44</span>           <span class="token number">2.63</span>         <span class="token number">1.46</span>                <span class="token number">1.46</span>         <span class="token number">0.04</span>        <span class="token number">1.49</span>            <span class="token number">2.63</span>   
+ <span class="token number">4</span>       <span class="token number">1000</span>          <span class="token number">1.43</span>           <span class="token number">2.38</span>         <span class="token number">1.45</span>                <span class="token number">1.45</span>         <span class="token number">0.04</span>        <span class="token number">1.49</span>            <span class="token number">2.38</span>   
+ <span class="token number">8</span>       <span class="token number">1000</span>          <span class="token number">1.43</span>           <span class="token number">2.47</span>         <span class="token number">1.45</span>                <span class="token number">1.45</span>         <span class="token number">0.03</span>        <span class="token number">1.49</span>            <span class="token number">2.47</span>   
+ <span class="token number">16</span>      <span class="token number">1000</span>          <span class="token number">1.44</span>           <span class="token number">2.63</span>         <span class="token number">1.46</span>                <span class="token number">1.46</span>         <span class="token number">0.02</span>        <span class="token number">1.47</span>            <span class="token number">2.63</span>   
+ <span class="token number">32</span>      <span class="token number">1000</span>          <span class="token number">1.47</span>           <span class="token number">2.21</span>         <span class="token number">1.49</span>                <span class="token number">1.49</span>         <span class="token number">0.04</span>        <span class="token number">1.51</span>            <span class="token number">2.21</span>   
+ <span class="token number">64</span>      <span class="token number">1000</span>          <span class="token number">1.47</span>           <span class="token number">2.14</span>         <span class="token number">1.49</span>                <span class="token number">1.50</span>         <span class="token number">0.03</span>        <span class="token number">1.52</span>            <span class="token number">2.14</span>   
+ <span class="token number">128</span>     <span class="token number">1000</span>          <span class="token number">1.53</span>           <span class="token number">2.71</span>         <span class="token number">1.56</span>                <span class="token number">1.56</span>         <span class="token number">0.03</span>        <span class="token number">1.58</span>            <span class="token number">2.71</span>   
+ <span class="token number">256</span>     <span class="token number">1000</span>          <span class="token number">1.96</span>           <span class="token number">2.46</span>         <span class="token number">1.98</span>                <span class="token number">1.98</span>         <span class="token number">0.01</span>        <span class="token number">2.04</span>            <span class="token number">2.46</span>   
+ <span class="token number">512</span>     <span class="token number">1000</span>          <span class="token number">2.19</span>           <span class="token number">2.67</span>         <span class="token number">2.22</span>                <span class="token number">2.23</span>         <span class="token number">0.03</span>        <span class="token number">2.31</span>            <span class="token number">2.67</span>   
+ <span class="token number">1024</span>    <span class="token number">1000</span>          <span class="token number">2.52</span>           <span class="token number">3.33</span>         <span class="token number">2.59</span>                <span class="token number">2.60</span>         <span class="token number">0.04</span>        <span class="token number">2.68</span>            <span class="token number">3.33</span>   
+ <span class="token number">2048</span>    <span class="token number">1000</span>          <span class="token number">2.95</span>           <span class="token number">3.75</span>         <span class="token number">3.01</span>                <span class="token number">3.03</span>         <span class="token number">0.05</span>        <span class="token number">3.17</span>            <span class="token number">3.75</span>   
+ <span class="token number">4096</span>    <span class="token number">1000</span>          <span class="token number">3.74</span>           <span class="token number">4.35</span>         <span class="token number">3.90</span>                <span class="token number">3.90</span>         <span class="token number">0.02</span>        <span class="token number">3.94</span>            <span class="token number">4.35</span>   
+ <span class="token number">8192</span>    <span class="token number">1000</span>          <span class="token number">5.17</span>           <span class="token number">6.14</span>         <span class="token number">5.28</span>                <span class="token number">5.30</span>         <span class="token number">0.07</span>        <span class="token number">5.45</span>            <span class="token number">6.14</span>   
+ <span class="token number">16384</span>   <span class="token number">1000</span>          <span class="token number">8.03</span>           <span class="token number">8.62</span>         <span class="token number">8.14</span>                <span class="token number">8.17</span>         <span class="token number">0.10</span>        <span class="token number">8.44</span>            <span class="token number">8.62</span>   
+ <span class="token number">32768</span>   <span class="token number">1000</span>          <span class="token number">13.66</span>          <span class="token number">19.92</span>        <span class="token number">13.80</span>               <span class="token number">13.83</span>        <span class="token number">0.11</span>        <span class="token number">14.16</span>           <span class="token number">19.92</span>  
+ <span class="token number">65536</span>   <span class="token number">1000</span>          <span class="token number">24.95</span>          <span class="token number">25.67</span>        <span class="token number">25.05</span>               <span class="token number">25.09</span>        <span class="token number">0.09</span>        <span class="token number">25.40</span>           <span class="token number">25.67</span>  
+ <span class="token number">131072</span>  <span class="token number">1000</span>          <span class="token number">47.54</span>          <span class="token number">59.08</span>        <span class="token number">47.71</span>               <span class="token number">47.73</span>        <span class="token number">0.10</span>        <span class="token number">47.95</span>           <span class="token number">59.08</span>  
+ <span class="token number">262144</span>  <span class="token number">1000</span>          <span class="token number">92.73</span>          <span class="token number">93.65</span>        <span class="token number">92.89</span>               <span class="token number">92.92</span>        <span class="token number">0.10</span>        <span class="token number">93.30</span>           <span class="token number">93.65</span>  
+ <span class="token number">524288</span>  <span class="token number">1000</span>          <span class="token number">183.09</span>         <span class="token number">183.53</span>       <span class="token number">183.28</span>              <span class="token number">183.30</span>       <span class="token number">0.09</span>        <span class="token number">183.49</span>          <span class="token number">183.53</span> 
+ <span class="token number">1048576</span> <span class="token number">1000</span>          <span class="token number">363.91</span>         <span class="token number">364.46</span>       <span class="token number">364.06</span>              <span class="token number">364.09</span>       <span class="token number">0.10</span>        <span class="token number">364.39</span>          <span class="token number">364.46</span> 
+ <span class="token number">2097152</span> <span class="token number">1000</span>          <span class="token number">725.47</span>         <span class="token number">731.55</span>       <span class="token number">725.62</span>              <span class="token number">725.65</span>       <span class="token number">0.12</span>        <span class="token number">725.96</span>          <span class="token number">731.55</span> 
+ <span class="token number">4194304</span> <span class="token number">1000</span>          <span class="token number">1448.63</span>        <span class="token number">1449.20</span>      <span class="token number">1448.77</span>             <span class="token number">1448.80</span>      <span class="token number">0.10</span>        <span class="token number">1449.07</span>         <span class="token number">1449.20</span>
+ <span class="token number">8388608</span> <span class="token number">1000</span>          <span class="token number">2894.77</span>        <span class="token number">2897.00</span>      <span class="token number">2894.93</span>             <span class="token number">2894.97</span>      <span class="token number">0.12</span>        <span class="token number">2895.30</span>         <span class="token number">2897.00</span>
+---------------------------------------------------------------------------------------<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="ib-read-lat"><a href="#ib-read-lat" class="headerlink" title="ib_read_lat"></a>ib_read_lat</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ ib_read_lat -a -d mlx5_0 -R cpn57-eth4
+Requested SQ size might be too big. Try reducing TX depth and/or inline size.
+Current TX depth is <span class="token number">1</span> and  inline size is <span class="token number">0</span> <span class="token builtin class-name">.</span>
+---------------------------------------------------------------------------------------
+                    RDMA_Read Latency Test
+ Dual-port       <span class="token builtin class-name">:</span> OFF      Device         <span class="token builtin class-name">:</span> mlx5_0
+ Number of qps   <span class="token builtin class-name">:</span> <span class="token number">1</span>        Transport <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> IB
+ Connection <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> RC       Using SRQ      <span class="token builtin class-name">:</span> OFF
+ TX depth        <span class="token builtin class-name">:</span> <span class="token number">1</span>
+ Mtu             <span class="token builtin class-name">:</span> <span class="token number">1024</span><span class="token punctuation">[</span>B<span class="token punctuation">]</span>
+ Link <span class="token builtin class-name">type</span>       <span class="token builtin class-name">:</span> Ethernet
+ GID index       <span class="token builtin class-name">:</span> <span class="token number">3</span>
+ Outstand reads  <span class="token builtin class-name">:</span> <span class="token number">16</span>
+ rdma_cm QPs     <span class="token builtin class-name">:</span> ON
+ Data ex. method <span class="token builtin class-name">:</span> rdma_cm
+---------------------------------------------------------------------------------------
+ <span class="token builtin class-name">local</span> address: LID 0000 QPN 0x01b3 PSN 0x559f79
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:58
+ remote address: LID 0000 QPN 0x01b6 PSN 0xabbde3
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:57
+---------------------------------------------------------------------------------------
+ <span class="token comment">#bytes #iterations    t_min[usec]    t_max[usec]  t_typical[usec]    t_avg[usec]    t_stdev[usec]   99% percentile[usec]   99.9% percentile[usec] </span>
+ <span class="token number">2</span>       <span class="token number">1000</span>          <span class="token number">2.66</span>           <span class="token number">4.60</span>         <span class="token number">2.70</span>                <span class="token number">2.72</span>         <span class="token number">0.08</span>        <span class="token number">2.91</span>            <span class="token number">4.60</span>   
+ <span class="token number">4</span>       <span class="token number">1000</span>          <span class="token number">2.68</span>           <span class="token number">4.70</span>         <span class="token number">2.73</span>                <span class="token number">2.73</span>         <span class="token number">0.02</span>        <span class="token number">2.79</span>            <span class="token number">4.70</span>   
+ <span class="token number">8</span>       <span class="token number">1000</span>          <span class="token number">2.68</span>           <span class="token number">4.27</span>         <span class="token number">2.73</span>                <span class="token number">2.73</span>         <span class="token number">0.02</span>        <span class="token number">2.78</span>            <span class="token number">4.27</span>   
+ <span class="token number">16</span>      <span class="token number">1000</span>          <span class="token number">2.68</span>           <span class="token number">4.05</span>         <span class="token number">2.72</span>                <span class="token number">2.73</span>         <span class="token number">0.04</span>        <span class="token number">2.88</span>            <span class="token number">4.05</span>   
+ <span class="token number">32</span>      <span class="token number">1000</span>          <span class="token number">2.67</span>           <span class="token number">6.25</span>         <span class="token number">2.74</span>                <span class="token number">2.74</span>         <span class="token number">0.04</span>        <span class="token number">2.87</span>            <span class="token number">6.25</span>   
+ <span class="token number">64</span>      <span class="token number">1000</span>          <span class="token number">2.70</span>           <span class="token number">3.78</span>         <span class="token number">2.75</span>                <span class="token number">2.76</span>         <span class="token number">0.05</span>        <span class="token number">2.91</span>            <span class="token number">3.78</span>   
+ <span class="token number">128</span>     <span class="token number">1000</span>          <span class="token number">2.80</span>           <span class="token number">4.54</span>         <span class="token number">2.85</span>                <span class="token number">2.87</span>         <span class="token number">0.06</span>        <span class="token number">3.15</span>            <span class="token number">4.54</span>   
+ <span class="token number">256</span>     <span class="token number">1000</span>          <span class="token number">2.89</span>           <span class="token number">4.72</span>         <span class="token number">2.95</span>                <span class="token number">2.97</span>         <span class="token number">0.07</span>        <span class="token number">3.29</span>            <span class="token number">4.72</span>   
+ <span class="token number">512</span>     <span class="token number">1000</span>          <span class="token number">3.07</span>           <span class="token number">4.02</span>         <span class="token number">3.12</span>                <span class="token number">3.13</span>         <span class="token number">0.04</span>        <span class="token number">3.45</span>            <span class="token number">4.02</span>   
+ <span class="token number">1024</span>    <span class="token number">1000</span>          <span class="token number">3.39</span>           <span class="token number">5.71</span>         <span class="token number">3.44</span>                <span class="token number">3.47</span>         <span class="token number">0.09</span>        <span class="token number">3.77</span>            <span class="token number">5.71</span>   
+ <span class="token number">2048</span>    <span class="token number">1000</span>          <span class="token number">3.83</span>           <span class="token number">4.49</span>         <span class="token number">3.93</span>                <span class="token number">3.96</span>         <span class="token number">0.07</span>        <span class="token number">4.24</span>            <span class="token number">4.49</span>   
+ <span class="token number">4096</span>    <span class="token number">1000</span>          <span class="token number">4.68</span>           <span class="token number">5.13</span>         <span class="token number">4.84</span>                <span class="token number">4.84</span>         <span class="token number">0.05</span>        <span class="token number">5.02</span>            <span class="token number">5.13</span>   
+ <span class="token number">8192</span>    <span class="token number">1000</span>          <span class="token number">6.08</span>           <span class="token number">6.69</span>         <span class="token number">6.25</span>                <span class="token number">6.28</span>         <span class="token number">0.11</span>        <span class="token number">6.59</span>            <span class="token number">6.69</span>   
+ <span class="token number">16384</span>   <span class="token number">1000</span>          <span class="token number">8.89</span>           <span class="token number">9.69</span>         <span class="token number">9.08</span>                <span class="token number">9.13</span>         <span class="token number">0.14</span>        <span class="token number">9.56</span>            <span class="token number">9.69</span>   
+ <span class="token number">32768</span>   <span class="token number">1000</span>          <span class="token number">14.56</span>          <span class="token number">15.38</span>        <span class="token number">14.76</span>               <span class="token number">14.80</span>        <span class="token number">0.14</span>        <span class="token number">15.21</span>           <span class="token number">15.38</span>  
+ <span class="token number">65536</span>   <span class="token number">1000</span>          <span class="token number">25.83</span>          <span class="token number">26.57</span>        <span class="token number">25.99</span>               <span class="token number">26.04</span>        <span class="token number">0.13</span>        <span class="token number">26.52</span>           <span class="token number">26.57</span>  
+ <span class="token number">131072</span>  <span class="token number">1000</span>          <span class="token number">48.33</span>          <span class="token number">49.28</span>        <span class="token number">48.61</span>               <span class="token number">48.68</span>        <span class="token number">0.18</span>        <span class="token number">49.14</span>           <span class="token number">49.28</span>  
+ <span class="token number">262144</span>  <span class="token number">1000</span>          <span class="token number">93.57</span>          <span class="token number">94.52</span>        <span class="token number">93.76</span>               <span class="token number">93.84</span>        <span class="token number">0.16</span>        <span class="token number">94.32</span>           <span class="token number">94.52</span>  
+ <span class="token number">524288</span>  <span class="token number">1000</span>          <span class="token number">183.96</span>         <span class="token number">184.85</span>       <span class="token number">184.17</span>              <span class="token number">184.24</span>       <span class="token number">0.17</span>        <span class="token number">184.70</span>          <span class="token number">184.85</span> 
+ <span class="token number">1048576</span> <span class="token number">1000</span>          <span class="token number">364.72</span>         <span class="token number">365.50</span>       <span class="token number">364.96</span>              <span class="token number">365.03</span>       <span class="token number">0.16</span>        <span class="token number">365.46</span>          <span class="token number">365.50</span> 
+ <span class="token number">2097152</span> <span class="token number">1000</span>          <span class="token number">726.30</span>         <span class="token number">727.26</span>       <span class="token number">726.54</span>              <span class="token number">726.60</span>       <span class="token number">0.14</span>        <span class="token number">727.03</span>          <span class="token number">727.26</span> 
+ <span class="token number">4194304</span> <span class="token number">1000</span>          <span class="token number">1449.43</span>        <span class="token number">1450.97</span>      <span class="token number">1449.64</span>             <span class="token number">1449.70</span>      <span class="token number">0.14</span>        <span class="token number">1450.15</span>         <span class="token number">1450.97</span>
+ <span class="token number">8388608</span> <span class="token number">1000</span>          <span class="token number">2895.62</span>        <span class="token number">2896.74</span>      <span class="token number">2895.84</span>             <span class="token number">2895.91</span>      <span class="token number">0.16</span>        <span class="token number">2896.40</span>         <span class="token number">2896.74</span>
+---------------------------------------------------------------------------------------<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="ib-atomic-lat"><a href="#ib-atomic-lat" class="headerlink" title="ib_atomic_lat"></a>ib_atomic_lat</h3><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ ib_atomic_lat -a -d mlx5_0 -R cpn57-eth4
+---------------------------------------------------------------------------------------
+                    Atomic FETCH_AND_ADD Latency Test
+ Dual-port       <span class="token builtin class-name">:</span> OFF      Device         <span class="token builtin class-name">:</span> mlx5_0
+ Number of qps   <span class="token builtin class-name">:</span> <span class="token number">1</span>        Transport <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> IB
+ Connection <span class="token builtin class-name">type</span> <span class="token builtin class-name">:</span> RC       Using SRQ      <span class="token builtin class-name">:</span> OFF
+ TX depth        <span class="token builtin class-name">:</span> <span class="token number">1</span>
+ Mtu             <span class="token builtin class-name">:</span> <span class="token number">1024</span><span class="token punctuation">[</span>B<span class="token punctuation">]</span>
+ Link <span class="token builtin class-name">type</span>       <span class="token builtin class-name">:</span> Ethernet
+ GID index       <span class="token builtin class-name">:</span> <span class="token number">3</span>
+ Outstand reads  <span class="token builtin class-name">:</span> <span class="token number">16</span>
+ rdma_cm QPs     <span class="token builtin class-name">:</span> ON
+ Data ex. method <span class="token builtin class-name">:</span> rdma_cm
+---------------------------------------------------------------------------------------
+ <span class="token builtin class-name">local</span> address: LID 0000 QPN 0x01b5 PSN 0xf3ebd6
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:58
+ remote address: LID 0000 QPN 0x01b8 PSN 0xdd4456
+ GID: 00:00:00:00:00:00:00:00:00:00:255:255:10:25:01:57
+---------------------------------------------------------------------------------------
+ <span class="token comment">#bytes #iterations    t_min[usec]    t_max[usec]  t_typical[usec]    t_avg[usec]    t_stdev[usec]   99% percentile[usec]   99.9% percentile[usec] </span>
+ <span class="token number">8</span>       <span class="token number">1000</span>          <span class="token number">2.69</span>           <span class="token number">5.85</span>         <span class="token number">2.74</span>                <span class="token number">2.75</span>         <span class="token number">0.05</span>        <span class="token number">2.94</span>            <span class="token number">5.85</span>   
+---------------------------------------------------------------------------------------<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Benchmark/" rel="tag"># Benchmark</a>
+              <a href="/tags/RoCE/" rel="tag"># RoCE</a>
+              <a href="/tags/Perftest/" rel="tag"># Perftest</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/MPI/Intel%20MPI/I_MPI_FABRICS/" rel="prev" title="I_MPI_FABRICS">
+                  <i class="fa fa-chevron-left"></i> I_MPI_FABRICS
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/RoCE/OpenMPI%E4%BD%BF%E7%94%A8RoCEv2%E7%9A%84%E6%96%B9%E6%B3%95/" rel="next" title="OpenMPI使用RoCEv2的方法">
+                  OpenMPI使用RoCEv2的方法 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

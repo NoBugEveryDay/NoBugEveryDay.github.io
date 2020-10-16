@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要由于在VPS上已经安装了LAMP+WordPress，但是WordPress排版爆炸了，所以想换着试一下，但是还不想完全弃用原来的，想把两个都部署上作为一个过渡">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用Docker部署Hexo">
+<meta property="og:url" content="http://blog.sysu.tech/Hexo/%E4%BD%BF%E7%94%A8DOCKER%E9%83%A8%E7%BD%B2HEXO/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要由于在VPS上已经安装了LAMP+WordPress，但是WordPress排版爆炸了，所以想换着试一下，但是还不想完全弃用原来的，想把两个都部署上作为一个过渡">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/Hexo/%E4%BD%BF%E7%94%A8DOCKER%E9%83%A8%E7%BD%B2HEXO/1564761064698.png">
+<meta property="article:published_time" content="2019-10-29T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.113Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Docker">
+<meta property="article:tag" content="Hexo">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/Hexo/%E4%BD%BF%E7%94%A8DOCKER%E9%83%A8%E7%BD%B2HEXO/1564761064698.png">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Hexo/%E4%BD%BF%E7%94%A8DOCKER%E9%83%A8%E7%BD%B2HEXO/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>使用Docker部署Hexo | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83"><span class="nav-number">2.</span> <span class="nav-text">环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85docker"><span class="nav-number">3.</span> <span class="nav-text">安装docker</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8Docker%E4%B8%AD%E5%AE%89%E8%A3%85Ubuntu"><span class="nav-number">4.</span> <span class="nav-text">在Docker中安装Ubuntu</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%B9%E5%99%A8%E5%86%85%E8%A3%85HEXO"><span class="nav-number">5.</span> <span class="nav-text">容器内装HEXO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%9D%E5%AD%98Hexo%E9%95%9C%E5%83%8F"><span class="nav-number">6.</span> <span class="nav-text">保存Hexo镜像</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96%E5%8D%9A%E5%AE%A2%E7%9B%AE%E5%BD%95"><span class="nav-number">7.</span> <span class="nav-text">初始化博客目录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E5%AE%B9%E5%99%A8%E5%B9%B6%E5%90%AF%E5%8A%A8Hexo"><span class="nav-number">8.</span> <span class="nav-text">启动容器并启动Hexo</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B0%E5%BB%BA%E6%96%87%E7%AB%A0"><span class="nav-number">9.</span> <span class="nav-text">新建文章</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%BA%9B%E6%B5%8B%E8%AF%95"><span class="nav-number">10.</span> <span class="nav-text">一些测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E6%96%87%E7%AB%A0%E4%B8%AD%E6%8F%92%E5%85%A5%E5%9B%BE%E7%89%87"><span class="nav-number">11.</span> <span class="nav-text">在文章中插入图片</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">12.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0"><span class="nav-number">13.</span> <span class="nav-text">更新</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Hexo/%E4%BD%BF%E7%94%A8DOCKER%E9%83%A8%E7%BD%B2HEXO/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          使用Docker部署Hexo
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-10-30 00:00:00" itemprop="dateCreated datePublished" datetime="2019-10-30T00:00:00+08:00">2019-10-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Hexo/" itemprop="url" rel="index"><span itemprop="name">Hexo</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>由于在VPS上已经安装了LAMP+WordPress，但是WordPress排版爆炸了，所以想换着试一下，但是还不想完全弃用原来的，想把两个都部署上作为一个过渡</p>
+<a id="more"></a> 
+
+<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><p>阿里云轻量型应用服务器Ubuntu-1核 - 2GB内存 - 系统盘 40GB SSD云盘 - 深圳</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">$ <span class="token function">uname</span> -a
+Linux SZ-vpn <span class="token number">4.4</span>.0-93-generic <span class="token comment">#116-Ubuntu SMP Fri Aug 11 21:17:51 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<h2 id="安装docker"><a href="#安装docker" class="headerlink" title="安装docker"></a>安装docker</h2><p>参考：<a target="_blank" rel="noopener" href="https://blog.csdn.net/u010889616/article/details/80170767">https://blog.csdn.net/u010889616/article/details/80170767</a></p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">apt</span> <span class="token function">install</span> docker.io
+systemctl start docker
+systemctl <span class="token builtin class-name">enable</span> docker<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>查看是否安装成功</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ docker -v
+Docker version <span class="token number">17.12</span>.1-ce, build 7390fc6<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>修改国内镜像源</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token function">sudo</span> <span class="token function">mkdir</span> -p /etc/docker
+<span class="token function">sudo</span> <span class="token function">tee</span> /etc/docker/daemon.json <span class="token operator">&lt;&lt;-</span><span class="token string">'EOF'
+&#123;
+  "registry-mirrors": ["https://ergtnl8j.mirror.aliyuncs.com"]
+&#125;
+EOF</span>
+<span class="token function">sudo</span> systemctl daemon-reload
+<span class="token function">sudo</span> systemctl restart docker<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="在Docker中安装Ubuntu"><a href="#在Docker中安装Ubuntu" class="headerlink" title="在Docker中安装Ubuntu"></a>在Docker中安装Ubuntu</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">docker pull ubuntu:18.04<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h2 id="容器内装HEXO"><a href="#容器内装HEXO" class="headerlink" title="容器内装HEXO"></a>容器内装HEXO</h2><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">docker run -it ubuntu
+<span class="token function">apt-get</span> update
+<span class="token function">apt-get</span> <span class="token function">install</span> -y <span class="token function">wget</span>
+<span class="token function">apt-get</span> <span class="token function">install</span> -y git-core
+<span class="token builtin class-name">cd</span> /root
+<span class="token function">mkdir</span> hexo
+<span class="token builtin class-name">cd</span> hexo
+<span class="token function">wget</span> https://raw.github.com/creationix/nvm/v0.33.11/install.sh
+<span class="token function">chmod</span> +x install.sh
+./install.sh
+<span class="token assign-left variable">NVM_NODEJS_ORG_MIRROR</span><span class="token operator">=</span>https://npm.taobao.org/mirrors/node nvm <span class="token function">install</span> stable <span class="token comment"># 换源</span>
+<span class="token function">npm</span> <span class="token function">install</span> -g hexo-cli
+<span class="token function">npm</span> <span class="token function">install</span> hexo-server --save
+<span class="token function">npm</span> <span class="token function">install</span> hexo-asset-image –save<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="保存Hexo镜像"><a href="#保存Hexo镜像" class="headerlink" title="保存Hexo镜像"></a>保存Hexo镜像</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">docker commit -m <span class="token string">"Hexo origin submit"</span> -a <span class="token string">"Orange"</span> 1ac140d51bcf hexo<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h2 id="初始化博客目录"><a href="#初始化博客目录" class="headerlink" title="初始化博客目录"></a>初始化博客目录</h2><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">mkdir</span> blog <span class="token comment"># 在host上建一个目录</span>
+docker run -it --name<span class="token operator">=</span><span class="token string">"hexo-server"</span> -v /root/hexo/blog:/root/hexo/blog hexo
+<span class="token builtin class-name">cd</span> /root/hexo
+hexo init blog <span class="token comment"># 新建工作目录</span>
+<span class="token builtin class-name">cd</span> blog
+<span class="token function">npm</span> <span class="token function">install</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="启动容器并启动Hexo"><a href="#启动容器并启动Hexo" class="headerlink" title="启动容器并启动Hexo"></a>启动容器并启动Hexo</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">docker run -d --name<span class="token operator">=</span><span class="token string">"hexo"</span> -p <span class="token number">80</span>:4000 -v /root/hexo/blog:/root/hexo/blog hexo /root/hexo/blog/start.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p><code>start.sh</code>如下</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token shebang important">#!/bin/bash</span>
+
+<span class="token builtin class-name">.</span> /root/.nvm/nvm.sh
+<span class="token builtin class-name">.</span> /root/.nvm/bash_completion
+
+<span class="token builtin class-name">cd</span> /root/hexo/blog
+hexo clean
+/root/hexo/blog/convert-image.sh /root/hexo/blog/source/_posts/ <span class="token comment"># 转换图片引用方式脚本</span>
+hexo generate
+hexo server<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="新建文章"><a href="#新建文章" class="headerlink" title="新建文章"></a>新建文章</h2><pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">docker <span class="token builtin class-name">exec</span> -it CONTAINER_ID /bin/bash
+hexo new <span class="token string">"TITLE"</span> -p <span class="token environment constant">PATH</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>当然直接新建是最方便的</p>
+<h2 id="一些测试"><a href="#一些测试" class="headerlink" title="一些测试"></a>一些测试</h2><ol>
+<li>在<code>source/_post</code>文件夹下可以建文件夹，在文件夹下新建md可以直接</li>
+<li>文件名可以为中文</li>
+<li>文件夹名可以为中文</li>
+</ol>
+<h2 id="在文章中插入图片"><a href="#在文章中插入图片" class="headerlink" title="在文章中插入图片"></a>在文章中插入图片</h2><p>参考：<a target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/asset-folders">https://hexo.io/zh-cn/docs/asset-folders</a></p>
+<p>在Hexo的文章中插入图片是最坑的，非要用它自己特定的语法，在本地编辑的时候没法预览。虽然说有相关插件，但是到了Hexo3，这些插件要么在文章预览时显示图片，点进去不显示，要么在文章预览时不显示，点进去才显示，非常智障。</p>
+<p>为了在本地编辑能够预览，上传之后也能正常显示，干脆写了个脚本在启动Hexo server之前来转换格式。</p>
+<p>为了方便整理每篇文章的图片，我选择在每篇文章的旁边建一个同名目录放图片的形式，这需要设置<code>_config.yml</code>的<code>post_asset_folder: true</code></p>
+<p>转换脚本如下</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token comment">#/bin/bash</span>
+
+<span class="token keyword">if</span> <span class="token punctuation">[</span> -z <span class="token variable">$1</span> <span class="token punctuation">]</span>
+<span class="token keyword">then</span>
+    <span class="token builtin class-name">echo</span> <span class="token string">"Use with path!"</span>
+    <span class="token builtin class-name">exit</span>
+<span class="token keyword">fi</span>
+
+<span class="token builtin class-name">echo</span> <span class="token builtin class-name">cd</span> <span class="token variable">$1</span>
+<span class="token builtin class-name">cd</span> <span class="token variable">$1</span>
+<span class="token keyword">for</span> <span class="token for-or-select variable">file</span> <span class="token keyword">in</span> <span class="token variable"><span class="token variable">`</span><span class="token function">ls</span><span class="token variable">`</span></span>
+<span class="token keyword">do</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> -d <span class="token variable">$file</span> <span class="token punctuation">]</span>
+    <span class="token keyword">then</span>
+        /root/hexo/blog/convert-image.sh <span class="token variable"><span class="token variable">`</span><span class="token builtin class-name">pwd</span><span class="token variable">`</span></span>/<span class="token variable">$file</span>
+    <span class="token keyword">elif</span> <span class="token punctuation">[</span> <span class="token string">"<span class="token variable">$&#123;file<span class="token operator">##</span>*.&#125;</span>"</span> <span class="token operator">=</span> <span class="token string">"md"</span> <span class="token punctuation">]</span>
+    <span class="token keyword">then</span>
+        <span class="token builtin class-name">echo</span> convert <span class="token variable">$file</span>
+        <span class="token function">sed</span> -i <span class="token string">"s/!\[.\+\](\(.\+\)\/\(.\+\))/&#123;% asset_img <span class="token entity" title="\2">\2</span> <span class="token entity" title="\1">\1</span> %&#125;/"</span> <span class="token variable">$file</span>
+    <span class="token keyword">fi</span>
+<span class="token keyword">done</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>个人觉得Hexo还是非常完美的，几乎完美符合我对个人博客的预期，该有的功能都有，累赘的东西一个都没有，除了文章中插入图片的方法过于狗屎。希望后面不要打脸叭~</p>
+<img src="/Hexo/%E4%BD%BF%E7%94%A8DOCKER%E9%83%A8%E7%BD%B2HEXO/1564761064698.png" class="">
+
+<h2 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h2><p>现在使用了基于<code>Seafile</code>的NAS，也将Hexo迁移到了NAS上。博客在PC上保存了之后能自动同步上NAS，所以将Hexo的启动逻辑改为了先同步更改到Hexo目录</p>
+<p><code>start.sh</code>更改为如下</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token shebang important">#!/bin/bash</span>
+
+<span class="token builtin class-name">.</span> /root/.nvm/nvm.sh
+<span class="token builtin class-name">.</span> /root/.nvm/bash_completion
+
+<span class="token builtin class-name">cd</span> /root/hexo/blog
+hexo clean
+<span class="token function">rsync</span> -axvh --delete /root/ori-post/* /root/hexo/blog/source/_posts
+/root/hexo/blog/convert-image.sh /root/hexo/blog/source/_posts/
+hexo generate
+hexo server<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>启动命令</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">docker run -d <span class="token punctuation">\</span>
+--name<span class="token operator">=</span><span class="token string">"hexo"</span> <span class="token punctuation">\</span>
+-p <span class="token number">80</span>:4000 <span class="token punctuation">\</span>
+-v /ssd-raid/hexo/blog:/root/hexo/blog <span class="token punctuation">\</span>
+-v <span class="token string">"/wolf1/seafile/backup/feng/admin/virtual-drive-dir/My Libraries/学习/blog"</span>:/root/ori-post <span class="token punctuation">\</span>
+hexo /root/hexo/blog/start.sh<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>由于每一次修改都要重启Hexo，其实有点浪费，干脆写一个能自动更新的脚本吧</p>
+<p><code>update.sh</code>如下</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell"><span class="token shebang important">#!/bin/bash</span>
+
+<span class="token builtin class-name">cd</span> /root/hexo/blog
+<span class="token function">rsync</span> -axvh --delete /root/ori-post/* /root/hexo/blog/source/_posts
+hexo clean
+/root/hexo/blog/convert-image.sh /root/hexo/blog/source/_posts/
+hexo generate<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>执行update.sh的命令如下</p>
+<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">docker <span class="token builtin class-name">exec</span> hexo /root/hexo/blog/update.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>但是使用这个脚本会导致图片爆炸……算了……还是暴力<code>docker restart hexo</code>吧</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Docker/" rel="tag"># Docker</a>
+              <a href="/tags/Hexo/" rel="tag"># Hexo</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Linux/%E6%93%8D%E4%BD%9C%E6%8A%80%E5%B7%A7/Linux%E5%88%86%E5%8C%BA%E5%88%A0%E9%99%A4%E5%90%8E%E6%81%A2%E5%A4%8D/" rel="prev" title="Linux分区删除后恢复">
+                  <i class="fa fa-chevron-left"></i> Linux分区删除后恢复
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Docker/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Transmission/" rel="next" title="使用Docker安装Transmission">
+                  使用Docker安装Transmission <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

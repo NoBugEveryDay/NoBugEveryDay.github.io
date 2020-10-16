@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要User namespace 是 Linux 3.8 新增的一种 namespace，用于隔离安全相关的资源，包括 user IDs and group IDs，keys, 和 capabilities。同样一个用户的 user ID 和 group ID 在不同的 user namespace 中可以不一样(与 PID nanespace 类似)。换句话说，一个用户可以在一个 user na">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【转】Linux Namespace User">
+<meta property="og:url" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要User namespace 是 Linux 3.8 新增的一种 namespace，用于隔离安全相关的资源，包括 user IDs and group IDs，keys, 和 capabilities。同样一个用户的 user ID 和 group ID 在不同的 user namespace 中可以不一样(与 PID nanespace 类似)。换句话说，一个用户可以在一个 user na">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133348283-931737385.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133427854-544045366.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133500261-2053538944.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133548661-668231418.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133655212-92150902.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133727288-640955460.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133836060-814501763.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133909229-1475966336.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133939711-828980199.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134011875-837006315.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134039385-768691240.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134119692-1735937774.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134156273-1568788424.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134226821-1964970731.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134317374-1734621745.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134356259-1197147050.png">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134506481-2054964518.png">
+<meta property="article:published_time" content="2019-08-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.147Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Namespace">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133348283-931737385.png">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>【转】Linux Namespace User | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-user-namespace"><span class="nav-number">2.</span> <span class="nav-text">创建 user namespace</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%90%86%E8%A7%A3-UID-%E5%92%8C-GID-%E7%9A%84%E6%98%A0%E5%B0%84"><span class="nav-number">3.</span> <span class="nav-text">理解 UID 和 GID 的映射</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#User-namespace-%E4%B8%8E%E5%85%B6%E5%AE%83-namespace-%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="nav-number">4.</span> <span class="nav-text">User namespace 与其它 namespace 的关系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Linux/Namespace/Linux%20Namespace%20User/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【转】Linux Namespace User
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-08-19 00:00:00" itemprop="dateCreated datePublished" datetime="2019-08-19T00:00:00+08:00">2019-08-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/Namespace/" itemprop="url" rel="index"><span itemprop="name">Namespace</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>User namespace 是 Linux 3.8 新增的一种 namespace，用于隔离安全相关的资源，包括 <strong>user IDs and group IDs</strong>，<strong>keys</strong>, 和 <strong>capabilities</strong>。同样一个用户的 user ID 和 group ID 在不同的 user namespace 中可以不一样(与 PID nanespace 类似)。换句话说，一个用户可以在一个 user namespace 中是普通用户，但在另一个 user namespace 中是超级用户。</p>
+<a id="more"></a> 
+
+<p>User namespace 可以嵌套(目前内核控制最多32层)，除了系统默认的 user namespace 外，所有的 user namespace 都有一个父 user namespace，每个 user namespace 都可以有零到多个子 user namespace。 当在一个进程中调用 unshare 或者 clone 创建新的 user namespace 时，当前进程原来所在的 user namespace 为父 user namespace，新的 user namespace 为子 user namespace。</p>
+<p>说明：本文的演示环境为 ubuntu 16.04。</p>
+<h2 id="创建-user-namespace"><a href="#创建-user-namespace" class="headerlink" title="创建 user namespace"></a>创建 user namespace</h2><p>我们可以通过 unshare 命令的 –user 选项来创建新的 user namespace：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ unshare -user -r /bin/bash<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133348283-931737385.png" class="">
+
+<p>通过 -r 参数，我们把新的 user namespace 中的 root 用户映射到了外面的 nick 用户(接下来会介绍映射相关的概念)。在新的 user namespace 中，root 用户是有权限创建其它的 namespace 的，比如 uts namespace。这是因为当前的 bash 进程拥有全部的 capabilities：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133427854-544045366.png" class="">
+
+<p>下面我们创建一个新的 uts namespace 试试：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ unshare --uts /bin/bash<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133500261-2053538944.png" class="">
+
+<p>我们看到，新的 uts namespace 被顺利的创建了。这是因为除了 user namespace 外，<strong>创建其它类型的 namespace 都需要 CAP_SYS_ADMIN 的 capability</strong>。当新的 user namespace 创建并映射好 uid、gid 了之后， <strong>这个 user namespace 的第一个进程将拥有完整的所有 capabilities，意味着它就可以创建新的其它类型 namespace。</strong></p>
+<p>其实没有必要把上面的操作(创建两个 namespace)分成两步，我们可以通 unshare 一次创建多个 namespace：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133548661-668231418.png" class="">
+
+<p>在 unshare 的实现中，其实就是传入了 CLONE_NEWUSER | CLONE_NEWUTS，大致如下：<br><strong>unshare(CLONE_NEWUSER | CLONE_NEWUTS);</strong><br>在上面这种情况下，<strong>内核会保证 CLONE_NEWUSER 先被执行，然后执行剩下的其他 CLONE_NEW*，这样就使得不用 root 用户而创建新的容器成为可能</strong>，这条规则对于clone 函数也同样适用。</p>
+<h2 id="理解-UID-和-GID-的映射"><a href="#理解-UID-和-GID-的映射" class="headerlink" title="理解 UID 和 GID 的映射"></a>理解 UID 和 GID 的映射</h2><p>在前面的演示中我们提到了用户在 user namespace 之间的映射，下面我们同样通过演示来理解映射是什么。我们先查看下当前用户的 ID 和 user namespace 情况：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133655212-92150902.png" class="">
+
+<p>然后执行 unshare –user /bin/bash 命令创建一个新的 user namespace，注意这次没 -r 参数：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ unshare --user /bin/bash<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133727288-640955460.png" class="">
+
+<p>在新的 user namespace 中，当前用户变成了 nobody，并且 ID 也变成了 65534。<br>这是因为我们<strong>还没有映射父 user namespace 的 user ID 和 group ID 到子 user namespace 中</strong>来，这一步是必须的，因为这样系统才能控制一个 user namespace 里的用户在其他 user namespace 中的权限(比如给其它 user namespace 中的进程发送信号，或者访问属于其它 user namespace 挂载的文件)。<br>如果没有映射，当在新的 user namespace 中用 getuid() 和 getgid() 获取 user ID 和 group ID 时，系统将返回文件 /proc/sys/kernel/overflowuid 中定义的 user ID 以及 proc/sys/kernel/overflowgid 中定义的 group ID，它们的默认值都是 65534。也就是说如果没有指定映射关系的话，会默认会把 ID 映射到 65534。</p>
+<p><strong>下面我们来完成 nick 用户在新的 user namespace 中的映射。</strong><br>映射 ID 的方法就是添加映射信息到 /proc/PID/uid_map 和 /proc/PID/gid_map (这里的 PID 是新 user namespace 中的进程 ID，刚开始时这两个文件都是空的)文件中。这两个文件中的配置信息的格式如下(每个文件中可以有多条配置信息)：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">ID-inside-ns ID-outside-ns length<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>比如 0 1000 500 这条配置就表示父 user namespace 中的 1000<del>1500 映射到新 user namespace 中的 0</del>500。</p>
+<p>对 uid_map 和 gid_map 文件的写入操作有着严格的权限控制，简单点说就是：<strong>这两个文件的拥有者是创建新的 user namespace 的用户，所以和这个用户在一个 user namespace 中的 root 账号可以写</strong>；这个用户自己是否有写 map 文件的权限还要看它有没有 CAP_SETUID 和 CAP_SETGID 的 capability。注意：只能向 map 文件写一次数据，但可以一次写多条，并且最多只能 5 条。<br>我们把刚才打开的 shell 窗口称为<strong>第一个 shell 窗口</strong>开始执行用户的映射操作(把用户 nick 映射为新 user namespace 中的 root)。<br><strong>第一步</strong>，先在<strong>第一个 shell 窗口</strong>中查看当前进程的 ID：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133836060-814501763.png" class="">
+
+<p><strong>第二步</strong>，新打开一个 shell 窗口，我称之为<strong>第二个 shell 窗口</strong>。查看进程 3049 的映射文件属性：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133909229-1475966336.png" class="">
+
+<p>用户 nick 是这两个文件的所有者，让我们尝试向这两个文件写入映射信息：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812133939711-828980199.png" class="">
+
+<p>看上去很奇怪呀，明明是文件的所有者，却没有权限向文件中写入内容！其实根本的原因在于当前的 bash 进程没 CAP_SETUID 和 CAP_SETGID 的权限：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134011875-837006315.png" class="">
+
+<p>下面我们为 /bin/bash 程序设置相关的 capabilities：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">sudo</span> setcap cap_setgid,cap_setuid+ep /bin/bash<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>然后重新加载 bash，就可以看到相应的 capabilities 了：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134039385-768691240.png" class="">
+
+<p>现在重新向 map 文件写入映射信息：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token builtin class-name">echo</span> <span class="token string">'0 1000 500'</span> <span class="token operator">></span> /proc/3049/uid_map
+$ <span class="token builtin class-name">echo</span> <span class="token string">'0 1000 500'</span> <span class="token operator">></span> /proc/3049/gid_map<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>这次的写入成功了。后面就不需要我们手动写入映射信息了，所以我们通过下面的命令把 /bin/bash 的 capability 恢复为原来的设置：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">sudo</span> setcap cap_setgid,cap_setuid-ep /bin/bash<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134119692-1735937774.png" class="">
+
+<p><strong>第三步</strong>，回到<strong>第一个 shell 窗口</strong><br>重新加载 bash，并执行 id 命令：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134156273-1568788424.png" class="">
+
+<p>当前用户已经变成了 root(新的 user namespace 中的 root 用户)。在看看当前 bash 进程具有的 capability：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134226821-1964970731.png" class="">
+
+<p>0000003fffffffff 表示当前运行的 bash 拥有所有的 capability。</p>
+<p><strong>第四步</strong>，在<strong>第一个 shell 窗口</strong>中<br>查看 /root 目录的访问权限：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134317374-1734621745.png" class="">
+
+<p>没权限啊！尝试修改主机的名称：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134356259-1197147050.png" class="">
+
+<p>依然是没有权限啊！<strong>看来这个新 user namespace 中的 root 用户在父 user namespace 里面不好使。这也正是 user namespace 所期望达到的效果，当访问其它 user namespace 里的资源时，是以其它 user namespace 中的相应用户的权限来执行的，比如这里 root 对应父 user namespace 的用户是 nick，所以改不了系统的 hostname</strong>。<br>普通用户 nick 没有修改 hostname 的权限，那把默认的 user namespace 中的 root 用户映射为子 user namespace 中的 root 用户后可以修改 hostname 吗？答案是，不行！那是因为<strong>不管怎么映射，当用子 user namespace 的用户访问父 user namespace 的资源的时候，它启动的进程的 capability 都为空，所以这里子 user namespace 的 root 用户在父 user namespace 中就相当于一个普通的用户。</strong></p>
+<h2 id="User-namespace-与其它-namespace-的关系"><a href="#User-namespace-与其它-namespace-的关系" class="headerlink" title="User namespace 与其它 namespace 的关系"></a>User namespace 与其它 namespace 的关系</h2><p><strong>Linux 下的每个 namespace，都有一个 user namespace 与之关联，这个 user namespace 就是创建相应 namespace 时进程所属的 user namespace</strong>，相当于每个 namespace 都有一个 owner(user namespace)，这样保证对任何 namespace 的操作都受到 user namespace 权限的控制。这也是为什么在子 user namespace 中设置 hostname 失败的原因，因为要修改的 uts namespace 属于的父 user namespace，而新 user namespace 的进程没有老 user namespace 的任何 capabilities。<br>以 uts namespace 为例，在 uts_namespace 的结构体中有一个指向 user namespace 的指针，指向它所属的 user namespace(笔者查看的 v4.13内核，uts_namespace 结构体的定义在 /include/linux/utsname.h 文件中)：</p>
+<img src="/Linux/Namespace/Linux%20Namespace%20User/952033-20180812134506481-2054964518.png" class="">
+
+<p>其它 namespace 的定义也是类似的。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>相对其它的 namespace 而言，user namespace 稍显复杂。这是由其功能决定的，涉及到权限管理的内容时，事情往往会变得不那么直观。笔者在本文中也只是介绍了 user namespace 的基本概念，更多丰富有趣的内容还有待大家自行发掘。</p>
+<p><strong>参考：</strong><br><a target="_blank" rel="noopener" href="http://man7.org/linux/man-pages/man7/user_namespaces.7.html">user namespace man page</a><br><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000006913195">Linux Namespace系列（07）：user namespace (CLONE_NEWUSER) (第一部分)</a><br><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000006913499">Linux Namespace系列（08）：user namespace (CLONE_NEWUSER) (第二部分)</a><br><a target="_blank" rel="noopener" href="https://lwn.net/Articles/532593/">Namespaces in operation, part 5: User namespaces</a><br><a target="_blank" rel="noopener" href="https://lwn.net/Articles/540087/">Namespaces in operation, part 6: more on user namespaces</a><br><a target="_blank" rel="noopener" href="http://man7.org/linux/man-pages/man7/capabilities.7.html">Linux capabilities</a></p>
+<hr>
+<p>转自[<a target="_blank" rel="noopener" href="https://www.cnblogs.com/sparkdev/tag/linux%20namespace/]">https://www.cnblogs.com/sparkdev/tag/linux%20namespace/]</a>(<a target="_blank" rel="noopener" href="https://www.cnblogs.com/sparkdev/tag/linux">https://www.cnblogs.com/sparkdev/tag/linux</a> namespace/)</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/Namespace/" rel="tag"># Namespace</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Linux/Namespace/Linux%20Namespace%20%E7%AE%80%E4%BB%8B/" rel="prev" title="【转】Linux Namespace 简介">
+                  <i class="fa fa-chevron-left"></i> 【转】Linux Namespace 简介
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Linux/Namespace/Linux%20Namespace%20UTS/" rel="next" title="【转】Linux Namespace UTS">
+                  【转】Linux Namespace UTS <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.sysu.tech","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="摘要本文介绍如何在CentOS7.6环境下安装GCC7.4到用户自定义目录，并且不需要root">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CentOS编译安装GCC">
+<meta property="og:url" content="http://blog.sysu.tech/Linux/%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/CentOS%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85GCC/index.html">
+<meta property="og:site_name" content="生命不息 折腾不止">
+<meta property="og:description" content="摘要本文介绍如何在CentOS7.6环境下安装GCC7.4到用户自定义目录，并且不需要root">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.sysu.tech/Linux/%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/CentOS%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85GCC/1566910777025.png">
+<meta property="article:published_time" content="2019-08-26T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:43:59.162Z">
+<meta property="article:author" content="Orange666">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="GCC">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.sysu.tech/Linux/%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/CentOS%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85GCC/1566910777025.png">
+
+
+<link rel="canonical" href="http://blog.sysu.tech/Linux/%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/CentOS%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85GCC/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>CentOS编译安装GCC | 生命不息 折腾不止</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">生命不息 折腾不止</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">2.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BD"><span class="nav-number">3.</span> <span class="nav-text">下载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">4.</span> <span class="nav-text">安装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%BA%E5%B0%91gmp%E6%8A%A5%E9%94%99"><span class="nav-number">4.1.</span> <span class="nav-text">缺少gmp报错</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%BA%E5%B0%9132%E4%BD%8D%E5%BA%93%E6%8A%A5%E9%94%99"><span class="nav-number">4.2.</span> <span class="nav-text">缺少32位库报错</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Make"><span class="nav-number">4.3.</span> <span class="nav-text">Make</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%B6%E4%BD%9Cmodulefile"><span class="nav-number">5.</span> <span class="nav-text">制作modulefile</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Orange666"
+      src="/images/xipian.jpg">
+  <p class="site-author-name" itemprop="name">Orange666</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">85</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">63</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://blog.sysu.tech/Linux/%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/CentOS%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85GCC/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xipian.jpg">
+      <meta itemprop="name" content="Orange666">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="生命不息 折腾不止">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CentOS编译安装GCC
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-08-27 00:00:00" itemprop="dateCreated datePublished" datetime="2019-08-27T00:00:00+08:00">2019-08-27</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">安装教程</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>本文介绍如何在CentOS7.6环境下安装GCC7.4到用户自定义目录，并且不需要root</p>
+<a id="more"></a> 
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>官方教程：<a target="_blank" rel="noopener" href="https://gcc.gnu.org/install/configure.html">https://gcc.gnu.org/install/configure.html</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.hualuoo.com/linux_study/72.html">https://www.hualuoo.com/linux_study/72.html</a></p>
+<h2 id="下载"><a href="#下载" class="headerlink" title="下载"></a>下载</h2><p>地址：<a target="_blank" rel="noopener" href="https://gcc.gnu.org/">https://gcc.gnu.org/</a></p>
+<img src="/Linux/%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/CentOS%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85GCC/1566910777025.png" class="">
+
+<p>随便找个源，在目录<code>Index of /software/gcc/releases/gcc-7.4.0</code>下找到了源码，下载下来</p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>官方强烈建议：</p>
+<blockquote>
+<p>We use srcdir to refer to the toplevel source directory for GCC; we use objdir to refer to the toplevel build/object directory.</p>
+<p>First, we <strong>highly</strong> recommend that GCC be built into a separate directory from the sources which does <strong>not</strong> reside within the source tree. This is how we generally build GCC; building where srcdir == objdir should still work, but doesn’t get extensive testing; building where objdir is a subdirectory of srcdir is unsupported.</p>
+<p>To configure GCC:</p>
+<pre class="line-numbers language-none"><code class="language-none">&gt;% mkdir objdir
+&gt;% cd objdir
+&gt;% srcdir&#x2F;configure [options] [target]<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+</blockquote>
+<p>于是我们</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token builtin class-name">cd</span> /public/fgn/software/gcc/install-package
+<span class="token function">tar</span> -xvf gcc-7.4.0.tar.gz
+<span class="token builtin class-name">cd</span> /public/fgn/software/gcc/7.4
+<span class="token function">mkdir</span> <span class="token function">install</span>
+/public/fgn/software/gcc/install-package/gcc-7.4.0/configure --prefix<span class="token operator">=</span><span class="token variable"><span class="token variable">`</span><span class="token builtin class-name">pwd</span><span class="token variable">`</span></span>/install<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>然后会陆陆续续出现如下报错</p>
+<h3 id="缺少gmp报错"><a href="#缺少gmp报错" class="headerlink" title="缺少gmp报错"></a>缺少gmp报错</h3><pre class="line-numbers language-none"><code class="language-none">checking for the correct version of gmp.h... no
+configure: error: Building GCC requires GMP 4.2+, MPFR 2.4.0+ and MPC 0.8.0+.
+Try the --with-gmp, --with-mpfr and&#x2F;or --with-mpc options to specify
+their locations.  Source code for these libraries can be found at
+their respective hosting sites as well as at
+ftp:&#x2F;&#x2F;gcc.gnu.org&#x2F;pub&#x2F;gcc&#x2F;infrastructure&#x2F;.  See also
+http:&#x2F;&#x2F;gcc.gnu.org&#x2F;install&#x2F;prerequisites.html for additional info.  If
+you obtained GMP, MPFR and&#x2F;or MPC from a vendor distribution package,
+make sure that you have installed both the libraries and the header
+files.  They may be located in separate packages.<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>在<a target="_blank" rel="noopener" href="http://gcc.gnu.org/install/prerequisites.html%E6%98%AF%E6%80%8E%E4%B9%88%E8%AF%B4%E7%9A%84">http://gcc.gnu.org/install/prerequisites.html是怎么说的</a></p>
+<blockquote>
+<p>Several support libraries are necessary to build GCC, some are required, others optional. While any sufficiently new version of required tools usually work, library requirements are generally stricter. Newer versions may work in some cases, but it’s safer to use the exact versions documented. We appreciate bug reports about problems with newer versions, though. If your OS vendor provides packages for the support libraries then using those packages may be the simplest way to install the libraries.</p>
+<ul>
+<li><p>GNU Multiple Precision Library (GMP) version 4.3.2 (or later)</p>
+<p>Necessary to build GCC. <strong>If a GMP source distribution is found in a subdirectory of your GCC sources named gmp, it will be built together with GCC</strong>. Alternatively, if GMP is already installed but it is not in your library search path, you will have to configure with the –with-gmp configure option. See also –with-gmp-lib and –with-gmp-include. The in-tree build is only supported with the GMP version that download_prerequisites installs.</p>
+</li>
+<li><p>MPFR Library version 2.4.2 (or later)</p>
+<p>Necessary to build GCC. It can be downloaded from <a target="_blank" rel="noopener" href="https://www.mpfr.org/">https://www.mpfr.org</a>. <strong>If an MPFR source distribution is found in a subdirectory of your GCC sources named mpfr, it will be built together with GCC</strong>. Alternatively, if MPFR is already installed but it is not in your default library search path, the –with-mpfr configure option should be used. See also –with-mpfr-lib and –with-mpfr-include. The in-tree build is only supported with the MPFR version that download_prerequisites installs.</p>
+</li>
+<li><p>MPC Library version 0.8.1 (or later)</p>
+<p>Necessary to build GCC. It can be downloaded from <a target="_blank" rel="noopener" href="http://www.multiprecision.org/mpc/">http://www.multiprecision.org/mpc/</a>. <strong>If an MPC source distribution is found in a subdirectory of your GCC sources named mpc, it will be built together with GCC.</strong> Alternatively, if MPC is already installed but it is not in your default library search path, the –with-mpc configure option should be used. See also –with-mpc-lib and –with-mpc-include. The in-tree build is only supported with the MPC version that download_prerequisites installs.</p>
+</li>
+<li><p>isl Library version 0.15 or later.</p>
+<p>Necessary to build GCC with the Graphite loop optimizations. It can be downloaded from <a href="ftp://gcc.gnu.org/pub/gcc/infrastructure/">ftp://gcc.gnu.org/pub/gcc/infrastructure/</a>. <strong>If an isl source distribution is found in a subdirectory of your GCC sources named isl, it will be built together with GCC.</strong> Alternatively, the –with-isl configure option should be used if isl is not installed in your default library search path.</p>
+</li>
+<li><p>zstd Library.</p>
+<p>Necessary to build GCC with zstd compression used for LTO bytecode. The library is searched in your default library patch search. Alternatively, the –with-zstd configure option should be used.</p>
+</li>
+</ul>
+</blockquote>
+<p>可以看出只要，新建几个文件夹，把源码下载下来，解压，就可以了</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token builtin class-name">cd</span> /public/fgn/software/gcc/install-package/gcc-7.4.0
+<span class="token function">mkdir</span> gmp
+<span class="token builtin class-name">cd</span> gmp
+<span class="token function">wget</span> ftp://gcc.gnu.org/pub/gcc/infrastructure/gmp-6.1.0.tar.bz2
+<span class="token function">tar</span> -xvf gmp-6.1.0.tar.bz2
+<span class="token function">mv</span> gmp-6.1.0/* ./ <span class="token operator">&amp;&amp;</span> <span class="token function">rm</span> -r gmp-6.1.0
+<span class="token comment"># 对于mpfr、mpc、isl同理</span>
+<span class="token builtin class-name">cd</span> /public/fgn/software/gcc/7.4
+/public/fgn/software/gcc/install-package/gcc-7.4.0/configure --prefix<span class="token operator">=</span><span class="token variable"><span class="token variable">`</span><span class="token builtin class-name">pwd</span><span class="token variable">`</span></span>/install<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>官方没提供zstd的下载，也没说zstd可以像其他的几个一样把源码放进文件夹就好了，所以就没管了，后面证实这样也可以。</p>
+<p>一开始我只下载了gmp的库，发现<code>configure</code>就能过了，但是在编译的时候出现了如下的蜜汁报错，把其他的几个包都打上就好了</p>
+<pre class="line-numbers language-none"><code class="language-none">g++ -std&#x3D;gnu++98 -c   -g -DIN_GCC     -fno-exceptions -fno-rtti -fasynchronous-unwind-tables -W -Wall -Wno-narrowing -Wwrite-strings -Wcast-qual -Wno-format -Wmissing-format-attribute -Woverloaded-virtual -pedant
+ic -Wno-long-long -Wno-variadic-macros -Wno-overlength-strings -fno-common  -DHAVE_CONFIG_H -DGENERATOR_FILE -fno-PIE -I. -Ibuild -I&#x2F;public&#x2F;fgn&#x2F;software&#x2F;gcc&#x2F;install-package&#x2F;gcc-7.4.0&#x2F;gcc -I&#x2F;public&#x2F;fgn&#x2F;software&#x2F;gc
+c&#x2F;install-package&#x2F;gcc-7.4.0&#x2F;gcc&#x2F;build -I&#x2F;public&#x2F;fgn&#x2F;software&#x2F;gcc&#x2F;install-package&#x2F;gcc-7.4.0&#x2F;gcc&#x2F;..&#x2F;include  -I&#x2F;public&#x2F;fgn&#x2F;software&#x2F;gcc&#x2F;install-package&#x2F;gcc-7.4.0&#x2F;gcc&#x2F;..&#x2F;libcpp&#x2F;include  \
+        -o build&#x2F;genmddeps.o &#x2F;public&#x2F;fgn&#x2F;software&#x2F;gcc&#x2F;install-package&#x2F;gcc-7.4.0&#x2F;gcc&#x2F;genmddeps.c
+In file included from .&#x2F;bconfig.h:3:0,
+                 from &#x2F;public&#x2F;fgn&#x2F;software&#x2F;gcc&#x2F;install-package&#x2F;gcc-7.4.0&#x2F;gcc&#x2F;genmddeps.c:18:
+.&#x2F;auto-host.h:2363:16: error: declaration does not declare anything [-fpermissive]
+ #define rlim_t long
+                ^<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="缺少32位库报错"><a href="#缺少32位库报错" class="headerlink" title="缺少32位库报错"></a>缺少32位库报错</h3><pre class="line-numbers language-none"><code class="language-none">configure: error: I suspect your system does not have 32-bit development libraries (libc and headers). If you have them, rerun configure with --enable-multilib. If you do not have them, and want to build a 64-bit-only compiler, rerun configure with --disable-multilib.<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>我们不需要编译32位的程序，所以只要添加参数<code>--disable-multilib</code></p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">/public/fgn/software/gcc/install-package/gcc-7.4.0/configure --prefix<span class="token operator">=</span><span class="token variable"><span class="token variable">`</span><span class="token builtin class-name">pwd</span><span class="token variable">`</span></span>/install --disable-multilib<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h3 id="Make"><a href="#Make" class="headerlink" title="Make"></a>Make</h3><p>然后<code>configure</code>就没有别的报错了，开始编译</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">make</span> -j
+<span class="token function">make</span> <span class="token function">install</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>最后出现了如下内容</p>
+<pre class="line-numbers language-none"><code class="language-none">----------------------------------------------------------------------
+Libraries have been installed in:
+   &#x2F;public&#x2F;fgn&#x2F;software&#x2F;gcc&#x2F;7.4&#x2F;install&#x2F;lib&#x2F;..&#x2F;lib64
+
+If you ever happen to want to link against installed libraries
+in a given directory, LIBDIR, you must either use libtool, and
+specify the full pathname of the library, or use the &#96;-LLIBDIR&#39;
+flag during linking and do at least one of the following:
+   - add LIBDIR to the &#96;LD_LIBRARY_PATH&#39; environment variable
+     during execution
+   - add LIBDIR to the &#96;LD_RUN_PATH&#39; environment variable
+     during linking
+   - use the &#96;-Wl,-rpath -Wl,LIBDIR&#39; linker flag
+   - have your system administrator add LIBDIR to &#96;&#x2F;etc&#x2F;ld.so.conf&#39;
+
+See any operating system documentation about shared libraries for
+more information, such as the ld(1) and ld.so(8) manual pages.
+----------------------------------------------------------------------<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>然后检查一下</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">make</span> check<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h2 id="制作modulefile"><a href="#制作modulefile" class="headerlink" title="制作modulefile"></a>制作modulefile</h2><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token comment">#%Module 1.0</span>
+
+<span class="token builtin class-name">set</span> DIR /public/fgn/software/gcc/7.4/install
+
+prepend-path <span class="token environment constant">PATH</span> <span class="token variable">$DIR</span>/bin
+prepend-path CPATH <span class="token variable">$DIR</span>/install
+prepend-path LD_LIBRARY_PATH <span class="token variable">$DIR</span>/lib64
+prepend-path LIBRARY_PATH <span class="token variable">$DIR</span>/lib64
+prepend-path MANPATH <span class="token variable">$DIR</span>/share/man<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/GCC/" rel="tag"># GCC</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Linux/%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/Docker%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/" rel="prev" title="Docker安装教程">
+                  <i class="fa fa-chevron-left"></i> Docker安装教程
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Confluence/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%85Confluence/" rel="next" title="使用Docker安装Confluence">
+                  使用Docker安装Confluence <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange666</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
