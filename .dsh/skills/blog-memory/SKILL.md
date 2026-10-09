@@ -14,7 +14,7 @@ whenToUse: 会话中首次涉及本博客（/home/orange/blog）的任务前必�
 - 仓库：`/home/orange/blog`，远程 `NoBugEveryDay/NoBugEveryDay.github.io`（main 分支，**默认分支应为 main**）
 - 站点：https://nobugeveryday.github.io/（Astro 5 + GitHub Pages Actions 自动部署 + Giscus 评论 + Pagefind 搜索）
 - 内容：118 篇公开文章（英文扁平 slug URL）+ about/cv/about-english + 10 篇加密隐藏文章（/h/<token>/）
-- 看板娘：鲸鱼娘 Live2D（右下角，模型资产 CC BY-NC-SA 4.0 需署名，许可文件 public/live2d/NOTICE.md）
+- 看板娘：鲸鱼娘（dsh-whale-musume 图片立绘引擎，2026-10 由 Live2D 切换；MIT 许可，vendor 于 public/assets/ 含 4 处 BLOG PATCH，见 public/assets/NOTICE.md）
 - 公告文章：/blog-now-maintained-by-ai/（用户写的开头 + 鲸鱼娘续写，已发布）
 - 旧域名 blog.sysu.tech：**用户已自行通过 DNS 解决跳转**（不再经旧服务器）；旧中文链接无逐篇跳转，由 404 引导页兜底
 - **隐私历史清理（2026-10 用户要求）**：main 已重写为单提交历史（清除含隐藏文章明文的旧提交）；
@@ -39,24 +39,31 @@ whenToUse: 会话中首次涉及本博客（/home/orange/blog）的任务前必�
 - **视觉模型 = `deepseek-flash`**（官方唯一视觉模型；deepseek-v4-pro 无视觉、
   deepseek-v4-flash-vision-exp 已下线、deepseek-v41-flash 不在 subagent 白名单）
   → workflow 工具里 `agent(prompt, { provider: 'deepseek-official', model: 'deepseek-flash' })`
-- **截图**：`CHROME_PATH="/mnt/c/Program Files/Google/Chrome/Application/chrome.exe" node scripts/shot.mjs --legacy --url <URL> --out /tmp/x.png --wait 60000 --width 1280 --height 860`
-  - **桌面看板娘必须 --wait 60000**（懒加载 5MB 模型，虚拟时间预算不够截不到）
+- **截图**：`CHROME_PATH="/mnt/c/Program Files/Google/Chrome/Application/chrome.exe" node scripts/shot.mjs --legacy --url <URL> --out /tmp/x.png --wait 14000 --width 1280 --height 860`
+  - 看板娘（dsh-whale-musume）只预载 5 张立绘（~1MB），`--wait 14000` 足够；`--states` 截待机/摸头两态
   - `--dark` 截暗色；`--dsf` 不可靠；**小视口截图不可信**（Chrome 强制最小窗口宽 ~500px，图与布局错位）
   - 真实手机宽度请用户真机确认；或用 iframe+探针思路（dump-dom 读 innerWidth/scrollWidth）
 - **DOM 证据**：`chrome --headless --virtual-time-budget=20000 --dump-dom <url>` 查
-  `whalepet-wrap` 的 `data-ready="1"` / `data-error`、气泡文字
+  `[data-dsh-whale-root]` 与 `data-dsh-whale-mode="float"`（看板娘已挂载）；
+  状态细节用 `scripts/shot.mjs`（CDP 模式）读 `window.__dshWhaleMoeDebug`
 - 截图后派 deepseek-flash 复核是成熟流程；我自己（默认模型）无视觉能力，别浪费时间
 
 ## 四、约定与红线（违反会出事）
 
 1. **slug 发布后不可改**（giscus pathname 映射绑定评论）；格式小写字母/数字/连字符，全局唯一
 2. **密码纪律**：隐藏文章统一密码只存本机 `private/passwords.md`（gitignore），
-   严禁进入任何提交/commit message/文档/对话记录；提交前 `git grep -n "666666" --cached` 必检
+   严禁进入任何提交/commit message/文档/对话记录（含本 skill 与 README，不得写字面量）；
+   提交前 `PW=$(tail -n 1 private/passwords.md); [ -n "$PW" ] && git grep -n "$PW" --cached` 无结果必检
+   （注：passwords.md 可带注释行，密码在**最后一行**；上面检查只认文本文件命中，密文/二进制里的
+   巧合子串不算泄漏，但出现时需人工确认匹配位置）
 3. **隐藏文章零明文（用户 2026-10 决定）**：`source.md.enc` 为 v2 格式（标题/日期等 meta 与正文一起加密）；
    阅读页外壳标题统一「隐藏文章」；`.hidden-posts.md` 索引仅本机（gitignore），由加密稿+密码随时重建；
    GitHub 上只有 token 目录与密文
-4. **看板娘许可**：美术 CC BY-NC-SA 4.0（© 上善无形/ZipZipPipe/氵六青），页脚署名不可删，
-   不可商用；代码 MIT 改编自 Andersen216/dsh-whale-girl-live2d
+4. **看板娘许可**：2026-10 起为 dsh-whale-musume（MIT © Sutera-Diffusus，代码与立绘整体 MIT，
+   立绘作者 SuteraWu），无署名/商用限制，页脚致谢仍保留；vendor 于 `public/assets/`，
+   4 处本地补丁带 `BLOG PATCH` 标记（升级上游须重新合入，见 `public/assets/NOTICE.md`）；
+   资源根硬编码 `/assets/generated/`，不可移动位置；`window.__BLOG_NO_REST_PRELOAD__`
+   由 BaseLayout 注入以跳过约 4MB 全量预热
 5. **front-matter**：date 可用时间（同日多篇排序）；首页摘要用 `<!-- more -->` 标记，
    卡片只显示摘要文字（不显示「摘要」标题）
 6. Astro 5 的 markdown 页面布局从 `Astro.props.frontmatter`/`content` 嵌套取字段（顶层拿不到）
@@ -71,7 +78,8 @@ whenToUse: 会话中首次涉及本博客（/home/orange/blog）的任务前必�
 
 ## 六、进行中 / 待办
 
-- [ ] 看板娘打磨（用户认可，待做）：① 气泡加小尾巴（指向角色）；② 移动端缩至 45% 或默认半隐藏以减少遮挡
+- [x] 看板娘打磨——2026-10 整体切换为 dsh-whale-musume 后自然解决：气泡自带尾巴；
+      移动端经 BLOG PATCH 缩至 70%（140px）；原 Live2D 方案废弃
 - [ ] 未来博文由用户投喂素材，鲸鱼娘按 blog-post skill 全流程处理（含隐藏/草稿档）
 - [x] 隐藏文章导航「隐藏」→ /hidden/ 加密目录页（自动重建）——已上线
 - [x] 英文扁平 slug、404 引导页、giscus、看板娘——均已上线

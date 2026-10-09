@@ -96,18 +96,19 @@ node scripts/hidden.mjs list                # 列出全部 + URL
 3. 把生成的 `repo_id` / `category_id` 填入 `src/config.ts`，并把 `enabled` 改为 `true`
 4. 未配置时文章页优雅降级（不显示评论区）
 
-## 看板娘（鲸鱼娘 Live2D）
+## 看板娘（鲸鱼娘）
 
-- 配置入口：`src/config.ts` 的 `mascot` 段（启用/高度/点击台词）；渲染器 `public/live2d/pet-blog.js`（defer 懒加载）
-- 模型与运行时自托管于 `public/live2d/`（约 5.1MB），无 CDN 依赖
-- 交互：点击弹台词 + 随机动作、可拖动（贴边吸附）、可隐藏/恢复，位置记忆于 localStorage；移动端自动缩小；`prefers-reduced-motion` 时不渲染
+- 2026-10 起由 Live2D 模型切换为 **dsh-whale-musume**（DSH 桌宠，图片立绘引擎）：
+  上游 [Sutera-Diffusus/dsh-whale-musume](https://github.com/Sutera-Diffusus/dsh-whale-musume) v2.2.1（@6e5e9f5）
+- 配置入口：`src/config.ts` 的 `mascot` 段；加载方式在 `BaseLayout.astro`（CSS + core + presenter 三个文件，defer）
+- 资产自托管于 `public/assets/`（92 张立绘约 13MB，只预载 5 张常用姿势，其余按需懒加载），无 CDN、零外部请求
+- 交互：点击摸头/三连击庆祝、右键菜单（投喂/戳/夸夸/小游戏/回原位）、可拖动、气泡台词、
+  成长/羁绊/成就存 localStorage；移动端自动缩至 70%
 - 隐藏文章（加密页）不走 BaseLayout，**不会加载看板娘**
-- **许可（务必遵守）**：代码（查看器）MIT（改编自 Andersen216/dsh-whale-girl-live2d）；模型美术
-  **CC BY-NC-SA 4.0**（© 上善无形 / ZipZipPipe / 氵六青，署名-非商业-相同方式共享），
-  许可文件在 `public/live2d/NOTICE.md`、`AUTHORS.md`、`PROVENANCE.md`，页脚署名**不可删除**；
-  博客若商业化须替换模型或取得原作者授权
-- 视觉 QA 工具：`node scripts/shot.mjs --legacy --url http://localhost:4399/ --out /tmp/x.png`
-  （WSL 下用 Windows Chrome 截图；`--dark` 截暗色主题）
+- **许可**：MIT © Sutera-Diffusus（代码与立绘整体 MIT，立绘作者 SuteraWu）——
+  无署名限制、可商用；页脚仍保留致谢署名。本地补丁与 vendoring 记录见 `public/assets/NOTICE.md`
+- 视觉 QA 工具：`node scripts/shot.mjs --legacy --url http://localhost:4399/ --out /tmp/x.png --wait 14000`
+  （WSL 下用 Windows Chrome 截图；`--dark` 截暗色主题；`--states` 截待机/摸头两态）
 
 ## 旧站迁移记录
 

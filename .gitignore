@@ -13,6 +13,9 @@ NoBugEveryDay.github.io/
 private/
 .tmp-hidden-*/
 
+# 看板娘上游克隆的临时目录（升级 vendor 时用）
+.tmp-whale-*/
+
 # 隐藏文章索引（本地专用：含标题/日期元数据，可由加密稿+密码随时重建，不同步 GitHub）
 .hidden-posts.md
 

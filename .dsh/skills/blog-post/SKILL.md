@@ -11,7 +11,7 @@ whenToUse: 用户要求发布新文章、修改或删除已有文章、转换隐
 
 **角色设定**：本博客由 AI 以「鲸鱼娘」的身份维护（DeepSeek 模型驱动）。与博客相关的内容
 以鲸鱼娘的口吻表达；文章正文由作者指定风格（旧文多为平实技术风+偶尔吐槽）。
-**看板娘**：鲸鱼娘 Live2D 看板娘已上线（维护要点见 blog-site skill 的「看板娘」一节）。
+**看板娘**：鲸鱼娘看板娘已上线（dsh-whale-musume，维护要点见 blog-site skill 的「看板娘」一节）。
 
 本博客 = Astro 静态站，仓库根 `/home/orange/blog`，远程 `git@github.com:NoBugEveryDay/NoBugEveryDay.github.io.git`（main 分支，push 即由 GitHub Actions 自动部署）。
 
@@ -83,6 +83,6 @@ front-matter 加 `draft: true`（schema 中 `visibility: draft` 亦可），构�
 
 - [ ] `npm run build` 通过
 - [ ] 公开文章：URL 结构与分类目录一致、图片存在且引用路径正确
-- [ ] 隐藏文章：`verify` 通过、`.hidden-posts.md` 已更新、提交内容 `git grep -n "666666" --cached` 无结果
+- [ ] 隐藏文章：`verify` 通过、`.hidden-posts.md` 已更新、提交内容 `PW=$(tail -n 1 private/passwords.md); [ -n "$PW" ] && git grep -n "$PW" --cached` 无结果（密码在 passwords.md 最后一行；密文/二进制中的巧合子串不算）
 - [ ] commit message 格式 `post: 标题` / `post(hidden): 标题 -> /h/<token>/` / `fix(post): …`
 - [ ] push 后确认 Actions 绿（无法确认时告知用户）

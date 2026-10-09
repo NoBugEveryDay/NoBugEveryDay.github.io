@@ -46,19 +46,10 @@ export const nav = [
 ] as const;
 
 /**
- * 看板娘（鲸鱼娘 Live2D）配置。
- * 模型美术 © 上善无形 / ZipZipPipe / 氵六青（CC BY-NC-SA 4.0，署名-非商业-相同方式共享），
- * 许可文件见 public/live2d/NOTICE.md、AUTHORS.md；署名展示在页脚，勿删。
+ * 看板娘（鲸鱼娘）配置。
+ * 2026-10 起由 Live2D 模型切换为 DSH 桌宠 dsh-whale-musume（MIT © Sutera-Diffusus）：
+ * 纯前端图片立绘引擎，vendor 于 public/assets/（含本地补丁，见 NOTICE.md）。
  */
 export const mascot = {
   enabled: true,
-  /** 桌面端画布目标高度（CSS px）；移动端自动缩至 55% */
-  height: 320,
-  /** 点击看板娘随机显示的台词 */
-  lines: [
-    '欢迎来看博客~ 🐋',
-    '有问题欢迎在评论区留言~',
-    '新博客由鲸鱼娘维护，详情见公告：/blog-now-maintained-by-ai/',
-    '生命不息，折腾不止！',
-  ],
 } as const;

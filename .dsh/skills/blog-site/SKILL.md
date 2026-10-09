@@ -11,29 +11,34 @@ whenToUse: 需要改站点配置/主题/布局、升级依赖、排查构建或�
 
 **角色设定**：本博客由 AI 以「鲸鱼娘」的身份维护（DeepSeek 模型驱动）。
 
-## 零、看板娘（鲸鱼娘 Live2D）
+## 零、看板娘（鲸鱼娘 · dsh-whale-musume）
 
-- 配置：`src/config.ts` 的 `mascot` 段；渲染器 `public/live2d/pet-blog.js`；资产 `public/live2d/{model,vendor}`（自托管，约 5.1MB）
-- 特性：idle 循环 + 视线跟随 + 点击气泡/随机动作 + 拖动/隐藏 + localStorage 记忆；移动端缩至 55%；reduced-motion 不渲染；加密页不加载
-- 隐藏文章入口：导航「隐藏」→ `/hidden/`（加密目录页，由 `scripts/hidden.mjs` 的 rebuildIndex 自动生成/重加密，
-  列出全部隐藏文章链接；robots 与 Pagefind 均已排除）
-- **许可红线（最高优先级）**：模型美术为 **CC BY-NC-SA 4.0**（© 上善无形 / ZipZipPipe / 氵六青）。
-  页脚署名**不可删**；**不可用于商业用途**（博客若商业化必须先替换模型或取得授权）；
-  修改模型资产需按 SA 相同许可发布。代码（查看器）MIT，改编自 Andersen216/dsh-whale-girl-live2d，保留头部注释
+- 2026-10 由 Live2D 切换为 DSH 桌宠 [dsh-whale-musume](https://github.com/Sutera-Diffusus/dsh-whale-musume)
+  v2.2.1（@6e5e9f5）：图片立绘引擎，纯前端、零外部请求、无 DSH 标记时恒处 idle 态（不影响博客内容）
+- 配置：`src/config.ts` 的 `mascot` 段（仅 enabled）；加载在 `BaseLayout.astro`
+  （`/assets/dsh-whale-moe.css` + `whale-moe-core.js` + `dsh-whale-moe.js`，defer，
+  先注入 `window.__BLOG_NO_REST_PRELOAD__=true` 跳过约 4MB 全量预热）；
+  资产自托管 `public/assets/`（92 张立绘 13MB，只预载 5 张常用姿势）
+- 特性：点击摸头/三连击庆祝、右键菜单（投喂/戳/夸夸/小游戏/回原位）、拖动+位置记忆、
+  气泡台词（已改博客语境）、成长/羁绊/成就 localStorage、节日自动换装、明暗主题跟随
+  （prefers-color-scheme 回落，与博客一致）；移动端 BLOG PATCH 缩至 70%
+- 加密页（hidden=true）不走 BaseLayout，**不会加载看板娘**
+- **许可**：MIT © Sutera-Diffusus（代码与立绘整体 MIT，立绘作者 SuteraWu）——无署名/商用限制，
+  页脚致谢仍保留。vendoring 与 4 处本地补丁（`BLOG PATCH` 标记）记录在 `public/assets/NOTICE.md`；
+  **升级上游后必须重新合入补丁并跑视觉 QA**
 - 视觉 QA：`node scripts/shot.mjs --legacy --url http://localhost:4399/ --out /tmp/x.png --wait 14000`
-  （WSL 用 Windows Chrome：CHROME_PATH 指向 chrome.exe；`--dark` 截暗色；`--width/--height` 调视口；
-  截图后用有视觉能力的 subagent 复核，或请用户人工确认）
+  （WSL 用 Windows Chrome：CHROME_PATH 指向 chrome.exe；`--dark` 截暗色；`--states` 截待机/摸头两态；
+  截图后用 deepseek-flash 复核，或请用户人工确认）
 - 已知限制（本机 WSL 环境实测）：Windows Chrome 的 CDP 调试端口只监听 Windows loopback，
   WSL 直连不通；`--remote-debugging-pipe` 也因 WSL 互操作不传继承句柄而失败；
-  `--screenshot` 模式会在懒加载（5MB 模型）完成前截取，抓不到看板娘——**60 秒虚拟时间预算可解**
-  （`--wait 60000`）；**移动端小视口截图不可信**：Chrome 强制最小窗口宽（~500px），
+  **移动端小视口截图不可信**：Chrome 强制最小窗口宽（~500px），
   图按请求尺寸截但布局按更宽视口算，会产生"每行被右缘裁切"的假阳性；真实手机宽度请用
   qa-probe 思路（iframe + dump-dom 读 innerWidth/scrollWidth）或直接请用户在真机确认。
   **可靠替代**：`chrome --headless --virtual-time-budget=20000 --dump-dom <url>` 检查
-  `whalepet-wrap` 的 `data-ready="1"`（模型加载成功）与 `data-error`（失败原因），
-  气泡文字也会出现在 DOM 里；**视觉复核用 deepseek-flash**（官方唯一视觉模型；
-  deepseek-v4-pro 无视觉、deepseek-v4-flash-vision-exp 已下线），最终视觉确认请用户在真实浏览器里看
-**遗留 TODO**：给站点加鲸鱼娘看板娘（live2d 组件），尚未实现——用户要求时再动工。
+  `[data-dsh-whale-root]` 与 `data-dsh-whale-mode="float"`（看板娘已挂载）；
+  状态细节走 CDP 读 `window.__dshWhaleMoeDebug`；**视觉复核用 deepseek-flash**
+  （官方唯一视觉模型；deepseek-v4-pro 无视觉、deepseek-v4-flash-vision-exp 已下线），
+  最终视觉确认请用户在真实浏览器里看
 
 本博客 = Astro 5 静态站，仓库根 `/home/orange/blog`，远程 `git@github.com:NoBugEveryDay/NoBugEveryDay.github.io.git`。
 main 分支 = 源码；`master` = 旧 Hexo 构建产物（回退存档）。GitHub Pages 由 Actions 部署。

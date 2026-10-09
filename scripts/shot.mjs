@@ -17,8 +17,8 @@
  *   node tools/shot.mjs                                   # 截预览页
  *   node tools/shot.mjs --url http://127.0.0.1:3080/      # 截正在跑的 DSH
  *   node tools/shot.mjs --ascii 110                       # 附带 ASCII 预览
- *   node tools/shot.mjs --script "DSHPet.setMood('angry')" --after 2000
- *   node tools/shot.mjs --states                          # 依次截 整张桌子/上半身/只有头
+ *   node tools/shot.mjs --script "..." --after 2000
+ *   node tools/shot.mjs --states                          # 待机 + 点击摸头两态，并打印看板娘调试状态
  */
 
 import { spawn, spawnSync, execFileSync } from 'node:child_process'
@@ -348,16 +348,18 @@ async function main() {
     await sleep(WAIT)
 
     if (STATES) {
-      for (const mode of ['full', 'bust', 'head']) {
-        await evaluate(
-          `(()=>{const k='dsh-live2d-pet:layout';const v=JSON.parse(localStorage.getItem(k)||'{}');v.fit='${mode}';localStorage.setItem(k,JSON.stringify(v));return 1})()`,
-        )
-        await send('Page.navigate', { url: URL_ }, sessionId, 8000).catch(() => {})
-        await sleep(WAIT)
-        const st = await evaluate('window.DSHPet?JSON.stringify(window.DSHPet.state.view):null')
+      // 新看板娘（dsh-whale-musume，2026-10 起）：截待机与「点击摸头」两态
+      for (const mode of ['idle', 'pat']) {
+        if (mode === 'pat') {
+          await evaluate(
+            `(()=>{const f=document.querySelector('[data-dsh-whale-frame]');if(f)f.click();return 1})()`,
+          )
+          await sleep(800)
+        }
+        const st = await evaluate('window.__dshWhaleMoeDebug?JSON.stringify(window.__dshWhaleMoeDebug):null')
         const file = OUT.replace(/\.png$/, '') + '-' + mode + '.png'
         const buf = await shootTo(file)
-        console.log(`  取景 ${mode}: ${st}`)
+        console.log(`  状态 ${mode}: ${st}`)
         if (ASCII_W) asciiPreview(buf, ASCII_W)
       }
       if (ws) ws.close()
@@ -375,7 +377,7 @@ async function main() {
 
     const buf = await shootTo(OUT)
     const st = await evaluate(
-      'window.DSHPet?JSON.stringify({view:window.DSHPet.state.view,content:window.DSHPet.state.contentBox,mood:window.DSHPet.state.mood,props:window.DSHPet.state.props}):null',
+      'window.__dshWhaleMoeDebug?JSON.stringify(window.__dshWhaleMoeDebug):(window.__dshWhaleMusumeBooted?JSON.stringify({booted:true}):null)',
     )
     console.log('状态: ' + st)
     if (ASCII_W) asciiPreview(buf, ASCII_W)

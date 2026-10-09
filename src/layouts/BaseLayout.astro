@@ -49,19 +49,18 @@ const pageTitle = title ? `${title} | ${site.title}` : site.title;
       </p>
       {!hidden && mascot.enabled && (
         <p class="mascot-credit">
-          看板娘·鲸鱼娘：模型 ©
-          <a href="https://space.bilibili.com/4456176" rel="noopener">上善无形</a> /
-          <a href="https://space.bilibili.com/4168597" rel="noopener">ZipZipPipe</a> /
-          <a href="https://space.bilibili.com/11272072" rel="noopener">氵六青</a>
-          （CC BY-NC-SA 4.0）· 查看器 <a href="/live2d/NOTICE.md">MIT</a>
+          看板娘·鲸鱼娘：<a href="https://github.com/Sutera-Diffusus/dsh-whale-musume" rel="noopener">dsh-whale-musume</a>
+          （MIT © Sutera-Diffusus，立绘由 <a href="https://github.com/SuteraWu" rel="noopener">SuteraWu</a> 绘制）
         </p>
       )}
     </footer>
     {
       !hidden && mascot.enabled && (
         <>
-          <script is:inline set:html={`window.__MASCOT__ = ${JSON.stringify(mascot)};`}></script>
-          <script defer src="/live2d/pet-blog.js"></script>
+          <link rel="stylesheet" href="/assets/dsh-whale-moe.css" />
+          <script is:inline>window.__BLOG_NO_REST_PRELOAD__ = true;</script>
+          <script defer src="/assets/whale-moe-core.js"></script>
+          <script defer src="/assets/dsh-whale-moe.js"></script>
         </>
       )
     }
