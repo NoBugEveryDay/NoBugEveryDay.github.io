@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /h/
+Disallow: /hidden/
+Sitemap: https://nobugeveryday.github.io/sitemap-index.xml

@@ -1,0 +1,24 @@
+# ── 依赖与构建产物：npm install / npm run build 可随时重建 ──
+.npm-cache/
+node_modules/
+dist/
+.astro/
+.pagefind/
+
+# ── 旧博客数据：仅本机迁移数据源与历史存档，不进仓库 ──
+blog/
+NoBugEveryDay.github.io/
+
+# ── 本机私密区：隐藏文章明文工作副本 + 密码本（绝不进仓库）──
+private/
+.tmp-hidden-*/
+
+# 隐藏文章索引（本地专用：含标题/日期元数据，可由加密稿+密码随时重建，不同步 GitHub）
+.hidden-posts.md
+
+# ── 本地环境与编辑器残留 ──
+.env
+.env.*
+.DS_Store
+.vscode/
+*.swp

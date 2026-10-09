@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { postUrl } from '../../lib/posts';
+
+const posts = (await getCollection('posts'))
+  .filter((p) => p.data.visibility === 'public')
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+// 按年分组
+const byYear = new Map<number, typeof posts>();
+for (const p of posts) {
+  const y = p.data.date.getUTCFullYear();
+  if (!byYear.has(y)) byYear.set(y, []);
+  byYear.get(y)!.push(p);
+}
+const years = [...byYear.entries()].sort((a, b) => b[0] - a[0]);
+---
+
+<BaseLayout title="归档">
+  <h1 class="page-title">归档</h1>
+  {
+    years.map(([year, list]) => (
+      <section class="archive-year">
+        <h2>{year}（{list.length} 篇）</h2>
+        <ul class="archive-list">
+          {list.map((p) => (
+            <li>
+              <time>{p.data.date.toISOString().slice(0, 10)}</time>
+              <a href={postUrl(p)}>{p.data.title}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+</BaseLayout>

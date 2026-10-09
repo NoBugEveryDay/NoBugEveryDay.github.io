@@ -1,0 +1,45 @@
+---
+/** Pagefind 搜索框（构建后由 pagefind 生成索引；隐藏页不加载） */
+---
+
+<div class="search" id="search"></div>
+<script>
+  import { pagefind } from '../lib/search';
+
+  document.querySelector<HTMLDivElement>('#search')!.innerHTML = `
+    <button type="button" class="search-open" aria-label="搜索">🔍 搜索</button>
+    <dialog class="search-dialog">
+      <form method="dialog" class="search-bar">
+        <input type="search" placeholder="搜索文章…" aria-label="搜索文章" />
+        <button type="button" class="search-close">✕</button>
+      </form>
+      <div class="search-results"></div>
+    </dialog>
+  `;
+
+  const dialog = document.querySelector<HTMLDialogElement>('.search-dialog')!;
+  const input = dialog.querySelector<HTMLInputElement>('input')!;
+  const results = dialog.querySelector<HTMLDivElement>('.search-results')!;
+  document.querySelector('.search-open')!.addEventListener('click', () => dialog.showModal());
+  document.querySelector('.search-close')!.addEventListener('click', () => dialog.close());
+
+  input.addEventListener('input', async () => {
+    const q = input.value.trim();
+    results.innerHTML = '';
+    if (!q) return;
+    const search = await pagefind.search(q);
+    if (!search) {
+      results.innerHTML = '<p class="search-empty">没有结果</p>';
+      return;
+    }
+    for (const r of search.results.slice(0, 10)) {
+      const data = await r.data();
+      const a = document.createElement('a');
+      a.className = 'search-result';
+      a.href = data.url;
+      a.innerHTML = `<span class="sr-title">${data.meta.title}</span><span class="sr-excerpt">${data.excerpt}</span>`;
+      results.appendChild(a);
+    }
+    if (results.childElementCount === 0) results.innerHTML = '<p class="search-empty">没有结果</p>';
+  });
+</script>

@@ -1,0 +1,33 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+
+const posts = (await getCollection('posts'))
+  .filter((p) => p.data.visibility === 'public')
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+// 统计每个分类的文章数（按分类名聚合，扁平化）
+const counts = new Map<string, number>();
+for (const p of posts) {
+  for (const c of p.data.categories) {
+    counts.set(c, (counts.get(c) ?? 0) + 1);
+  }
+}
+const categories = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+---
+
+<BaseLayout title="分类">
+  <h1 class="page-title">分类</h1>
+  <ul class="tag-cloud">
+    {
+      categories.map(([name, count]) => (
+        <li>
+          <a class="meta-link" href={`/categories/${encodeURIComponent(name)}/`}>
+            {name} <sup>{count}</sup>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</BaseLayout>

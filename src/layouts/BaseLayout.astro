@@ -1,0 +1,69 @@
+---
+import { site, nav, mascot } from '../config';
+import '../styles/global.css';
+import Search from '../components/Search.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** hidden 页面为 true：不索引、不加载评论与搜索 */
+  hidden?: boolean;
+}
+const { title, description = site.description, hidden = false } = Astro.props;
+const pageTitle = title ? `${title} | ${site.title}` : site.title;
+---
+
+<!doctype html>
+<html lang={site.lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    {hidden && <meta name="robots" content="noindex, nofollow" />}
+    <title>{pageTitle}</title>
+    <link rel="alternate" type="application/rss+xml" title={site.title} href="/rss.xml" />
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body data-pagefind-ignore={hidden ? 'all' : undefined}>
+    <header class="site-header">
+      <a class="site-title" href="/">{site.title}</a>
+      <nav>
+        {
+          nav.map((item) => (
+            <a href={item.href} class="nav-link" aria-current={Astro.url.pathname === item.href ? 'page' : undefined}>
+              {item.label}
+            </a>
+          ))
+        }
+      </nav>
+    </header>
+    {!hidden && <Search />}
+    <main class="site-main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <p>
+        © {new Date().getFullYear()} {site.author} · 由 Astro 构建，GitHub Actions 自动部署 ·
+        <a href="https://github.com/NoBugEveryDay/NoBugEveryDay.github.io">源码</a> ·
+        <a href="/rss.xml">RSS</a>
+      </p>
+      {!hidden && mascot.enabled && (
+        <p class="mascot-credit">
+          看板娘·鲸鱼娘：模型 ©
+          <a href="https://space.bilibili.com/4456176" rel="noopener">上善无形</a> /
+          <a href="https://space.bilibili.com/4168597" rel="noopener">ZipZipPipe</a> /
+          <a href="https://space.bilibili.com/11272072" rel="noopener">氵六青</a>
+          （CC BY-NC-SA 4.0）· 查看器 <a href="/live2d/NOTICE.md">MIT</a>
+        </p>
+      )}
+    </footer>
+    {
+      !hidden && mascot.enabled && (
+        <>
+          <script is:inline set:html={`window.__MASCOT__ = ${JSON.stringify(mascot)};`}></script>
+          <script defer src="/live2d/pet-blog.js"></script>
+        </>
+      )
+    }
+  </body>
+</html>

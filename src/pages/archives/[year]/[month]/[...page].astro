@@ -1,0 +1,46 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import PostCard from '../../../../components/PostCard.astro';
+
+// 手工分页：复刻旧站 URL /archives/<year>/<month>/ 与 /archives/<year>/<month>/page/<N>/
+export async function getStaticPaths() {
+  const posts = (await getCollection('posts'))
+    .filter((p) => p.data.visibility === 'public')
+    .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  const byMonth = new Map<string, typeof posts>();
+  for (const p of posts) {
+    const d = p.data.date;
+    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+    if (!byMonth.has(key)) byMonth.set(key, []);
+    byMonth.get(key)!.push(p);
+  }
+  const paths: any[] = [];
+  for (const [key, list] of byMonth) {
+    const [year, month] = key.split('-');
+    const totalPages = Math.max(1, Math.ceil(list.length / 10));
+    for (let n = 1; n <= totalPages; n++) {
+      const chunk = list.slice((n - 1) * 10, n * 10);
+      paths.push({
+        params: { year, month, page: n === 1 ? undefined : `page/${n}` },
+        props: { posts: chunk, list, currentPage: n, totalPages },
+      });
+    }
+  }
+  return paths;
+}
+
+const { posts, list, currentPage, totalPages } = Astro.props;
+const { year, month } = Astro.params;
+const baseUrl = `/archives/${year}/${month}/`;
+---
+
+<BaseLayout title={`归档：${year}-${month}`}>
+  <h1 class="page-title">归档：{year} 年 {month} 月（{list.length} 篇）</h1>
+  {posts.map((post) => <PostCard post={post} />)}
+  <nav class="pagination">
+    {currentPage > 1 ? <a href={currentPage === 2 ? baseUrl : `${baseUrl}page/${currentPage - 1}/`}>← 上一页</a> : <span></span>}
+    <span class="page-num">{currentPage} / {totalPages}</span>
+    {currentPage < totalPages ? <a href={`${baseUrl}page/${currentPage + 1}/`}>下一页 →</a> : <span></span>}
+  </nav>
+</BaseLayout>

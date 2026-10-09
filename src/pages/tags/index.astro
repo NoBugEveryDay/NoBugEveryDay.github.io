@@ -1,0 +1,29 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const posts = (await getCollection('posts')).filter((p) => p.data.visibility === 'public');
+
+const counts = new Map<string, number>();
+for (const p of posts) {
+  for (const t of p.data.tags) {
+    counts.set(t, (counts.get(t) ?? 0) + 1);
+  }
+}
+const tags = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+---
+
+<BaseLayout title="标签">
+  <h1 class="page-title">标签</h1>
+  <ul class="tag-cloud">
+    {
+      tags.map(([name, count]) => (
+        <li>
+          <a class="meta-link" href={`/tags/${encodeURIComponent(name)}/`}>
+            #{name} <sup>{count}</sup>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</BaseLayout>

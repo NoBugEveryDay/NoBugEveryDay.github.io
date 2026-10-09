@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="页面不存在">
+  <div class="not-found">
+    <h1>404</h1>
+    <p class="nf-lead">你要找的页面不存在。</p>
+    <div class="nf-note">
+      <p>本博客已于 2026 年改版，所有文章更换为英文短链接，<strong>旧的中文链接已全部失效</strong>。</p>
+      <p>但文章都还在——用下面任一方式即可找到：</p>
+    </div>
+    <ul class="nf-links">
+      <li>🔍 页面左上角 <strong>搜索框</strong>，输入标题关键词</li>
+      <li><a href="/archives/">按时间浏览归档</a></li>
+      <li><a href="/categories/">按分类浏览</a></li>
+      <li><a href="/">回首页</a></li>
+    </ul>
+  </div>
+</BaseLayout>

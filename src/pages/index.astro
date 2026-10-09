@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+import { site } from '../config';
+import { getPublicPosts } from '../lib/posts';
+
+const allPosts = await getPublicPosts();
+const pageSize = site.pageSize;
+const posts = allPosts.slice(0, pageSize);
+const totalPages = Math.max(1, Math.ceil(allPosts.length / pageSize));
+---
+
+<BaseLayout>
+  {posts.map((post) => <PostCard post={post} />)}
+  <nav class="pagination">
+    <span></span>
+    <span class="page-num">1 / {totalPages}</span>
+    {totalPages > 1 ? <a href="/page/2/">下一页 →</a> : <span></span>}
+  </nav>
+</BaseLayout>

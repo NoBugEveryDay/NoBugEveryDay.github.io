@@ -1,0 +1,28 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Astro 5 的 markdown 页面把 frontmatter 放在 frontmatter/content 属性里，而非顶层 */
+  frontmatter?: { title?: string; description?: string };
+  content?: { title?: string; description?: string };
+}
+const fm = (Astro.props.frontmatter ?? Astro.props.content ?? {}) as {
+  title?: string;
+  description?: string;
+};
+const title = Astro.props.title ?? fm.title ?? '页面';
+const description = Astro.props.description ?? fm.description;
+---
+
+<BaseLayout title={title} description={description}>
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">{title}</h1>
+    </header>
+    <div class="post-body">
+      <slot />
+    </div>
+  </article>
+</BaseLayout>

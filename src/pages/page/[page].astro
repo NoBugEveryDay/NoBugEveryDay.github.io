@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { site } from '../../config';
+import { getPublicPosts } from '../../lib/posts';
+
+// 首页分页 /page/N/（旧站 URL 兼容，第 1 页即 /）
+export async function getStaticPaths() {
+  const allPosts = await getPublicPosts();
+  const pageSize = site.pageSize;
+  const totalPages = Math.max(1, Math.ceil(allPosts.length / pageSize));
+  const paths: any[] = [];
+  for (let n = 2; n <= totalPages; n++) {
+    paths.push({
+      params: { page: String(n) },
+      props: { posts: allPosts.slice((n - 1) * pageSize, n * pageSize), currentPage: n, totalPages },
+    });
+  }
+  return paths;
+}
+
+const { posts, currentPage, totalPages } = Astro.props;
+---
+
+<BaseLayout title={`第 ${currentPage} 页`}>
+  {posts.map((post) => <PostCard post={post} />)}
+  <nav class="pagination">
+    {currentPage > 2 ? <a href={`/page/${currentPage - 1}/`}>← 上一页</a> : <a href="/">← 上一页</a>}
+    <span class="page-num">{currentPage} / {totalPages}</span>
+    {currentPage < totalPages ? <a href={`/page/${currentPage + 1}/`}>下一页 →</a> : <span></span>}
+  </nav>
+</BaseLayout>

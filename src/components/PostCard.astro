@@ -1,0 +1,61 @@
+---
+/** 文章列表卡片 */
+import type { CollectionEntry } from 'astro:content';
+import { postUrl } from '../lib/posts';
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+
+const { post } = Astro.props;
+const { title, categories, description } = post.data;
+
+/** 摘要文本清理：去代码块/图片/链接语法、去「## 摘要 / 简介」标题行、压空白 */
+function cleanExcerpt(text: string) {
+  return text
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/^#+\s*(摘要|简介)\s*$/gim, '')
+    .replace(/<!-- more -->/g, '')
+    .replace(/[#>*_`~\-|]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * 摘要优先级：
+ * ① `<!-- more -->` 标记之前的正文（旧站惯例，只展示摘要文字，不显示「摘要」标题）
+ * ② front-matter 的 description
+ * ③ 正文开头自动节选（约 200 字）
+ */
+let excerpt = '';
+const raw = post.body ?? '';
+const moreIdx = raw.indexOf('<!-- more -->');
+if (moreIdx !== -1) {
+  excerpt = cleanExcerpt(raw.slice(0, moreIdx));
+}
+if (!excerpt && description) {
+  excerpt = description;
+}
+if (!excerpt) {
+  excerpt = cleanExcerpt(raw);
+  if (excerpt.length > 200) excerpt = `${excerpt.slice(0, 200)}…`;
+}
+// 自动节选可能把正文开头的「## 标题」残留为纯文本，与卡片标题重复，剥掉
+if (excerpt.startsWith(title)) {
+  excerpt = excerpt.slice(title.length).replace(/^[\s:：-]+/, '');
+}
+const date = post.data.date.toISOString().slice(0, 10);
+---
+
+<article class="post-card">
+  <h2 class="post-card-title">
+    <a href={postUrl(post)}>{title}</a>
+  </h2>
+  <div class="post-card-meta">
+    <time datetime={date}>{date}</time>
+    {categories.length > 0 && <span class="meta-group">{categories.map((c) => <a class="meta-link" href={`/categories/${encodeURIComponent(c)}/`}>{c}</a>)}</span>}
+  </div>
+  <p class="post-card-excerpt">{excerpt}</p>
+</article>

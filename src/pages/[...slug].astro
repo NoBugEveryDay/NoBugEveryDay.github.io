@@ -1,0 +1,19 @@
+---
+import { getCollection } from 'astro:content';
+import PostLayout from '../layouts/PostLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = (await getCollection('posts')).filter(
+    (p) => p.data.visibility === 'public',
+  );
+  // URL 扁平化为英文 slug；slug 缺失时回退文件路径。slug 重复会在构建期报错。
+  return posts.map((post) => ({
+    params: { slug: post.data.slug ?? post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+---
+
+<PostLayout post={post} />

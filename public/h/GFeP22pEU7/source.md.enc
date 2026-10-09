@@ -1,0 +1,12 @@
+{
+  "v": 2,
+  "kdf": {
+    "name": "pbkdf2",
+    "salt": "wqMkp4WEIoANuGSUd9PDMQ==",
+    "iterations": 200000,
+    "hash": "sha256"
+  },
+  "iv": "w9mlsiJVkSIjEpIi",
+  "tag": "CC8X7OXN1aVaglpxEOo03Q==",
+  "data": "kmFzvO6qXQKt92ZHYM3RbDCrRhPdiQcRFHBeSFgrDCjIKOYh/aNHJWw1rIcdxYOlkOer7ireQuflPr7sHzfTVhK21Zn0L4XPAe+DvVmDjmWu2R4SkR26glxL+B6QcLQd7HD6P+vKnquuZ6k/EoZeM36VBdVMS/aU/1g2Fiz6xIufJgFiuNmLbkRKPMxlSMkkSMKT+C1NDqOVsRX1J0LQVXx2svOkPPsmS9uLHzkFZt0Pepci1p52UkmPDNOcSmYN0/8otzi/sFFy7yYGN7C5V+o+Gr4oBpK3qM0nRxjYA0Lr32eSb3R2tutvIFI1eZLoZ4RQzg6n/YRW1GG9A7a3WKfOBH43BHoyFKrCJR7bb/OWFQ=="
+}
