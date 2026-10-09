@@ -31,7 +31,8 @@ npm run preview    # 预览构建产物
 ## 发布
 
 推送到 `main` 分支即自动部署（`.github/workflows/deploy.yml`）：构建 → Pagefind 索引 → GitHub Pages。
-本仓库即为 GitHub Pages 源；远程 `master` 分支是旧 Hexo 站点的历史存档（回退用）。
+本仓库即为 GitHub Pages 源（main 分支）。旧 Hexo 站点存档在本机 `NoBugEveryDay.github.io/` 目录
+（gitignore；2026-10 隐私清理时已删除远程旧分支，回退方法见 skill 或询问 AI）。
 
 ## 文章可见性三档
 

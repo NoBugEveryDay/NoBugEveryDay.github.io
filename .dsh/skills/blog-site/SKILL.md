@@ -87,8 +87,10 @@ main 分支 = 源码；`master` = 旧 Hexo 构建产物（回退存档）。GitH
 
 ## 七、回退方案
 
-远程 `master` 分支完整保留旧 Hexo 站点产物：Settings → Pages → Source 改回 "Deploy from a branch: master" 即恢复旧站。
-本地旧数据存档在 `blog/` 与 `NoBugEveryDay.github.io/`（均 gitignore）。
+旧 Hexo 站点的完整构建产物存档在**本机** `NoBugEveryDay.github.io/` 目录（gitignore，含其全部 git 历史）。
+2026-10 隐私清理时**已删除远程 master 分支**（旧构建曾包含后来转为隐藏的文章的完整 HTML），
+若需回退旧站：从该本地目录 `git push` 重建远程分支，再切 Pages 源为 "Deploy from a branch"。
+本地旧数据另有 `blog/`（服务器打包源文件）。
 
 ## 八、依赖升级
 

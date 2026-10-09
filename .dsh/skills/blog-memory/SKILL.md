@@ -11,12 +11,15 @@ whenToUse: 会话中首次涉及本博客（/home/orange/blog）的任务前必�
 
 ## 一、项目快照（截至 2026-10-09）
 
-- 仓库：`/home/orange/blog`，远程 `NoBugEveryDay/NoBugEveryDay.github.io`（main 分支）
+- 仓库：`/home/orange/blog`，远程 `NoBugEveryDay/NoBugEveryDay.github.io`（main 分支，**默认分支应为 main**）
 - 站点：https://nobugeveryday.github.io/（Astro 5 + GitHub Pages Actions 自动部署 + Giscus 评论 + Pagefind 搜索）
 - 内容：118 篇公开文章（英文扁平 slug URL）+ about/cv/about-english + 10 篇加密隐藏文章（/h/<token>/）
 - 看板娘：鲸鱼娘 Live2D（右下角，模型资产 CC BY-NC-SA 4.0 需署名，许可文件 public/live2d/NOTICE.md）
 - 公告文章：/blog-now-maintained-by-ai/（用户写的开头 + 鲸鱼娘续写，已发布）
 - 旧域名 blog.sysu.tech：**用户已自行通过 DNS 解决跳转**（不再经旧服务器）；旧中文链接无逐篇跳转，由 404 引导页兜底
+- **隐私历史清理（2026-10 用户要求）**：main 已重写为单提交历史（清除含隐藏文章明文的旧提交）；
+  远程 master（旧 Hexo 构建，**曾包含后来转为隐藏的文章的完整 HTML**）已删除；
+  旧站完整存档在本机 `NoBugEveryDay.github.io/`（gitignore）；仓库当前零明文，克隆不可见任何隐藏文章元数据
 
 ## 二、环境速查（最易忘的坑，务必照做）
 
