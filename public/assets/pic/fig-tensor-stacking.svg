@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 430" font-family="'Cambria Math','PingFang SC','Microsoft YaHei',serif">
+  <style>
+    svg {
+      --bg:#fbfbf9; --fg:#1f2328; --muted:#667; --white:#ffffff;
+      --border:#d8d8d0; --red:#c0392b; --blue:#2a7de1; --green:#2f7a3d;
+      --red-border:#e0b4ae; --green-border:#7fb069; --node:#889;
+      --red-fill:#fdf0ef; --green-fill:#eef4ee; --blue-fill:#e3ecf7;
+    }
+    @media (prefers-color-scheme: dark) {
+      svg {
+        --bg:#1b1e23; --fg:#e6e6e6; --muted:#9aa; --white:#1b1e23;
+        --border:#3d444d; --red:#ff8a7a; --blue:#6cb2ff; --green:#5bbd7a;
+        --red-border:#6a3a34; --green-border:#3f6a4f; --node:#9aa;
+        --red-fill:#33231f; --green-fill:#22322a; --blue-fill:#22324a;
+      }
+    }
+
+    .title{fill:var(--red);font-size:18px;font-weight:700;}
+    .mW{fill:var(--blue-fill);stroke:var(--blue);stroke-width:1.5;}
+    .mG{fill:var(--green-fill);stroke:var(--green);stroke-width:1.5;}
+    .mF{fill:var(--red-fill);stroke:var(--red);stroke-width:1.5;}
+    .mname{font-size:20px;font-weight:700;}
+    .mdim{fill:var(--fg);font-size:14px;}
+    .op{fill:var(--fg);font-size:24px;}
+    .lbl{fill:var(--fg);font-size:13px;}
+    .tag{fill:var(--muted);font-size:12px;}
+    .keybox{fill:var(--red-fill);stroke:var(--red);stroke-width:1.5;}
+    .keyeq{fill:var(--fg);font-size:17px;font-weight:700;}
+  </style>
+  <rect width="760" height="430" style="fill: var(--bg)"/>
+
+  <text class="title" x="40" y="40">张量堆叠：把内积硬掰成外积</text>
+
+  <!-- 矩阵 W（左，N×K） -->
+  <rect class="mW" x="40" y="140" width="110" height="120" rx="4"/>
+  <text class="mname" x="95" y="192" text-anchor="middle" style="fill: var(--blue)">W</text>
+  <text class="mdim" x="95" y="220" text-anchor="middle">N × K</text>
+
+  <!-- 乘号 -->
+  <text class="op" x="165" y="205" text-anchor="middle">×</text>
+
+  <!-- 矩阵 G（中上，K×D） -->
+  <rect class="mG" x="190" y="155" width="150" height="90" rx="4"/>
+  <text class="mname" x="265" y="195" text-anchor="middle" style="fill: var(--green)">G</text>
+  <text class="mdim" x="265" y="223" text-anchor="middle">K × D</text>
+
+  <!-- 等号 -->
+  <text class="op" x="355" y="205" text-anchor="middle">=</text>
+
+  <!-- 矩阵 F（右，N×D） -->
+  <rect class="mF" x="385" y="140" width="120" height="120" rx="4"/>
+  <text class="mname" x="445" y="190" text-anchor="middle" style="fill: var(--red)">F = W·G</text>
+  <text class="mdim" x="445" y="220" text-anchor="middle">N × D</text>
+
+  <!-- 图例 -->
+  <text class="lbl" x="40" y="292">W（N×K）：N 个粒子 × K 个节点，每行 = 一个粒子的 K 个权重</text>
+  <text class="lbl" x="40" y="314">G（K×D）：K 个节点 × D 维场（D=6：Ex,Ey,Ez,Bx,By,Bz），每行 = 一个节点的场向量</text>
+  <text class="lbl" x="40" y="336">F（N×D）：N 个粒子 × D 维场，每行 = 一个粒子插值出的场</text>
+
+  <!-- 关键方程框 -->
+  <rect class="keybox" x="40" y="354" width="680" height="62" rx="6"/>
+  <text class="keyeq" x="380" y="380" text-anchor="middle">F = W·G = Σ<sub>q</sub> w<sub>:,q</sub> ⊗ g<sub>q</sub></text>
+  <text class="tag" x="380" y="402" text-anchor="middle">w<sub>:,q</sub> = W 的第 q 列（N 个粒子对节点 q 的权重），g<sub>q</sub> = G 的第 q 行（节点 q 的场）；每个节点做一次 N×D 外积</text>
+</svg>

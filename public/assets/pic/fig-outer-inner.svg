@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" font-family="'PingFang SC','Microsoft YaHei',sans-serif">
+  <style>
+    svg {
+      --bg:#fbfbf9; --fg:#1f2328; --muted:#667; --white:#ffffff;
+      --border:#d8d8d0; --red:#c0392b; --blue:#2a7de1; --green:#2f7a3d;
+      --red-border:#e0b4ae; --green-border:#7fb069; --node:#889;
+      --red-fill:#fdf0ef; --green-fill:#eef4ee; --blue-fill:#e3ecf7;
+    }
+    @media (prefers-color-scheme: dark) {
+      svg {
+        --bg:#1b1e23; --fg:#e6e6e6; --muted:#9aa; --white:#1b1e23;
+        --border:#3d444d; --red:#ff8a7a; --blue:#6cb2ff; --green:#5bbd7a;
+        --red-border:#6a3a34; --green-border:#3f6a4f; --node:#9aa;
+        --red-fill:#33231f; --green-fill:#22322a; --blue-fill:#22324a;
+      }
+    }
+
+    .panel{fill:var(--bg);stroke:var(--border);stroke-width:1.5;}
+    .title{fill:var(--red);font-size:17px;font-weight:700;}
+    .sub{fill:var(--fg);font-size:13px;}
+    .tag{fill:var(--muted);font-size:12px;font-style:italic;}
+    .node{fill:var(--white);stroke:var(--node);stroke-width:1.5;}
+    .node-hot{fill:var(--red);stroke:var(--red);}
+    .particle{fill:var(--red);}
+    .arrow-in{stroke:var(--red);stroke-width:1.8;fill:none;marker-end:url(#arrIn);}
+    .arrow-out{stroke:var(--blue);stroke-width:1.8;fill:none;marker-end:url(#arrOut);}
+  </style>
+  <rect width="760" height="360" style="fill: var(--bg)"/>
+  <defs>
+    <marker id="arrIn" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" style="fill: var(--red)"/>
+    </marker>
+    <marker id="arrOut" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" style="fill: var(--blue)"/>
+    </marker>
+  </defs>
+
+  <!-- 左面板：沉积 = 外积（一对多） -->
+  <rect class="panel" x="20" y="20" width="350" height="320" rx="10"/>
+  <text class="title" x="40" y="52">沉积 Deposition</text>
+  <text class="sub" x="40" y="74">1 个粒子 → 8 个网格点</text>
+  <text class="tag" x="40" y="94">scatter · 一对多 · 外积</text>
+
+  <!-- 中心粒子 -->
+  <circle class="particle" cx="195" cy="210" r="11"/>
+  <text x="195" y="215" style="fill: var(--white)" font-size="11" text-anchor="middle" font-weight="700">p</text>
+
+  <!-- 周围 8 个网格点 -->
+  <g>
+    <rect class="node" x="95" y="130" width="26" height="26" rx="4"/>
+    <rect class="node" x="165" y="130" width="26" height="26" rx="4"/>
+    <rect class="node" x="235" y="130" width="26" height="26" rx="4"/>
+    <rect class="node" x="95" y="200" width="26" height="26" rx="4"/>
+    <rect class="node" x="235" y="200" width="26" height="26" rx="4"/>
+    <rect class="node" x="95" y="270" width="26" height="26" rx="4"/>
+    <rect class="node" x="165" y="270" width="26" height="26" rx="4"/>
+    <rect class="node" x="235" y="270" width="26" height="26" rx="4"/>
+  </g>
+
+  <!-- 粒子 → 网格 的散射箭头 -->
+  <path class="arrow-out" d="M186 200 L120 152"/>
+  <path class="arrow-out" d="M196 199 L190 158"/>
+  <path class="arrow-out" d="M206 200 L258 152"/>
+  <path class="arrow-out" d="M185 210 L120 213"/>
+  <path class="arrow-out" d="M205 210 L258 213"/>
+  <path class="arrow-out" d="M186 220 L120 274"/>
+  <path class="arrow-out" d="M196 221 L190 262"/>
+  <path class="arrow-out" d="M206 220 L258 274"/>
+
+  <!-- 右面板：插值 = 内积（多对一） -->
+  <rect class="panel" x="390" y="20" width="350" height="320" rx="10"/>
+  <text class="title" x="410" y="52">插值 Interpolation</text>
+  <text class="sub" x="410" y="74">8 个网格点 → 1 个粒子</text>
+  <text class="tag" x="410" y="94">gather · 多对一 · 内积</text>
+
+  <circle class="particle" cx="565" cy="210" r="11"/>
+  <text x="565" y="215" style="fill: var(--white)" font-size="11" text-anchor="middle" font-weight="700">p</text>
+
+  <g>
+    <rect class="node" x="465" y="130" width="26" height="26" rx="4"/>
+    <rect class="node" x="535" y="130" width="26" height="26" rx="4"/>
+    <rect class="node" x="605" y="130" width="26" height="26" rx="4"/>
+    <rect class="node" x="465" y="200" width="26" height="26" rx="4"/>
+    <rect class="node" x="605" y="200" width="26" height="26" rx="4"/>
+    <rect class="node" x="465" y="270" width="26" height="26" rx="4"/>
+    <rect class="node" x="535" y="270" width="26" height="26" rx="4"/>
+    <rect class="node" x="605" y="270" width="26" height="26" rx="4"/>
+  </g>
+
+  <!-- 网格 → 粒子 的汇聚箭头 -->
+  <path class="arrow-in" d="M118 152 L548 200"/>
+  <path class="arrow-in" d="M188 158 L557 202"/>
+  <path class="arrow-in" d="M256 152 L576 202"/>
+  <path class="arrow-in" d="M118 213 L552 210"/>
+  <path class="arrow-in" d="M256 213 L578 210"/>
+  <path class="arrow-in" d="M118 274 L548 220"/>
+  <path class="arrow-in" d="M188 262 L557 218"/>
+  <path class="arrow-in" d="M256 274 L576 220"/>
+
+  <!-- 底部注释 -->
+  <text class="sub" x="195" y="330" text-anchor="middle">MPU 天生会做 → 直接映射</text>
+  <text class="sub" x="565" y="330" text-anchor="middle">MPU 不会做 → 需张量堆叠</text>
+</svg>

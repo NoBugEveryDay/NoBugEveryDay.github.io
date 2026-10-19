@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 400" font-family="'PingFang SC','Microsoft YaHei',sans-serif">
+  <style>
+    svg {
+      --bg:#fbfbf9; --fg:#1f2328; --muted:#667; --white:#ffffff;
+      --border:#d8d8d0; --red:#c0392b; --blue:#2a7de1; --green:#2f7a3d;
+      --red-border:#e0b4ae; --green-border:#7fb069; --node:#889;
+      --red-fill:#fdf0ef; --green-fill:#eef4ee; --blue-fill:#e3ecf7;
+    }
+    @media (prefers-color-scheme: dark) {
+      svg {
+        --bg:#1b1e23; --fg:#e6e6e6; --muted:#9aa; --white:#1b1e23;
+        --border:#3d444d; --red:#ff8a7a; --blue:#6cb2ff; --green:#5bbd7a;
+        --red-border:#6a3a34; --green-border:#3f6a4f; --node:#9aa;
+        --red-fill:#33231f; --green-fill:#22322a; --blue-fill:#22324a;
+      }
+    }
+
+    .frame{fill:var(--bg);stroke:var(--border);stroke-width:1.5;}
+    .ord{fill:var(--green-fill);stroke:var(--green-border);stroke-width:1.2;}
+    .dis{fill:var(--red-fill);stroke:var(--red);stroke-width:1.2;}
+    .title{fill:var(--red);font-size:17px;font-weight:700;}
+    .sub{fill:var(--fg);font-size:13px;}
+    .tag{fill:var(--muted);font-size:12px;}
+    .arrow{stroke:var(--fg);stroke-width:2;fill:none;marker-end:url(#arr);}
+    .arrow-r{stroke:var(--blue);stroke-width:2;fill:none;marker-end:url(#arrB);}
+    .arrow-m{stroke:var(--red);stroke-width:2;fill:none;marker-end:url(#arrR);}
+  </style>
+  <rect width="760" height="400" style="fill: var(--bg)"/>
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" style="fill: var(--fg)"/></marker>
+    <marker id="arrB" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" style="fill: var(--blue)"/></marker>
+    <marker id="arrR" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" style="fill: var(--red)"/></marker>
+  </defs>
+
+  <text class="title" x="30" y="36">Sort-on-Write（SoW）：写回时顺手分流，维持物理连续</text>
+
+  <!-- 当前帧 P_cur -->
+  <text class="sub" x="30" y="82" font-weight="700">当前帧 P_cur</text>
+  <rect class="frame" x="30" y="92" width="320" height="60" rx="8"/>
+  <rect class="ord" x="40" y="100" width="230" height="44" rx="4"/>
+  <text class="tag" x="155" y="120" text-anchor="middle">有序区（物理连续）</text>
+  <text class="tag" x="155" y="136" text-anchor="middle">绝大多数粒子 · 可直接 MPU 加载</text>
+  <rect class="dis" x="274" y="100" width="66" height="44" rx="4"/>
+  <text class="tag" x="307" y="120" text-anchor="middle">无序</text>
+  <text class="tag" x="307" y="136" text-anchor="middle">尾</text>
+
+  <!-- 中间：push + 流式分流（文字在上，箭头在下，避开重叠） -->
+  <text class="sub" x="30" y="172" font-weight="700">粒子推进 Push（写回路径）→ 流式分流</text>
+  <text class="tag" x="30" y="190">SIMD 一次分类：c_new == c ？</text>
+
+  <!-- 下一帧 P_next -->
+  <text class="sub" x="30" y="272" font-weight="700">下一帧 P_next</text>
+  <rect class="frame" x="30" y="282" width="320" height="60" rx="8"/>
+  <rect class="ord" x="40" y="290" width="230" height="44" rx="4"/>
+  <text class="tag" x="155" y="310" text-anchor="middle">有序区（驻留粒子紧凑写入）</text>
+  <text class="tag" x="155" y="326" text-anchor="middle">物理连续 · 自愈</text>
+  <rect class="dis" x="274" y="290" width="66" height="44" rx="4"/>
+  <text class="tag" x="307" y="310" text-anchor="middle">无序</text>
+  <text class="tag" x="307" y="326" text-anchor="middle">尾（append）</text>
+
+  <!-- 分流箭头（下移，避开上方文字） -->
+  <path class="arrow-r" d="M155 208 L155 278"/>
+  <text class="tag" x="165" y="248" text-anchor="start">驻留 m_stay</text>
+  <path class="arrow-m" d="M300 208 L300 278"/>
+  <text class="tag" x="310" y="248" text-anchor="start">迁移 m_move</text>
+
+  <!-- 右侧说明 -->
+  <rect class="frame" x="400" y="92" width="330" height="250" rx="8"/>
+  <text class="sub" x="420" y="120" font-weight="700">为什么能"顺手"排序？</text>
+  <text class="sub" x="420" y="148">· CFL 条件：一步内绝大多数粒子</text>
+  <text class="sub" x="428" y="170">不跨 cell → 驻留，无需排序。</text>
+  <text class="sub" x="420" y="198">· 只有少数迁移粒子进无序尾，</text>
+  <text class="sub" x="428" y="220">下一步开头做 O(N_tail) 轻量 binning。</text>
+  <text class="sub" x="420" y="248">· 无序粒子逐步被吸回有序区，</text>
+  <text class="sub" x="428" y="270">无需 stop-the-world 全局排序。</text>
+  <text class="tag" x="420" y="300">对比：GPMA（论文1）只维护逻辑索引，</text>
+  <text class="tag" x="420" y="318">不保证物理连续；SoW 保证物理连续。</text>
+</svg>

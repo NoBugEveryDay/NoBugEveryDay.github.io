@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" font-family="'Cambria Math','PingFang SC','Microsoft YaHei',serif">
+  <style>
+    svg {
+      --bg:#fbfbf9; --fg:#1f2328; --muted:#667; --white:#ffffff;
+      --border:#d8d8d0; --red:#c0392b; --blue:#2a7de1; --green:#2f7a3d;
+      --red-border:#e0b4ae; --green-border:#7fb069; --node:#889;
+      --red-fill:#fdf0ef; --green-fill:#eef4ee; --blue-fill:#e3ecf7;
+    }
+    @media (prefers-color-scheme: dark) {
+      svg {
+        --bg:#1b1e23; --fg:#e6e6e6; --muted:#9aa; --white:#1b1e23;
+        --border:#3d444d; --red:#ff8a7a; --blue:#6cb2ff; --green:#5bbd7a;
+        --red-border:#6a3a34; --green-border:#3f6a4f; --node:#9aa;
+        --red-fill:#33231f; --green-fill:#22322a; --blue-fill:#22324a;
+      }
+    }
+
+    .cell{fill:var(--red-fill);stroke:var(--red-border);stroke-width:1.2;}
+    .vecA{fill:var(--red);}
+    .vecB{fill:var(--blue);}
+    .prod{fill:var(--fg);font-size:14px;font-weight:700;}
+    .lbl{fill:var(--fg);font-size:15px;}
+    .tag{fill:var(--muted);font-size:13px;}
+    .title{fill:var(--red);font-size:18px;font-weight:700;}
+    .vecTxt{fill:var(--white);font-size:16px;font-weight:700;}
+  </style>
+  <rect width="720" height="380" style="fill: var(--bg)"/>
+
+  <text class="title" x="40" y="40">Matrix-PIC 的核心：把 8 个贡献算成一个外积</text>
+
+  <!-- a：列向量（左，与矩阵两行对齐） -->
+  <text class="lbl" x="72" y="187" text-anchor="end">a =</text>
+  <rect class="vecA" x="90" y="140" width="80" height="46" rx="4"/>
+  <text class="vecTxt" x="130" y="168" text-anchor="middle">s₀</text>
+  <rect class="vecA" x="90" y="188" width="80" height="46" rx="4"/>
+  <text class="vecTxt" x="130" y="216" text-anchor="middle">s₁</text>
+
+  <!-- bᵀ：行向量（上，与矩阵四列对齐） -->
+  <text class="lbl" x="286" y="106" text-anchor="end">bᵀ =</text>
+  <rect class="vecB" x="300" y="90" width="70" height="32" rx="4"/>
+  <text class="vecTxt" x="335" y="111" text-anchor="middle">t₀</text>
+  <rect class="vecB" x="372" y="90" width="70" height="32" rx="4"/>
+  <text class="vecTxt" x="407" y="111" text-anchor="middle">t₁</text>
+  <rect class="vecB" x="444" y="90" width="70" height="32" rx="4"/>
+  <text class="vecTxt" x="479" y="111" text-anchor="middle">t₂</text>
+  <rect class="vecB" x="516" y="90" width="70" height="32" rx="4"/>
+  <text class="vecTxt" x="551" y="111" text-anchor="middle">t₃</text>
+
+  <!-- 矩阵 C = a ⊗ b（2×4） -->
+  <g>
+    <rect class="cell" x="300" y="140" width="70" height="46"/>
+    <text class="prod" x="335" y="168" text-anchor="middle">s₀·t₀</text>
+    <rect class="cell" x="372" y="140" width="70" height="46"/>
+    <text class="prod" x="407" y="168" text-anchor="middle">s₀·t₁</text>
+    <rect class="cell" x="444" y="140" width="70" height="46"/>
+    <text class="prod" x="479" y="168" text-anchor="middle">s₀·t₂</text>
+    <rect class="cell" x="516" y="140" width="70" height="46"/>
+    <text class="prod" x="551" y="168" text-anchor="middle">s₀·t₃</text>
+
+    <rect class="cell" x="300" y="188" width="70" height="46"/>
+    <text class="prod" x="335" y="216" text-anchor="middle">s₁·t₀</text>
+    <rect class="cell" x="372" y="188" width="70" height="46"/>
+    <text class="prod" x="407" y="216" text-anchor="middle">s₁·t₁</text>
+    <rect class="cell" x="444" y="188" width="70" height="46"/>
+    <text class="prod" x="479" y="216" text-anchor="middle">s₁·t₂</text>
+    <rect class="cell" x="516" y="188" width="70" height="46"/>
+    <text class="prod" x="551" y="216" text-anchor="middle">s₁·t₃</text>
+  </g>
+
+  <!-- 图注 -->
+  <text class="tag" x="300" y="260">C = a ⊗ b：外积把「2 个数 × 4 个数」摊成 8 个格子（一对多）。</text>
+
+  <!-- 解释 -->
+  <text class="lbl" x="40" y="300">其中 a = [sₓ,₀, sₓ,₁]ᵀ 是 x 方向形状因子；b = [t₀, t₁, t₂, t₃]ᵀ 是 y·z 组合：</text>
+  <text class="lbl" x="40" y="326">t₀ = s_y,₀·s_z,₀，t₁ = s_y,₁·s_z,₀，t₂ = s_y,₀·s_z,₁，t₃ = s_y,₁·s_z,₁。</text>
+  <text class="tag" x="40" y="356">这 8 个格子 = 一个粒子的 8 个 3D 形状函数乘积 Sₖ(xₚ)；再乘有效电流 w_p,x，展平写回 8 个 rhocell 条目。</text>
+</svg>

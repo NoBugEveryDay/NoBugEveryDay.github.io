@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 400" font-family="'PingFang SC','Microsoft YaHei',sans-serif">
+  <style>
+    svg {
+      --bg:#fbfbf9; --fg:#1f2328; --muted:#667; --white:#ffffff;
+      --border:#d8d8d0; --red:#c0392b; --blue:#2a7de1; --green:#2f7a3d;
+      --red-border:#e0b4ae; --green-border:#7fb069; --node:#889;
+      --red-fill:#fdf0ef; --green-fill:#eef4ee; --blue-fill:#e3ecf7;
+    }
+    @media (prefers-color-scheme: dark) {
+      svg {
+        --bg:#1b1e23; --fg:#e6e6e6; --muted:#9aa; --white:#1b1e23;
+        --border:#3d444d; --red:#ff8a7a; --blue:#6cb2ff; --green:#5bbd7a;
+        --red-border:#6a3a34; --green-border:#3f6a4f; --node:#9aa;
+        --red-fill:#33231f; --green-fill:#22322a; --blue-fill:#22324a;
+      }
+    }
+
+    .title{fill:var(--red);font-size:17px;font-weight:700;}
+    .sub{fill:var(--fg);font-size:13px;}
+    .tag{fill:var(--muted);font-size:11px;}
+    .phase{fill:var(--green-fill);stroke:var(--green-border);stroke-width:1.2;}
+    .comm{fill:var(--red-fill);stroke:var(--red);stroke-width:1.2;}
+    .comm-overlap{fill:var(--blue-fill);stroke:var(--blue);stroke-width:1.2;stroke-dasharray:5 4;}
+    .axis{stroke:var(--fg);stroke-width:1.5;}
+  </style>
+  <rect width="780" height="400" style="fill: var(--bg)"/>
+
+  <text class="title" x="30" y="34">通信重叠：把粒子重分布藏进沉积</text>
+
+  <!-- BSP 时间线 -->
+  <text class="sub" x="30" y="76" font-weight="700">原生 WarpX（BSP，通信暴露在关键路径上）</text>
+  <line class="axis" x1="30" y1="96" x2="750" y2="96"/>
+  <g>
+    <rect class="phase" x="30" y="108" width="150" height="40" rx="5"/>
+    <text class="tag" x="105" y="124" text-anchor="middle">插值 + 推进</text>
+    <text class="tag" x="105" y="138" text-anchor="middle">Interp &amp; Push</text>
+
+    <rect class="phase" x="190" y="108" width="110" height="40" rx="5"/>
+    <text class="tag" x="245" y="124" text-anchor="middle">沉积</text>
+    <text class="tag" x="245" y="138" text-anchor="middle">Deposition</text>
+
+    <rect class="comm" x="310" y="108" width="100" height="40" rx="5"/>
+    <text class="tag" x="360" y="124" text-anchor="middle">扫描打包</text>
+    <text class="tag" x="360" y="138" text-anchor="middle">Scan &amp; Pack</text>
+
+    <rect class="comm" x="420" y="108" width="110" height="40" rx="5"/>
+    <text class="tag" x="475" y="124" text-anchor="middle">阻塞通信</text>
+    <text class="tag" x="475" y="138" text-anchor="middle">Send / Wait</text>
+
+    <rect class="comm" x="540" y="108" width="80" height="40" rx="5"/>
+    <text class="tag" x="580" y="124" text-anchor="middle">解包</text>
+    <text class="tag" x="580" y="138" text-anchor="middle">Unpack</text>
+
+    <rect class="phase" x="630" y="108" width="120" height="40" rx="5"/>
+    <text class="tag" x="690" y="124" text-anchor="middle">场求解</text>
+    <text class="tag" x="690" y="138" text-anchor="middle">Field Solve</text>
+  </g>
+
+  <!-- POLAR-PIC 时间线 -->
+  <text class="sub" x="30" y="200" font-weight="700">POLAR-PIC（打包融合 + RDMA 重叠，通信被藏起）</text>
+  <line class="axis" x1="30" y1="220" x2="750" y2="220"/>
+  <g>
+    <rect class="phase" x="30" y="232" width="220" height="40" rx="5"/>
+    <text class="tag" x="140" y="248" text-anchor="middle">插值 + 推进 + 融合打包</text>
+    <text class="tag" x="140" y="262" text-anchor="middle">Interp &amp; Push（SoW 预打包）</text>
+
+    <rect class="phase" x="260" y="232" width="160" height="40" rx="5"/>
+    <text class="tag" x="340" y="248" text-anchor="middle">沉积</text>
+    <text class="tag" x="340" y="262" text-anchor="middle">Deposition</text>
+
+    <rect class="comm-overlap" x="270" y="300" width="140" height="34" rx="5"/>
+    <text class="tag" x="340" y="314" text-anchor="middle" style="fill: var(--blue)">RDMA 传输（后台）</text>
+    <text class="tag" x="340" y="328" text-anchor="middle" style="fill: var(--blue)">UNR batch_put</text>
+
+    <rect class="comm" x="430" y="232" width="70" height="40" rx="5"/>
+    <text class="tag" x="465" y="248" text-anchor="middle">Wait</text>
+    <text class="tag" x="465" y="262" text-anchor="middle">UNR_Wait</text>
+
+    <rect class="phase" x="510" y="232" width="70" height="40" rx="5"/>
+    <text class="tag" x="545" y="248" text-anchor="middle">合并</text>
+    <text class="tag" x="545" y="262" text-anchor="middle">Merge</text>
+
+    <rect class="phase" x="590" y="232" width="160" height="40" rx="5"/>
+    <text class="tag" x="670" y="248" text-anchor="middle">场求解</text>
+    <text class="tag" x="670" y="262" text-anchor="middle">Field Solve</text>
+  </g>
+
+  <!-- 虚线连接：RDMA 与沉积重叠 -->
+  <line x1="300" y1="300" x2="300" y2="272" style="stroke: var(--blue)" stroke-width="1" stroke-dasharray="3 3"/>
+  <line x1="400" y1="300" x2="400" y2="272" style="stroke: var(--blue)" stroke-width="1" stroke-dasharray="3 3"/>
+
+  <!-- 底部说明 -->
+  <text class="sub" x="30" y="370">效果：打包融入写回路径（省掉独立 Scan &amp; Pack）；RDMA 交给网卡，CPU 转去沉积，通信延迟被沉积计算遮蔽。</text>
+  <text class="tag" x="30" y="390">实测重叠率 99.1%，通信时间比 MPI 方案少 20×，最大 per-rank 等待降 58×。</text>
+</svg>
