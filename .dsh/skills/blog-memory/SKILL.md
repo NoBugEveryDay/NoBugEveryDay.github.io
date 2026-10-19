@@ -112,6 +112,11 @@ whenToUse: 会话中首次涉及本博客（/home/orange/blog）的任务前必�
       **用户审阅门：未经用户审阅 HTML 批准，不 commit 不 push**（当前全部变更未提交：
       `.gitignore` 的 `tmp_*`、博文、图片）
 
+- [x] **PIC 教学项目（2026-10-18 发布）**：教用户读懂 Matrix-PIC（EUROSYS'26）与 POLAR-PIC（HPDC'26）。
+      六章 HTML 课件 + 6 张示意图在 `tmp_pic_learning/`（保留 figures 源 SVG / lessons 课件 / make_lessons_pic.py / questions.md；PDF 提取文本、lessons.md、blog-draft.md、make_dark.py、fix_dark.py 已清）。
+      博文《Matrix-PIC 与 POLAR-PIC：把 PIC 仿真搬到 SME 上》（slug `pic-matrix-outer-product-from-zero`，分类 论文研读）已上线 https://nobugeveryday.github.io/pic-matrix-outer-product-from-zero/。
+      **SVG 明暗自适应踩坑**：用脚本对整份 SVG 做颜色替换（#hex→var()）时，会连 `:root{--bg:#xxx}` 的变量定义也替换成 `--bg:var(--bg)` 自引用 → 全图塌成黑；正确做法=先替换颜色、后插入变量定义；且 `:root` 改 `svg` 选择器、展示属性 `fill="var()"` 改 `style="fill: var()"`（presentation 属性对 var 支持不稳）。用户告知：LX2 芯片实际用的就是 SME（矩阵扩展），标题因此用 SME 而非 MPU。
+
 ## 七、本文件的维护规则
 
 - 重要事项（用户决定、环境变化、踩坑解法）随手追加到对应小节，commit message 用 `docs(memory): ...`
