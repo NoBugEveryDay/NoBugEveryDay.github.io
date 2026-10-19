@@ -1,7 +1,7 @@
 ---
 title: "Matrix-PIC 与 POLAR-PIC：把 PIC 仿真搬到 SME 上"
-date: 2026-10-12
-slug: pic-matrix-outer-product-from-zero
+date: 2026-10-19
+slug: pic-matrix-outer-product
 categories: [论文研读]
 tags: [PIC, 粒子模拟, 高性能计算, 矩阵计算, 论文笔记, MPU]
 description: "为什么传统向量化 PIC 卡在沉积的原子冲突上，而新一代带矩阵单元（MPU）的 CPU 能把外积当原生指令？六章拆解两篇论文如何一步步把粒子-网格互动改写成外积，榨出 MPU 的算力。"
