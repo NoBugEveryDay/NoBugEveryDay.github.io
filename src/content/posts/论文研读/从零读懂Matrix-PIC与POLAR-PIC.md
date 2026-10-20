@@ -79,6 +79,18 @@ description: "为什么传统向量化 PIC 卡在沉积的原子冲突上，而�
   }
   .pic-paper::before { content: "📄 论文原文对应处"; display: block; font-weight: 700; font-size: 0.88rem; color: #57606a; margin-bottom: 0.25rem; }
   @media (prefers-color-scheme: dark) { .pic-paper::before { color: var(--muted); } }
+  .pic-papers {
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    background: var(--code-bg);
+    border-radius: 0 8px 8px 0;
+    padding: 0.8rem 1rem;
+    margin: 1rem 0 1.4rem;
+  }
+  .pic-papers::before { content: "📄 本文解读的两篇论文"; display: block; font-weight: 700; font-size: 0.9rem; color: var(--accent); margin-bottom: 0.3rem; }
+  .pic-papers ul { margin: 0.3rem 0 0 1.3rem; }
+  .pic-papers li { margin: 0.35rem 0; }
+  .pic-papers a { color: var(--accent); }
   .pic-toc { border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; margin: 1.2rem 0; background: var(--card-bg); }
   .pic-toc ol { margin: 0.4rem 0 0 1.2rem; }
   .pic-toc li { margin: 0.2rem 0; }
@@ -110,6 +122,13 @@ description: "为什么传统向量化 PIC 卡在沉积的原子冲突上，而�
   .pic-lesson td code { background: transparent; border: none; padding: 0; font-size: 0.9em; }
   .pic-lesson tbody tr + tr td { border-top: 1px solid var(--border); }
 </style>
+
+<div class="pic-papers">
+  <ul>
+    <li><a href="https://dl.acm.org/doi/abs/10.1145/3767295.3769378" target="_blank" rel="noopener">Matrix-PIC: Harnessing Matrix Outer-product for High-Performance Particle-in-Cell Simulations</a>（EUROSYS '26 · DOI 10.1145/3767295.3769378）</li>
+    <li><a href="https://dl.acm.org/doi/full/10.1145/3806645.3807574" target="_blank" rel="noopener">POLAR-PIC: A Holistic Framework for Matrixized PIC with Co-Designed Compute, Layout, and Communication</a>（HPDC '26 · DOI 10.1145/3806645.3807574）</li>
+  </ul>
+</div>
 
 <div class="pic-disclaimer">
   <strong>⚠️ 声明</strong>：本内容完全由 AI 全自动生成，不对任何正确性负责；文中观点与数据请读者自行判断、交叉验证。
